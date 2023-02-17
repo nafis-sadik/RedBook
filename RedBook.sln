@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32901.215
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InventoryService", "InventoryService", "{37085E07-08C0-47E1-AD32-FA42A79FF4B5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inventory.WebAPI", "WebAPI\Inventory.WebAPI.csproj", "{0D1C465B-7066-4417-8788-14025B262E6E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inventory.Domain", "DataAccessLayer\Inventory.Domain.csproj", "{822A41F2-E1FA-4326-90E5-5F3019677E18}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core.Service", "Core.Service", "{037C2590-62F9-4A2D-BE43-603269D230C2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RedBook.Core", "RedBook.Core\RedBook.Core.csproj", "{53E2F54F-CFC6-4D11-ACA2-BC0460597F92}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3C2E7927-0419-4A5B-854D-62B81872CA6B}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IdentityService", "IdentityService", "{81AA8ED7-5F5A-40C5-9480-75BAFFC08C58}"
+	ProjectSection(SolutionItems) = preProject
+		DataAccessLayer\Entities\Organization.cs = DataAccessLayer\Entities\Organization.cs
+		DataAccessLayer\Entities\OrganizationOffice.cs = DataAccessLayer\Entities\OrganizationOffice.cs
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D1C465B-7066-4417-8788-14025B262E6E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D1C465B-7066-4417-8788-14025B262E6E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D1C465B-7066-4417-8788-14025B262E6E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D1C465B-7066-4417-8788-14025B262E6E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{822A41F2-E1FA-4326-90E5-5F3019677E18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{822A41F2-E1FA-4326-90E5-5F3019677E18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{822A41F2-E1FA-4326-90E5-5F3019677E18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{822A41F2-E1FA-4326-90E5-5F3019677E18}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53E2F54F-CFC6-4D11-ACA2-BC0460597F92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53E2F54F-CFC6-4D11-ACA2-BC0460597F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53E2F54F-CFC6-4D11-ACA2-BC0460597F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53E2F54F-CFC6-4D11-ACA2-BC0460597F92}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0D1C465B-7066-4417-8788-14025B262E6E} = {37085E07-08C0-47E1-AD32-FA42A79FF4B5}
+		{822A41F2-E1FA-4326-90E5-5F3019677E18} = {37085E07-08C0-47E1-AD32-FA42A79FF4B5}
+		{53E2F54F-CFC6-4D11-ACA2-BC0460597F92} = {037C2590-62F9-4A2D-BE43-603269D230C2}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {82527706-4C3A-4C21-9071-F5811EB50765}
+	EndGlobalSection
+EndGlobal
