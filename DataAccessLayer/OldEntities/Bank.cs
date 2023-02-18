@@ -5,11 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Inventory.Domain.Entities
 {
-    public class BankBranches : BaseEntity<int>
+    public class Bank : BaseEntity<int>
     {
-        [MaxLength(200)]
-        [Column(TypeName = "varchar(200)")]
-        public string? BranchName { get; set; }
-        public virtual Bank Bank { get; set; } = new Bank();
+        [Required]
+        [MaxLength(100)]
+        [Column(TypeName = "varchar(100)")]
+        public string BankName { get; set; }
     }
 }

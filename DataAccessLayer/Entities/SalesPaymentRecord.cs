@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace Inventory.Domain.Entities
 {
-    public partial class PurchasePaymentRecord
+    public partial class SalesPaymentRecord
     {
         public int Id { get; set; }
-        public string ChalanNumber { get; set; }
+        public string MemoNumber { get; set; }
         public DateTime PaymentDate { get; set; }
         public decimal PaymentAmount { get; set; }
 
-        public virtual Purchase ChalanNumberNavigation { get; set; }
+        public virtual Sale MemoNumberNavigation { get; set; }
     }
 }

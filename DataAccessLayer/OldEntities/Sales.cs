@@ -13,7 +13,7 @@ namespace Inventory.Domain.Entities
         public DateTime SalesDate { get; set; }
         public Guid SoldBy { get; set; }
         public decimal TotalAmount { get; set; }
-        public virtual ICollection<SalesDetails> SalesDetails { get; set; } = new List<SalesDetails>(); 
-        public virtual ICollection<SalesPaymentRecords> SalesPaymentRecords { get; set; } = new List<SalesPaymentRecords>();
+        //public virtual ICollection<SalesDetails> SalesDetails { get; set; } = new List<SalesDetails>(); 
+        //public virtual ICollection<SalesPaymentRecords> SalesPaymentRecords { get; set; } = new List<SalesPaymentRecords>();
     }
 }

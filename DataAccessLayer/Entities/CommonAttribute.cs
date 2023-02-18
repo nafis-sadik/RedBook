@@ -1,22 +1,18 @@
-﻿using RedBook.Core.EntityFramework;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
+
+#nullable disable
 
 namespace Inventory.Domain.Entities
 {
-    public class CommonAttribute: BaseEntity<int>
+    public partial class CommonAttribute
     {
-        [Required]
-        [MaxLength(100)]
-        [Column(TypeName = "varchar(100)")]
-        public string AttributeName { get; set; }
-        [Required]
-        [MaxLength(100)]
-        [Column(TypeName = "varchar(100)")]
+        public int Id { get; set; }
         public string AttributeType { get; set; }
-        public DateTime? CreateDate { get; set; }
-        public Guid? CreatedBy { get; set; }
+        public string AttributeName { get; set; }
+        public DateTime CreateDate { get; set; }
+        public string CreatedBy { get; set; }
         public DateTime? UpdateDate { get; set; }
-        public Guid? UpdatedBy { get; set; }
+        public string UpdateBy { get; set; } = "";
     }
 }

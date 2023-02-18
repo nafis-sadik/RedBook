@@ -2,11 +2,11 @@
 
 namespace Inventory.Domain.Entities
 {
-    public class SalesPaymentRecords: BaseEntity<int>
+    public class PurchasePaymentRecord: BaseEntity<int>
     {
-        public int MemoNumber { get; set; }
+        public int ChalanNumber { get; set; }
         public DateTime PaymentDate { get; set; }
         public decimal PaymentAmount { get; set; }
-        public virtual Sales Sales { get; set; } = new Sales();
+        //public virtual Purchase Purchase { get; set; } = new Purchase();
     }
 }
