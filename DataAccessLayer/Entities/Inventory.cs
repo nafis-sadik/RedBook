@@ -12,6 +12,7 @@ namespace Inventory.Domain.Entities
         public decimal Quantity { get; set; }
         public string ChalanNumber { get; set; }
         public int QuantityAttributeId { get; set; }
+        public int OrganizationId { get; set; }
 
         public virtual Purchase ChalanNumberNavigation { get; set; }
         public virtual Product Product { get; set; }

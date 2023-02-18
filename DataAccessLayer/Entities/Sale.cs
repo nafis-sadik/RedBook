@@ -17,6 +17,7 @@ namespace Inventory.Domain.Entities
         public DateTime SalesDate { get; set; }
         public string SoldBy { get; set; }
         public decimal TotalAmount { get; set; }
+        public int OrganizationId { get; set; }
 
         public virtual ICollection<SalesDetail> SalesDetails { get; set; }
         public virtual ICollection<SalesPaymentRecord> SalesPaymentRecords { get; set; }

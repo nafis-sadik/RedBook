@@ -25,6 +25,7 @@ namespace Inventory.Domain.Entities
         public int FromBankBranchId { get; set; }
         public string CheckNumber { get; set; }
         public decimal TotalPurchasePrice { get; set; }
+        public int OrganizationId { get; set; }
 
         public virtual Bank FromBank { get; set; }
         public virtual BankBranch FromBankBranch { get; set; }

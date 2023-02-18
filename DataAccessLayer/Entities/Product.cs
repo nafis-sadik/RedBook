@@ -22,6 +22,7 @@ namespace Inventory.Domain.Entities
         public string CreateBy { get; set; }
         public DateTime? UpdateDate { get; set; }
         public string UpdateBy { get; set; }
+        public int OrganizationId { get; set; }
 
         public virtual ICollection<Inventory> Inventories { get; set; }
         public virtual ICollection<PurchaseDetail> PurchaseDetails { get; set; }
