@@ -1,4 +1,4 @@
-using Inventory.Domain;
+using Inventory.Data;
 using Inventory.WebAPI.Configurations;
 
 var builder = WebApplication.CreateBuilder(args);

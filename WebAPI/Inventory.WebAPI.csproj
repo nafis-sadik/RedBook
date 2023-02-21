@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataAccessLayer\Inventory.Domain.csproj" />
+    <ProjectReference Include="..\DataAccessLayer\Inventory.Data.csproj" />
     <ProjectReference Include="..\RedBook.Core\RedBook.Core.csproj" />
   </ItemGroup>
 

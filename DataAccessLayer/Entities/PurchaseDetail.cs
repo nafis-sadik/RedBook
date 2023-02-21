@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 #nullable disable
 
-namespace Inventory.Domain.Entities
+namespace Inventory.Data.Entities
 {
     public partial class PurchaseDetail
     {

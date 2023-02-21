@@ -1,7 +1,7 @@
-﻿using Inventory.Domain.Entities;
+﻿using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace DataAccessLayer
+namespace Inventory.Data
 {
     public partial class RedBookInventoryContext : DbContext
     {
@@ -12,7 +12,7 @@ namespace DataAccessLayer
         public const string DefaultSchema = "Inventory";
         public virtual DbSet<Catagory> Categories { get; set; }
         public virtual DbSet<CommonAttribute> CommonAttributes { get; set; }
-        public virtual DbSet<Inventory.Domain.Entities.Inventory> Inventory { get; set; }
+        public virtual DbSet<Entities.Inventory> Inventory { get; set; }
         public virtual DbSet<Product> Products { get; set; }
         public virtual DbSet<Purchase> Purchases { get; set; }
         public virtual DbSet<PurchaseDetail> PurchaseDetails { get; set; }
@@ -97,7 +97,7 @@ namespace DataAccessLayer
                 entity.Property(e => e.UpdateDate).HasColumnType("datetime");
             });
 
-            modelBuilder.Entity<Inventory.Domain.Entities.Inventory>(entity =>
+            modelBuilder.Entity<Entities.Inventory>(entity =>
             {
                 entity.ToTable("Inventory");
 

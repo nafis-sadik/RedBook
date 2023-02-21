@@ -1,4 +1,4 @@
-﻿using DataAccessLayer;
+﻿using Inventory.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.WebAPI.Configurations

@@ -1,10 +1,8 @@
-﻿using DataAccessLayer;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using RedBook.Core.UnitOfWork;
 
-namespace Inventory.Domain
+namespace Inventory.Data
 {
     public static class DomainExtension
     {
