@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace RedBook.Core.Repositories
 {
-    public interface IRepositoryBase<TEntity, TPrimaryKey> where TEntity : BaseEntity<TPrimaryKey> where TPrimaryKey : Type
+    public interface IRepositoryBase<TEntity> where TEntity : class
     {
         IQueryable<TEntity> TrackableQuery();
         IQueryable<TEntity> UnTrackableQuery();
@@ -13,7 +13,7 @@ namespace RedBook.Core.Repositories
         Task<TEntity> InsertAsync(TEntity entity);
 
         // Read
-        Task<TEntity> GetByIdAsync(TPrimaryKey id);
+        Task<TEntity> GetByIdAsync(object id);
         Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> where);
         Task<PagedModel<TEntity>> GetPagedAsync(PagedModel<TEntity>? pagedModel);
 
@@ -21,7 +21,7 @@ namespace RedBook.Core.Repositories
         TEntity Update(TEntity entity);
 
         // Delete
-        Task<TEntity> DeleteAsync(TPrimaryKey id);
+        Task<TEntity> DeleteAsync(object id);
         Task DeleteAsync(Expression<Func<TEntity, bool>> where);
 
         // Utilities

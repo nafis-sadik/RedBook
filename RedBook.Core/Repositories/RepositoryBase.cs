@@ -1,15 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using RedBook.Core.EntityFramework;
 using RedBook.Core.Models;
 using System.Linq.Expressions;
 
 namespace RedBook.Core.Repositories
 {
-    internal class RepositoryBase<TEntity, TPrimaryKey> : 
-        IRepositoryBase<TEntity, TPrimaryKey>
-        where TEntity : BaseEntity<TPrimaryKey>
-        where TPrimaryKey : Type
+    public class RepositoryBase<TEntity> : IRepositoryBase<TEntity> where TEntity : class
     {
         private readonly DbContext _dbContext;
         private readonly DbSet<TEntity> _dbSet;
@@ -32,7 +28,7 @@ namespace RedBook.Core.Repositories
         }
 
         // Read
-        public async Task<TEntity> GetByIdAsync(TPrimaryKey id) => await _dbSet.FindAsync(id);
+        public async Task<TEntity> GetByIdAsync(object id) => await _dbSet.FindAsync(id);
         public async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> query) => await UnTrackableQuery().Where(query).ToListAsync();
         public Task<PagedModel<TEntity>> GetPagedAsync(PagedModel<TEntity>? pagedModel) => throw new NotImplementedException();
 
@@ -45,7 +41,7 @@ namespace RedBook.Core.Repositories
         }
 
         // Delete
-        public async Task<TEntity> DeleteAsync(TPrimaryKey id)
+        public async Task<TEntity> DeleteAsync(object id)
         {
             EntityEntry<TEntity> entityEntry = _dbSet.Remove(await GetByIdAsync(id));
             if (entityEntry.State == EntityState.Modified) return entityEntry.Entity;

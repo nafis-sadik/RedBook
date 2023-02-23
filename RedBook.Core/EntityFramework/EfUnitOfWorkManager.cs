@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RedBook.Core.Repositories;
 using RedBook.Core.UnitOfWork;
 
 namespace RedBook.Core.EntityFramework
@@ -11,6 +12,8 @@ namespace RedBook.Core.EntityFramework
         {
             _dbContext = dbContext;
         }
+
+        public IRepositoryBase<TEntity> GetRepository<TEntity>() where TEntity : class => new RepositoryBase<TEntity>(_dbContext);
 
         public void Dispose() => _dbContext.Dispose();
         public void SaveChanges() => _dbContext.SaveChanges();

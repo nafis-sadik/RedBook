@@ -1,22 +1,16 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Identity.Data.Entities;
+using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Crypto.Generators;
 
-#nullable disable
-
-namespace Identity.Data.Entities
+namespace Identity.Data
 {
     public partial class UserManagementSystemContext : DbContext
     {
-        public UserManagementSystemContext()
-        {
-        }
+        public UserManagementSystemContext() { }
 
-        public UserManagementSystemContext(DbContextOptions<UserManagementSystemContext> options)
-            : base(options)
-        {
-        }
+        public UserManagementSystemContext(DbContextOptions<UserManagementSystemContext> options) : base(options) { }
 
         public const string DefaultSchema = "UserManagement";
-
         public virtual DbSet<Application> Applications { get; set; }
         public virtual DbSet<Organization> Organizations { get; set; }
         public virtual DbSet<Policy> Policies { get; set; }
@@ -25,14 +19,13 @@ namespace Identity.Data.Entities
         public virtual DbSet<User> Users { get; set; }
         public virtual DbSet<UserGroup> UserGroups { get; set; }
 
-//        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//        {
-//            if (!optionsBuilder.IsConfigured)
-//            {
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-//                optionsBuilder.UseSqlServer("User Id=BS-857;Database=UserManagementSystem;Trusted_Connection=True;");
-//            }
-//        }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            if (!optionsBuilder.IsConfigured)
+            {
+                optionsBuilder.UseMySQL("server=containers-us-west-34.railway.app;uid=root;pwd=duAdo6cYZWNEXElxUKsf;port=7140;protocol=TCP;database=railway");
+            }
+        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -40,7 +33,7 @@ namespace Identity.Data.Entities
 
             modelBuilder.Entity<Application>(entity =>
             {
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.ApplicationName)
                     .IsRequired()
@@ -49,7 +42,7 @@ namespace Identity.Data.Entities
 
             modelBuilder.Entity<Organization>(entity =>
             {
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.OrganizationName)
                     .IsRequired()
@@ -58,7 +51,7 @@ namespace Identity.Data.Entities
 
             modelBuilder.Entity<Policy>(entity =>
             {
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
                 entity.HasOne(d => d.Role)
                     .WithMany(p => p.Policies)
@@ -81,7 +74,7 @@ namespace Identity.Data.Entities
 
             modelBuilder.Entity<Role>(entity =>
             {
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.RoleName)
                     .IsRequired()
@@ -96,7 +89,7 @@ namespace Identity.Data.Entities
 
             modelBuilder.Entity<Route>(entity =>
             {
-                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
                 entity.Property(e => e.Description).IsRequired();
 
@@ -135,6 +128,11 @@ namespace Identity.Data.Entities
                     .WithMany(p => p.Users)
                     .HasForeignKey(d => d.OrganizationId)
                     .HasConstraintName("FK_Users_Organizations");
+
+                entity.HasOne(d => d.Role)
+                    .WithMany(p => p.Users)
+                    .HasForeignKey(d => d.RoleId)
+                    .HasConstraintName("FK_Users_Roles");
             });
 
             modelBuilder.Entity<UserGroup>(entity =>
@@ -152,9 +150,45 @@ namespace Identity.Data.Entities
                     .HasConstraintName("FK_UserGroups_Organizations");
             });
 
-            OnModelCreatingPartial(modelBuilder);
+            var DefaultOrgs = new Organization[]
+            {
+                new Organization
+                {
+                    Id = 1,
+                    OrganizationName = "Blume Digital Corp.",
+                }
+            };
+            modelBuilder.Entity<Organization>().HasData(DefaultOrgs);
+
+            var SysAdminRole = new Role[] {
+                new Role
+                {
+                    Id = 1,
+                    RoleName = "System Admin",
+                    OrganizationId = 1,
+                }
+            };
+            modelBuilder.Entity<Role>().HasData(SysAdminRole);
+
+            var SystemAdminUsers = new User[]
+            {
+                new User {
+                    Id = new Guid().ToString(),
+                    FirstName = "Nafis",
+                    LastName = "Sadik",
+                    UserName = "nafis_sadik",
+                    AccountBalance = 999999999999,
+                    Status = 'A',
+                    OrganizationId = 1,
+                    RoleId = 1,
+                    Password = BCrypt.Net.BCrypt.EnhancedHashPassword("OBO13nafu.")
+                }
+            };
+            modelBuilder.Entity<User>().HasData(SystemAdminUsers);
+
+            //OnModelCreatingPartial(modelBuilder);
         }
 
-        partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
+        //partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     }
 }

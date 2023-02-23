@@ -1,6 +1,4 @@
-﻿#nullable disable
-
-namespace Identity.Data.Entities
+﻿namespace Identity.Data.Entities
 {
     public partial class Role
     {
@@ -15,5 +13,6 @@ namespace Identity.Data.Entities
 
         public virtual Organization Organization { get; set; }
         public virtual ICollection<Policy> Policies { get; set; }
+        public virtual ICollection<User> Users { get; set; }
     }
 }

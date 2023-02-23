@@ -12,7 +12,7 @@ namespace Inventory.Data
             {
                 opts.UseMySQL(
                     configuration["ConnectionStrings:Inventory"]
-                    //sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", RedBookInventoryContext.DefaultSchema).UseRelationalNulls()
+                    //, sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", RedBookInventoryContext.DefaultSchema).UseRelationalNulls()
                 );
             });
         }

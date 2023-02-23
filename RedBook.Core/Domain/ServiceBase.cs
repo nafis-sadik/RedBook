@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
+using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
+using System.Security.Claims;
 
 namespace RedBook.Core.Domain
 {
@@ -20,9 +22,18 @@ namespace RedBook.Core.Domain
         }
         public ILogger Logger { protected get; set; }
         public IObjectMapper Mapper { get; set; }
-        public ServiceBase(ILogger logger, IObjectMapper mapper/*, IClaimsPrincipalAccessor accessor*/)
-        {
 
+        private IClaimsPrincipalAccessor ClaimsPrincipalAccessor { get; }
+        protected ClaimsPrincipal? User
+        {
+            get { return ClaimsPrincipalAccessor?.GetCurrentPrincipal(); }
+        }
+
+        public ServiceBase(ILogger logger, IObjectMapper mapper, IClaimsPrincipalAccessor accessor)
+        {
+            Logger = logger;
+            Mapper = mapper;
+            ClaimsPrincipalAccessor = accessor;
         }
     }
 }

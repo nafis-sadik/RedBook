@@ -1,6 +1,4 @@
-﻿#nullable disable
-
-namespace Identity.Data.Entities
+﻿namespace Identity.Data.Entities
 {
     public partial class Policy
     {

@@ -1,27 +1,29 @@
-using Inventory.Data;
-using Inventory.WebAPI.Configurations;
+using Identity.Data;
+using Identity.WebAPI.Configurations;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-// Caching
-builder.Services.AddCaching(builder.Configuration);
+builder.Services.AddDatabaseConfigurations(opts =>
+{
+    opts.UseMySQL(
+        builder.Configuration["ConnectionStrings:Identity"]
+    //, sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", UserManagementSystemContext.DefaultSchema).UseRelationalNulls()
+    );
+});
 
-// Cross-Origin Requests (CORS)
-builder.Services.AddCors(builder.Configuration);
-
-builder.Services.AddDatabaseConfigurations(builder.Configuration);
+builder.Services.RosolveDependencies();
 
 builder.Services.AddControllers();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-// Database Initialization
-app.InitDatabase(builder.Environment);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -29,6 +31,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseAuthentication();
 
 app.UseHttpsRedirection();
 
