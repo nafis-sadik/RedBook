@@ -1,7 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+﻿using Identity.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace Identity.Data
 {
@@ -9,7 +8,8 @@ namespace Identity.Data
     {
         public static void AddDatabaseConfigurations(this IServiceCollection services, Action<DbContextOptionsBuilder> dbOptionsBuilder)
         {
-            services.AddDbContextPool<UserManagementSystemContext>(dbOptionsBuilder);
+            //services.AddDbContextPool<UserManagementSystemContext>(dbOptionsBuilder);
+            services.AddDbContext<UserManagementSystemContext>(dbOptionsBuilder);
 
             //services.AddDbContext<UserManagementSystemContext>(opts =>
             //{

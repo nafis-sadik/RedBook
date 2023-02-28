@@ -1,18 +1,16 @@
-﻿namespace Identity.Data.Entities
+﻿namespace Identity.Data.Entities;
+
+public partial class Role
 {
-    public partial class Role
-    {
-        public Role()
-        {
-            Policies = new HashSet<Policy>();
-        }
+    public int Id { get; set; }
 
-        public int Id { get; set; }
-        public string RoleName { get; set; }
-        public int OrganizationId { get; set; }
+    public string RoleName { get; set; }
 
-        public virtual Organization Organization { get; set; }
-        public virtual ICollection<Policy> Policies { get; set; }
-        public virtual ICollection<User> Users { get; set; }
-    }
+    public bool? IsGenericRole { get; set; }
+
+    public virtual ICollection<OrganizationRoleMapping> OrganizationRoleMappings { get; } = new List<OrganizationRoleMapping>();
+
+    public virtual ICollection<Policy> Policies { get; } = new List<Policy>();
+
+    public virtual ICollection<User> Users { get; } = new List<User>();
 }

@@ -2,6 +2,11 @@
 {
     public static class CommonConstants
     {
+        public static class GenericRoles
+        {
+            public const string Admin = "Admin";
+            public const string SystemAdmin = "System Admin";
+        }
         public static class Boolean
         {
             public const char TrueCh = 'Y';

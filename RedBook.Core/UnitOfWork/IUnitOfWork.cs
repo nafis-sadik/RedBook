@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RedBook.Core.Repositories;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +13,10 @@ namespace RedBook.Core.UnitOfWork
         /// Starts a unit of work.
         /// </summary>
         IUnitOfWorkManager Begin();
+
+        /// <summary>
+        /// Creates repository object for given entity using the DbContext of UnitOfWork
+        /// </summary>
+        IRepositoryBase<TEntity> GetRepository<TEntity>() where TEntity : class;
     }
 }

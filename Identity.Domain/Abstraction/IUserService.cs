@@ -10,12 +10,12 @@ namespace Identity.Domain.Abstraction
 
         // All User API
         Task<UserModel> UpdateOwnInformation(UserModel userModel);
-        Task<UserModel> GetOwnInformation(string userId);
-        Task<bool> ArchiveOwnId(string userId);
+        Task<UserModel?> GetOwnInformation(string userId);
 
         // Organization Admin API
         Task<UserModel> RegisterNewUser(UserModel userModel);
         Task<bool> ArchiveAccount(string userId);
+        Task<bool> UnArchiveAccount(string userId);
         Task<bool> ResetPassword(string userId);
 
         // System Admin API

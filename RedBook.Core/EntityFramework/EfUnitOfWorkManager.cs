@@ -13,8 +13,6 @@ namespace RedBook.Core.EntityFramework
             _dbContext = dbContext;
         }
 
-        public IRepositoryBase<TEntity> GetRepository<TEntity>() where TEntity : class => new RepositoryBase<TEntity>(_dbContext);
-
         public void Dispose() => _dbContext.Dispose();
         public void SaveChanges() => _dbContext.SaveChanges();
         public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();

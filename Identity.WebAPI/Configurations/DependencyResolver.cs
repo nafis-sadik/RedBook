@@ -11,11 +11,12 @@ namespace Identity.WebAPI.Configurations
 {
     public static class DependencyResolver
     {
-        public static void RosolveDependencies(this IServiceCollection services)
+        public static void RosolveDependencies(this IServiceCollection services, Action<DbContextOptionsBuilder> dbOptionsBuilder)
         {
-            CoreDependencyResolver<UserManagementSystemContext>.RosolveCoreDependencies(services);
+            CoreDependencyResolver<UserManagementSystemContext>.RosolveCoreDependencies(services, dbOptionsBuilder);
             // Services
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IClaimsPrincipalAccessor, HttpContextClaimsPrincipalAccessor>();
 
             // Repositories

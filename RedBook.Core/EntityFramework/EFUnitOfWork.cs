@@ -4,10 +4,10 @@ using RedBook.Core.UnitOfWork;
 
 namespace RedBook.Core.EntityFramework
 {
-    public class EFUnitOfWork<TDbContext> : IUnitOfWork where TDbContext : DbContext
+    public class EFUnitOfWork: IUnitOfWork
     {
-        private readonly TDbContext _dbContext;
-        public EFUnitOfWork(TDbContext dbContext)
+        private readonly DbContext _dbContext;
+        public EFUnitOfWork(DbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -16,5 +16,7 @@ namespace RedBook.Core.EntityFramework
         {
             return new EfUnitOfWorkManager(_dbContext);
         }
+
+        public IRepositoryBase<TEntity> GetRepository<TEntity>() where TEntity : class => new RepositoryBase<TEntity>(_dbContext);
     }
 }

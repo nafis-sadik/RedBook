@@ -1,4 +1,4 @@
-﻿using Identity.Data;
+﻿using Identity.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Identity.WebAPI.Configurations

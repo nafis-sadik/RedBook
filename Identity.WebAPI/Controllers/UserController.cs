@@ -1,6 +1,7 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Constants;
 
@@ -34,13 +35,6 @@ namespace Identity.WebAPI.Controllers
         [Route("SignUp")]
         public async Task<IActionResult> SignUp(UserModel user)
         {
-            //UserModel user;
-            //using (StreamReader reader = new StreamReader(Request.Body))
-            //{
-            //    string body = await reader.ReadToEndAsync();
-            //    user = JsonSerializer.Deserialize<UserModel>(body);
-            //}
-
             string? signUpResponse = await _userServices.SignUpAsync(user);
             if (signUpResponse == null)
                 return new ConflictObjectResult(new { Response = user.UserName + " " + CommonConstants.HttpResponseMessages.KeyExists });
@@ -51,13 +45,25 @@ namespace Identity.WebAPI.Controllers
         }
 
         [HttpDelete]
+        [Authorize]
         [Route("Archive/{id}")]
         public async Task<IActionResult> ArchiveAccount(string id)
         {
             if (await _userServices.ArchiveAccount(id))
                 return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
             else
-                return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
+                return new ForbidResult();
+        }
+
+        [HttpPut]
+        [Authorize]
+        [Route("Unarchive/{id}")]
+        public async Task<IActionResult> UnArchiveAccount(string id)
+        {
+            if (await _userServices.UnArchiveAccount(id))
+                return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
+            else
+                return new ForbidResult();
         }
 
         [HttpDelete]
@@ -69,13 +75,35 @@ namespace Identity.WebAPI.Controllers
             else
                 return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
         }
-
+        
         [HttpPut]
         [Route("ResetPassword/{id}")]
         public async Task<IActionResult> ResetPassword(string id)
         {
             if (await _userServices.ResetPassword(id))
                 return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
+            else
+                return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
+        }
+
+        [HttpGet]
+        [Route("GetOwnInformation/{id}")]
+        public async Task<IActionResult> GetOwnInformation(string userId)
+        {
+            var userData = await _userServices.GetOwnInformation(userId);
+            if (userData != null)
+                return new OkObjectResult(new { Response = userData });
+            else
+                return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
+        }
+
+        [HttpPut]
+        [Route("UpdateOwnInformation/{id}")]
+        public async Task<IActionResult> UpdateOwnInformation(UserModel user)
+        {
+            var userData = await _userServices.UpdateOwnInformation(user);
+            if (userData != null)
+                return new OkObjectResult(new { Response = userData });
             else
                 return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
         }

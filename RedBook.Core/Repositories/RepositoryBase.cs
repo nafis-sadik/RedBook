@@ -33,12 +33,7 @@ namespace RedBook.Core.Repositories
         public Task<PagedModel<TEntity>> GetPagedAsync(PagedModel<TEntity>? pagedModel) => throw new NotImplementedException();
 
         // Update
-        public virtual TEntity Update(TEntity entity)
-        {
-            EntityEntry<TEntity> entityEntry = _dbSet.Update(entity);
-            if (entityEntry.State == EntityState.Modified) return entityEntry.Entity;
-            else throw new InvalidOperationException($"Failed to update {entity}");
-        }
+        public virtual TEntity Update(TEntity entity) => _dbSet.Update(entity).Entity;
 
         // Delete
         public async Task<TEntity> DeleteAsync(object id)

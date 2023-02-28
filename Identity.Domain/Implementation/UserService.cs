@@ -26,14 +26,12 @@ namespace Identity.Domain.Implementation
             ILogger<UserService> logger,
             IObjectMapper mapper,
             IUnitOfWork unitOfWork,
-            IRepositoryBase<Role> roleRepo,
-            IRepositoryBase<User> userRepo,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor)
         {
-            _userRepo = userRepo;
             _unitOfWork = unitOfWork;
-            _roleRepo = roleRepo;
+            _userRepo = _unitOfWork.GetRepository<User>();
+            _roleRepo = _unitOfWork.GetRepository<Role>();
         }
 
         // Public API
@@ -49,11 +47,12 @@ namespace Identity.Domain.Implementation
             if (userEntity != null && BCrypt.Net.BCrypt.EnhancedVerify(userModel.Password, userEntity.Password))
             {
                 var roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Id == userEntity.RoleId);
-                List<Claim> claimList = new List<Claim>();
-                claimList.Add(new Claim("UserId", userEntity.Id));
-                claimList.Add(new Claim(ClaimTypes.Role, roleEntity?.Id.ToString()));
-                claimList.Add(new Claim(ClaimTypes.Role, roleEntity?.RoleName));
-                return GenerateJwtToken(claimList);
+
+                return GenerateJwtToken(new List<Claim> {
+                    new Claim("UserId", userEntity.Id),
+                    new Claim(ClaimTypes.Role, roleEntity?.Id.ToString()),
+                    new Claim("OrganizationId", userEntity?.OrganizationId.ToString())
+                });
             }
             else
                 return "";
@@ -74,46 +73,81 @@ namespace Identity.Domain.Implementation
                     FirstName = userModel.FirstName,
                     LastName = userModel.LastName,
                     UserName = string.IsNullOrEmpty(userModel.UserName) ? userModel.FirstName + userModel.LastName : userModel.UserName,
-                    Status = CommonConstants.StatusTypes.Active,
+                    //Status = CommonConstants.StatusTypes.Active,
                     Password = BCrypt.Net.BCrypt.EnhancedHashPassword(userModel.Password),
-                    AccountBalance = CommonConstants.DefaultCreditBalance
+                    AccountBalance = CommonConstants.DefaultCreditBalance,
+                    OrganizationId = null,
+                    RoleId = null
                 });
 
                 await transaction.SaveChangesAsync();
 
-                var roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Id == userEntity.RoleId);
-                List<Claim> claimList = new List<Claim>();
-                claimList.Add(new Claim("UserId", userEntity.Id));
-                claimList.Add(new Claim(ClaimTypes.Role, roleEntity?.Id.ToString()));
-                claimList.Add(new Claim(ClaimTypes.Role, roleEntity?.RoleName));
+                Role? roleEntity;
+                if (userEntity.RoleId != null)
+                {
+                    roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Id == userEntity.RoleId);
 
-                return GenerateJwtToken(claimList);
+                    return GenerateJwtToken(new List<Claim>
+                    {
+                        new Claim("UserId", userEntity.Id),
+                        new Claim(ClaimTypes.Role, roleEntity?.Id.ToString()),
+                        new Claim("OrganizationId", userEntity?.OrganizationId.ToString())
+                    });
+                }
+
+                return GenerateJwtToken(new List<Claim> { new Claim("UserId", userEntity.Id) });
             }
-
-            //EmailAddress email = _emailIdRepo.AsQueryable().FirstOrDefault(x => Convert.ToString(x.EmailAddress1) == user.DefaultEmail);
-            //if (email != null)
-            //{
-            //    token = CommonConstants.HttpResponseMessages.MailExists;
-            //    return null;
-            //}
-
-            //_emailIdRepo.Add(new EmailAddress
-            //{
-            //    UserId = userId,
-            //    IsPrimaryMail = CommonConstants.True,
-            //    EmailAddress1 = user.DefaultEmail,
-            //    Status = CommonConstants.StatusTypes.Pending
-            //});
         }
 
         // All User API
         public Task<UserModel> UpdateOwnInformation(UserModel userModel) => throw new NotImplementedException();
-        public Task<UserModel> GetOwnInformation(string userId) => throw new NotImplementedException();
-        public Task<bool> ArchiveOwnId(string userId) => throw new NotImplementedException();
+        public async Task<UserModel?> GetOwnInformation(string userId)
+        {
+            if (userId != User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId", StringComparison.InvariantCultureIgnoreCase))?.Value) return null;
+            User? userEntity = await _userRepo.GetByIdAsync(userId);
+            return Mapper.Map<UserModel>(userEntity);
+        }
 
         // Organization Admin API
         public Task<UserModel> RegisterNewUser(UserModel userModel) => throw new NotImplementedException();
-        public Task<bool> ArchiveAccount(string userId) => throw new NotImplementedException();
+        public async Task<bool> ArchiveAccount(string userId)
+        {
+            if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException("Invalid User Id");
+
+            var role = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
+
+            // Role Id for System Admin should always be 1
+            if (role != 1.ToString()) return false;
+
+            using (var transaction = _unitOfWork.Begin())
+            {
+                User? userEntity = await _userRepo.GetByIdAsync(userId);
+                userEntity.Status = CommonConstants.StatusTypes.Archived;
+                _userRepo.Update(userEntity);
+                await transaction.SaveChangesAsync();
+            }
+
+            return true;
+        }
+        public async Task<bool> UnArchiveAccount(string userId)
+        {
+            if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException("Invalid User Id");
+
+            var role = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
+
+            // Role Id for System Admin should always be 1
+            if (role != 1.ToString()) return false;
+
+            using (var transaction = _unitOfWork.Begin())
+            {
+                User? userEntity = await _userRepo.GetByIdAsync(userId);
+                userEntity.Status = CommonConstants.StatusTypes.Active;
+                _userRepo.Update(userEntity);
+                await transaction.SaveChangesAsync();
+            }
+
+            return true;
+        }
         public Task<bool> ResetPassword(string userId) => throw new NotImplementedException();
 
         // System Admin API
@@ -124,49 +158,21 @@ namespace Identity.Domain.Implementation
             // generate token that is valid for 7 days
             var tokenHandler = new JwtSecurityTokenHandler();
             byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(claimList),
-                Expires = DateTime.UtcNow.AddDays(CommonConstants.PasswordConfig.SaltExpire),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey),
-                SecurityAlgorithms.HmacSha256Signature)
-            };
-            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
+
+            SecurityToken token = new JwtSecurityToken
+            (
+                issuer: "Blume.Id",
+                audience: "User",
+                expires: DateTime.UtcNow.AddDays(CommonConstants.PasswordConfig.SaltExpire),
+                signingCredentials: new SigningCredentials(
+                    new SymmetricSecurityKey(tokenKey),
+                    SecurityAlgorithms.HmacSha256Signature
+                ),
+                claims: claimList
+            );
+
             return tokenHandler.WriteToken(token);
         }
-
-
-        //public bool ArchiveAccount(string userId)
-        //{
-        //    try
-        //    {
-        //        User user = _userRepo.AsQueryable().FirstOrDefault(x => x.UserId == userId);
-        //        if (user != null)
-        //        {
-        //            user.Status = CommonConstants.StatusTypes.Archived;
-        //            _userRepo.Update(user);
-        //            return true;
-        //        }
-
-        //        return false;
-        //    }
-        //    catch(Exception ex)
-        //    {
-        //        int pk = _crashLogRepo.AsQueryable().Count() + 1;
-
-        //        _crashLogRepo.Add(new Crashlog
-        //        {
-        //            CrashLogId = pk,
-        //            ClassName = "UserService",
-        //            MethodName = "ArchiveAccount",
-        //            ErrorMessage = ex.Message,
-        //            ErrorInner = (string.IsNullOrEmpty(ex.Message) || ex.Message == CommonConstants.MsgInInnerException ? ex.InnerException.Message : ex.Message),
-        //            Data = userId,
-        //            TimeStamp = DateTime.Now
-        //        });
-        //        return false;
-        //    }
-        //}
 
         //public bool DeleteAccount(string userId)
         //{
