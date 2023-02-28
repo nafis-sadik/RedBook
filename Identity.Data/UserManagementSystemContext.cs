@@ -157,13 +157,13 @@ namespace Identity.Data.Entities {
             var SysAdminRole = new Role[] {
                 new Role
                 {
-                    Id = 1,
+                    Id = CommonConstants.GenericRoles.SystemAdminRoleId,
                     RoleName = CommonConstants.GenericRoles.SystemAdmin,
                     IsGenericRole = true,
                 },
                 new Role
                 {
-                    Id = 2,
+                    Id = CommonConstants.GenericRoles.AdminRoleId,
                     RoleName = CommonConstants.GenericRoles.Admin,
                     IsGenericRole = true,
                 }
@@ -178,7 +178,7 @@ namespace Identity.Data.Entities {
                     LastName = "Sadik",
                     UserName = "nafis_sadik",
                     AccountBalance = int.MaxValue,
-                    Status = 'A',
+                    Status = CommonConstants.StatusTypes.Active,
                     OrganizationId = 1,
                     RoleId = 1,
                     Password = BCrypt.Net.BCrypt.EnhancedHashPassword("OBO13nafu.")

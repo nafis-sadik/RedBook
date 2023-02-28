@@ -8,17 +8,17 @@ namespace Identity.Domain.Abstraction
         Task<string?> SignUpAsync(UserModel userModel);
         Task<string?> LogInAsync(UserModel userModel);
 
-        // All User API
-        Task<UserModel> UpdateOwnInformation(UserModel userModel);
-        Task<UserModel?> GetOwnInformation(string userId);
-
         // Organization Admin API
         Task<UserModel> RegisterNewUser(UserModel userModel);
-        Task<bool> ArchiveAccount(string userId);
-        Task<bool> UnArchiveAccount(string userId);
         Task<bool> ResetPassword(string userId);
+
+        // All User API
+        Task<UserModel> UpdateOwnInformation(UserModel userModel);
+        Task<UserModel?> GetOwnInformation();
+        Task<bool> ArchiveAccount();
 
         // System Admin API
         Task<bool> DeleteAccount(string userId);
+        Task<bool> UnArchiveAccount(string userId);
     }
 }

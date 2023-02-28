@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using RedBook.Core.UnitOfWork;
 using Identity.Domain.Abstraction;
 using RedBook.Core.Security;
+using System.Data;
 
 namespace Identity.Domain.Implementation
 {
@@ -57,7 +58,6 @@ namespace Identity.Domain.Implementation
             else
                 return "";
         }
-
         public async Task<string?> SignUpAsync(UserModel userModel)
         {
             User? existingUser = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName);
@@ -73,7 +73,7 @@ namespace Identity.Domain.Implementation
                     FirstName = userModel.FirstName,
                     LastName = userModel.LastName,
                     UserName = string.IsNullOrEmpty(userModel.UserName) ? userModel.FirstName + userModel.LastName : userModel.UserName,
-                    //Status = CommonConstants.StatusTypes.Active,
+                    Status = CommonConstants.StatusTypes.Active,
                     Password = BCrypt.Net.BCrypt.EnhancedHashPassword(userModel.Password),
                     AccountBalance = CommonConstants.DefaultCreditBalance,
                     OrganizationId = null,
@@ -100,30 +100,112 @@ namespace Identity.Domain.Implementation
         }
 
         // All User API
-        public Task<UserModel> UpdateOwnInformation(UserModel userModel) => throw new NotImplementedException();
-        public async Task<UserModel?> GetOwnInformation(string userId)
+        public async Task<UserModel> UpdateOwnInformation(UserModel userModel)
         {
-            if (userId != User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId", StringComparison.InvariantCultureIgnoreCase))?.Value) return null;
+            var requestSenderId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
+            if (userModel.UserId != requestSenderId) throw new ArgumentException($"User {requestSenderId} is not allowed to update information of {userModel.UserId}");
+
+            User? userEntity = await _userRepo.GetByIdAsync(userModel.UserId);
+
+            using (var transaction = _unitOfWork.Begin())
+            {
+                userEntity.FirstName = userModel.FirstName;
+                userEntity.LastName = userModel.LastName;
+                userEntity.UserName = userModel.UserName;
+                userEntity.OrganizationId = userModel.OrganizationId;
+
+                userEntity = _userRepo.Update(userEntity);
+
+                await transaction.SaveChangesAsync();
+            }
+
+            return Mapper.Map<UserModel>(userEntity);
+        }
+        public async Task<UserModel?> GetOwnInformation()
+        {
+            var userId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId", StringComparison.InvariantCultureIgnoreCase))?.Value;
+            if(string.IsNullOrEmpty(userId)) throw new ArgumentException($"{nameof(userId)} is not valid user");
             User? userEntity = await _userRepo.GetByIdAsync(userId);
             return Mapper.Map<UserModel>(userEntity);
         }
-
-        // Organization Admin API
-        public Task<UserModel> RegisterNewUser(UserModel userModel) => throw new NotImplementedException();
-        public async Task<bool> ArchiveAccount(string userId)
+        public async Task<bool> ArchiveAccount()
         {
+            var userId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId", StringComparison.InvariantCultureIgnoreCase))?.Value;
+
             if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException("Invalid User Id");
-
-            var role = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
-
-            // Role Id for System Admin should always be 1
-            if (role != 1.ToString()) return false;
 
             using (var transaction = _unitOfWork.Begin())
             {
                 User? userEntity = await _userRepo.GetByIdAsync(userId);
                 userEntity.Status = CommonConstants.StatusTypes.Archived;
                 _userRepo.Update(userEntity);
+                await transaction.SaveChangesAsync();
+            }
+
+            return true;
+        }
+
+        // Organization Admin API
+        public async Task<UserModel> RegisterNewUser(UserModel userModel)
+        {
+            int roleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
+            int orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
+
+            if (roleId != CommonConstants.GenericRoles.SystemAdminRoleId && roleId != CommonConstants.GenericRoles.AdminRoleId)
+                throw new ArgumentException($"Only admin user can add new user to his organization");
+
+            var newUser = Mapper.Map<User>(userModel);
+
+            using (var transaction = _unitOfWork.Begin())
+            {
+                newUser.Id = new Guid().ToString();
+                newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
+                newUser.OrganizationId = orgId;
+                newUser.RoleId = userModel.RoleId;
+                newUser = await _userRepo.InsertAsync(newUser);
+
+                await transaction.SaveChangesAsync();
+            }
+
+            return Mapper.Map<UserModel>(newUser);
+        }
+        public async Task<bool> ResetPassword(string userId)
+        {
+            if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException("Invalid User Id");
+
+            var role = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
+
+            // Role Id for System Admin should always be 1
+            // Only System Admin user can unarchive an user
+            if (role != CommonConstants.GenericRoles.SystemAdminRoleId.ToString()) return false;
+
+            using (var transaction = _unitOfWork.Begin())
+            {
+                User? userEntity = await _userRepo.GetByIdAsync(userId);
+                userEntity.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
+                _userRepo.Update(userEntity);
+                await transaction.SaveChangesAsync();
+            }
+
+            return true;
+        }
+
+        // System Admin API
+        public async Task<bool> DeleteAccount(string userId)
+        {
+            if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException("Invalid User Id");
+
+            var role = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
+
+            // Role Id for System Admin should always be 1
+            // Only System Admin user can unarchive an user
+            if (role != CommonConstants.GenericRoles.SystemAdminRoleId.ToString()) return false;
+
+            using (var transaction = _unitOfWork.Begin())
+            {
+                User? userEntity = await _userRepo.GetByIdAsync(userId);
+                userEntity.Status = CommonConstants.StatusTypes.Active;
+                await _userRepo.DeleteAsync(userEntity);
                 await transaction.SaveChangesAsync();
             }
 
@@ -136,7 +218,8 @@ namespace Identity.Domain.Implementation
             var role = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
 
             // Role Id for System Admin should always be 1
-            if (role != 1.ToString()) return false;
+            // Only System Admin user can unarchive an user
+            if (role != CommonConstants.GenericRoles.SystemAdminRoleId.ToString()) return false;
 
             using (var transaction = _unitOfWork.Begin())
             {
@@ -148,11 +231,7 @@ namespace Identity.Domain.Implementation
 
             return true;
         }
-        public Task<bool> ResetPassword(string userId) => throw new NotImplementedException();
 
-        // System Admin API
-        public Task<bool> DeleteAccount(string userId) => throw new NotImplementedException();
-        
         private string GenerateJwtToken(List<Claim> claimList)
         {
             // generate token that is valid for 7 days
@@ -173,69 +252,5 @@ namespace Identity.Domain.Implementation
 
             return tokenHandler.WriteToken(token);
         }
-
-        //public bool DeleteAccount(string userId)
-        //{
-        //    try
-        //    {
-        //        User user = _userRepo.AsQueryable().FirstOrDefault(x => x.UserId == userId);
-        //        if (user != null)
-        //        {
-        //            user.Status = CommonConstants.StatusTypes.Archived;
-        //            _userRepo.Delete(user);
-        //            return true;
-        //        }
-
-        //        return false;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        int pk = _crashLogRepo.AsQueryable().Count() + 1;
-
-        //        _crashLogRepo.Add(new Crashlog
-        //        {
-        //            CrashLogId = pk,
-        //            ClassName = "UserService",
-        //            MethodName = "DeleteAccount",
-        //            ErrorMessage = ex.Message,
-        //            ErrorInner = (string.IsNullOrEmpty(ex.Message) || ex.Message == CommonConstants.MsgInInnerException ? ex.InnerException.Message : ex.Message),
-        //            Data = userId,
-        //            TimeStamp = DateTime.Now
-        //        });
-        //        return false;
-        //    }
-        //}
-
-        //public bool ResetPassword(string userId)
-        //{
-        //    try
-        //    {
-        //        User userData = _userRepo.AsQueryable().FirstOrDefault(x => x.UserId == userId);
-        //        if (userData != null)
-        //        {
-        //            userData.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("ADIBA<3nafis");
-        //            _userRepo.Update(userData);
-        //            return true;
-        //        }
-
-        //        return false;
-        //    } 
-        //    catch (Exception ex)
-        //    {
-        //        int pk = _crashLogRepo.AsQueryable().Count() + 1;   
-
-        //        _crashLogRepo.Add(new Crashlog
-        //        {
-        //            CrashLogId = pk,
-        //            ClassName = "UserService",
-        //            MethodName = "ResetPassword",
-        //            ErrorMessage = ex.Message,
-        //            ErrorInner = (string.IsNullOrEmpty(ex.Message) || ex.Message == CommonConstants.MsgInInnerException ? ex.InnerException.Message : ex.Message),
-        //            Data = userId,
-        //            TimeStamp = DateTime.Now
-        //        });
-        //        return false;
-        //    }
-        //}
     }
 }

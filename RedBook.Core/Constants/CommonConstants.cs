@@ -6,6 +6,8 @@
         {
             public const string Admin = "Admin";
             public const string SystemAdmin = "System Admin";
+            public const int SystemAdminRoleId = 1;
+            public const int AdminRoleId = 2;
         }
         public static class Boolean
         {

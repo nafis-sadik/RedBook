@@ -46,10 +46,10 @@ namespace Identity.WebAPI.Controllers
 
         [HttpDelete]
         [Authorize]
-        [Route("Archive/{id}")]
-        public async Task<IActionResult> ArchiveAccount(string id)
+        [Route("Archive")]
+        public async Task<IActionResult> ArchiveAccount()
         {
-            if (await _userServices.ArchiveAccount(id))
+            if (await _userServices.ArchiveAccount())
                 return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
             else
                 return new ForbidResult();
@@ -67,6 +67,7 @@ namespace Identity.WebAPI.Controllers
         }
 
         [HttpDelete]
+        [Authorize]
         [Route("Delete/{id}")]
         public async Task<IActionResult> PermanantDelete(string id)
         {
@@ -77,6 +78,7 @@ namespace Identity.WebAPI.Controllers
         }
         
         [HttpPut]
+        [Authorize]
         [Route("ResetPassword/{id}")]
         public async Task<IActionResult> ResetPassword(string id)
         {
@@ -87,10 +89,11 @@ namespace Identity.WebAPI.Controllers
         }
 
         [HttpGet]
-        [Route("GetOwnInformation/{id}")]
-        public async Task<IActionResult> GetOwnInformation(string userId)
+        [Authorize]
+        [Route("GetOwnInformation")]
+        public async Task<IActionResult> GetOwnInformation()
         {
-            var userData = await _userServices.GetOwnInformation(userId);
+            var userData = await _userServices.GetOwnInformation();
             if (userData != null)
                 return new OkObjectResult(new { Response = userData });
             else
@@ -98,7 +101,8 @@ namespace Identity.WebAPI.Controllers
         }
 
         [HttpPut]
-        [Route("UpdateOwnInformation/{id}")]
+        [Authorize]
+        [Route("UpdateOwnInformation")]
         public async Task<IActionResult> UpdateOwnInformation(UserModel user)
         {
             var userData = await _userServices.UpdateOwnInformation(user);
