@@ -8,8 +8,8 @@ namespace RedBook.Core.Domain
 {
     public class ServiceBase
     {
-        private IUnitOfWorkManager _unitOfWorkManager;
-        public IUnitOfWorkManager UnitOfWorkManager
+        private IUnitOfWork _unitOfWorkManager;
+        public IUnitOfWork UnitOfWorkManager
         {
             get
             {
@@ -29,11 +29,12 @@ namespace RedBook.Core.Domain
             get { return ClaimsPrincipalAccessor?.GetCurrentPrincipal(); }
         }
 
-        public ServiceBase(ILogger logger, IObjectMapper mapper, IClaimsPrincipalAccessor accessor)
+        public ServiceBase(ILogger logger, IObjectMapper mapper, IClaimsPrincipalAccessor accessor, IUnitOfWork unitOfWork)
         {
             Logger = logger;
             Mapper = mapper;
             ClaimsPrincipalAccessor = accessor;
+            _unitOfWorkManager = unitOfWork;
         }
     }
 }

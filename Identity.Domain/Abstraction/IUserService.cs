@@ -20,5 +20,6 @@ namespace Identity.Domain.Abstraction
         // System Admin API
         Task<bool> DeleteAccount(string userId);
         Task<bool> UnArchiveAccount(string userId);
+        Task<UserModel> RegisterAdminUser(UserModel userModel);
     }
 }

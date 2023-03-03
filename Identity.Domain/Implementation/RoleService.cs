@@ -16,7 +16,6 @@ namespace Identity.Domain.Implementation
 {
     public class RoleService : ServiceBase, IRoleService
     {
-        private readonly IUnitOfWork _unitOfWork;
         private readonly IRepositoryBase<User> _userRepo;
         private readonly IRepositoryBase<Role> _roleRepo;
         private readonly IRepositoryBase<OrganizationRoleMapping> _roleOrganizationMappingRepo;
@@ -25,12 +24,11 @@ namespace Identity.Domain.Implementation
             IObjectMapper mapper,
             IUnitOfWork unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor)
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
         {
-            _unitOfWork = unitOfWork;
-            _userRepo = _unitOfWork.GetRepository<User>();
-            _roleRepo = _unitOfWork.GetRepository<Role>();
-            _roleOrganizationMappingRepo = _unitOfWork.GetRepository<OrganizationRoleMapping>();
+            _userRepo = unitOfWork.GetRepository<User>();
+            _roleRepo = unitOfWork.GetRepository<Role>();
+            _roleOrganizationMappingRepo = unitOfWork.GetRepository<OrganizationRoleMapping>();
         }
 
         // Testing required
@@ -45,9 +43,9 @@ namespace Identity.Domain.Implementation
                 throw new ArgumentException($"Invalid user role");
 
 
-            Role roleEntity;
+            Role? roleEntity;
 
-            using(var transaction = _unitOfWork.Begin())
+            using(var transaction = UnitOfWorkManager.Begin())
             {
                 int[] rolesOfUserOrg = _roleOrganizationMappingRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId).Select(x => x.RoleId).ToArray();
                 roleEntity = _roleRepo.UnTrackableQuery().FirstOrDefault(x => x.RoleName == role.RoleName && rolesOfUserOrg.Contains(x.Id));
@@ -106,7 +104,7 @@ namespace Identity.Domain.Implementation
             if (roleToDelete.OrganizationRoleMappings.Where(x => x.OrganizationId.Equals(orgId)).Count() <= 0)
                 throw new ArgumentException("Users can delete only the roles of their own organization");
 
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 await _roleRepo.DeleteAsync(roleToDelete);
                 await transaction.SaveChangesAsync();
@@ -152,7 +150,7 @@ namespace Identity.Domain.Implementation
             var userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value);
 
             Role roleEntity;
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 roleEntity = await _roleRepo.GetByIdAsync(role.Id);
                 roleEntity.RoleName = role.RoleName;

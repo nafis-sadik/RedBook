@@ -111,5 +111,16 @@ namespace Identity.WebAPI.Controllers
             else
                 return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
         }
+
+        [HttpPost]
+        [Route("RegisterAdmin")]
+        public async Task<IActionResult> RegisterAdminToOrganization(UserModel user)
+        {
+            user = await _userServices.RegisterAdminUser(user);
+            if (user != null)
+                return Ok(new { Response = user });
+
+            return Conflict(new { Response = user });
+        }
     }
 }

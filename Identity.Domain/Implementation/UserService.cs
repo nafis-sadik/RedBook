@@ -19,7 +19,6 @@ namespace Identity.Domain.Implementation
 {
     public class UserService : ServiceBase, IUserService
     {
-        private readonly IUnitOfWork _unitOfWork;
         private readonly IRepositoryBase<User> _userRepo;
         private readonly IRepositoryBase<Role> _roleRepo;
 
@@ -28,11 +27,10 @@ namespace Identity.Domain.Implementation
             IObjectMapper mapper,
             IUnitOfWork unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor)
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
         {
-            _unitOfWork = unitOfWork;
-            _userRepo = _unitOfWork.GetRepository<User>();
-            _roleRepo = _unitOfWork.GetRepository<Role>();
+            _userRepo = unitOfWork.GetRepository<User>();
+            _roleRepo = unitOfWork.GetRepository<Role>();
         }
 
         // Public API
@@ -65,7 +63,7 @@ namespace Identity.Domain.Implementation
             if (existingUser != null)
                 return null;
 
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 User? userEntity = await _userRepo.InsertAsync(new User
                 {
@@ -107,7 +105,7 @@ namespace Identity.Domain.Implementation
 
             User? userEntity = await _userRepo.GetByIdAsync(userModel.UserId);
 
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 userEntity.FirstName = userModel.FirstName;
                 userEntity.LastName = userModel.LastName;
@@ -134,7 +132,7 @@ namespace Identity.Domain.Implementation
 
             if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException("Invalid User Id");
 
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 User? userEntity = await _userRepo.GetByIdAsync(userId);
                 userEntity.Status = CommonConstants.StatusTypes.Archived;
@@ -156,7 +154,7 @@ namespace Identity.Domain.Implementation
 
             var newUser = Mapper.Map<User>(userModel);
 
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 newUser.Id = new Guid().ToString();
                 newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
@@ -179,7 +177,7 @@ namespace Identity.Domain.Implementation
             // Only System Admin user can unarchive an user
             if (role != CommonConstants.GenericRoles.SystemAdminRoleId.ToString()) return false;
 
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 User? userEntity = await _userRepo.GetByIdAsync(userId);
                 userEntity.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
@@ -201,7 +199,7 @@ namespace Identity.Domain.Implementation
             // Only System Admin user can unarchive an user
             if (role != CommonConstants.GenericRoles.SystemAdminRoleId.ToString()) return false;
 
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 User? userEntity = await _userRepo.GetByIdAsync(userId);
                 userEntity.Status = CommonConstants.StatusTypes.Active;
@@ -221,7 +219,7 @@ namespace Identity.Domain.Implementation
             // Only System Admin user can unarchive an user
             if (role != CommonConstants.GenericRoles.SystemAdminRoleId.ToString()) return false;
 
-            using (var transaction = _unitOfWork.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 User? userEntity = await _userRepo.GetByIdAsync(userId);
                 userEntity.Status = CommonConstants.StatusTypes.Active;
@@ -231,7 +229,32 @@ namespace Identity.Domain.Implementation
 
             return true;
         }
+        public async Task<UserModel> RegisterAdminUser(UserModel userModel)
+        {
+            var role = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
+            if (!role.Equals(CommonConstants.GenericRoles.SystemAdminRoleId.ToString()))
+                throw new ArgumentException($"Only System Admin users have access to execute this operation");
 
+            var userEntity = new User
+            {
+                Id = new Guid().ToString(),
+                AccountBalance = 0,
+                FirstName = userModel.FirstName,
+                LastName = userModel.LastName,
+                OrganizationId = userModel.OrganizationId,
+                Password = BCrypt.Net.BCrypt.EnhancedHashPassword("OBO13nafu."),
+                RoleId = CommonConstants.GenericRoles.AdminRoleId,
+                Status = CommonConstants.StatusTypes.Active,
+                UserName = userModel.UserName
+            };
+
+            using(var transaction = UnitOfWorkManager.Begin())
+            {
+                userEntity = await _userRepo.InsertAsync(userEntity);
+                await transaction.SaveChangesAsync();
+            }
+            return Mapper.Map<UserModel>(userEntity);
+        }
         private string GenerateJwtToken(List<Claim> claimList)
         {
             // generate token that is valid for 7 days
