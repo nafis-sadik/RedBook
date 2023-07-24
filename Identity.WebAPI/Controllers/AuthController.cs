@@ -9,10 +9,10 @@ namespace Identity.WebAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class UserController : ControllerBase
+    public class AuthController : ControllerBase
     {
         private readonly IUserService _userServices;
-        public UserController(IUserService userServices)
+        public AuthController(IUserService userServices)
         {
             _userServices = userServices;
         }

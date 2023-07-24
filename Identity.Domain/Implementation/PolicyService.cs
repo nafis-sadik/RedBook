@@ -9,12 +9,7 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Identity.Domain.Implementation
 {

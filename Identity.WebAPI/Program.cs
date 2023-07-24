@@ -1,14 +1,18 @@
-using Identity.Data;
 using Identity.Data.Models;
 using Identity.WebAPI.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RedBook.Core.Constants;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// 
+// Cross-Origin Requests (CORS)
+builder.Services.AddCors(Configuration);
 
 // Add services to the container.
 
@@ -85,6 +89,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors(DefaultCorsConfig.Policy);
+
 app.UseAuthentication();
 
 app.UseHttpsRedirection();
