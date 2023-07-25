@@ -4,6 +4,8 @@ using RedBook.Core.Constants;
 namespace Identity.Data.Entities {
     public partial class UserManagementSystemContext : DbContext
     {
+        public const string DefaultSchema = "InnoDB";
+
         public UserManagementSystemContext()
         {
         }
@@ -27,8 +29,8 @@ namespace Identity.Data.Entities {
 
         public virtual DbSet<User> Users { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseSqlServer("User Id=DESKTOP-SLFI9O5;Database=UserManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;");
+        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        //    => optionsBuilder.UseSqlServer("User Id=DESKTOP-SLFI9O5;Database=UserManagementSystem;Trusted_Connection=True;TrustServerCertificate=True;");
 
         //    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         //    {

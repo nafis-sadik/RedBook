@@ -1,103 +1,100 @@
-using Identity.Data.Models;
+using Identity.Data;
 using Identity.WebAPI.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RedBook.Core.Constants;
 using System.Text;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// 
-// Cross-Origin Requests (CORS)
-builder.Services.AddCors(Configuration);
-
-// Add services to the container.
-
-//builder.Services.AddDatabaseConfigurations(opts =>
-//{
-//    opts.UseSqlServer(
-//        builder.Configuration["ConnectionStrings:IdentityLocal"]
-//    );
-//    //opts.UseMySQL(
-//    //    builder.Configuration["ConnectionStrings:Identity"], sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", UserManagementSystemContext.DefaultSchema).UseRelationalNulls()
-//    //);
-//});
-
-builder.Services.RosolveDependencies(opts =>
+namespace Identity.WebAPI
 {
-    opts.UseSqlServer(
-        builder.Configuration["ConnectionStrings:IdentityLocal"]
-    );
-    //opts.UseMySQL(
-    //    builder.Configuration["ConnectionStrings:Identity"], sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", UserManagementSystemContext.DefaultSchema).UseRelationalNulls()
-    //);
-});
-
-builder.Services.AddControllers();
-
-builder.Services.AddAuthentication(x =>
-{
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(x =>
-{
-    x.RequireHttpsMetadata = false;
-    x.SaveToken = true;
-    x.TokenValidationParameters = new TokenValidationParameters
+    public class Program
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt)),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
-});
-
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-
-builder.Services.AddSwaggerGen(x => {
-    x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
-        In=ParameterLocation.Header,
-        Description="Please enter token",
-        Name="Authorization",
-        Type=SecuritySchemeType.Http,
-        BearerFormat="JWT",
-        Scheme="bearer"
-    });
-
-    x.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        public static void Main(string[] args)
         {
-            new OpenApiSecurityScheme{
-                Reference=new OpenApiReference{
-                    Type=ReferenceType.SecurityScheme,
-                    Id="Bearer"
-                }
-            },
-            new string[] { }
+            var builder = WebApplication.CreateBuilder(args);
+
+            // Add services to the container.
+            // Cross-Origin Requests (CORS)
+            builder.Services.AddCorsIdentity(builder.Configuration);
+
+            // Database Configuration
+            builder.Services.AddDatabaseConfigurations(builder.Configuration);
+
+            // IoC Container & DbContext
+            builder.Services.RosolveDependencies();
+
+            // Add Controllers
+            builder.Services.AddControllers();
+
+            // JWT Bearer token based authentication
+            builder.Services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            });
+
+            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddEndpointsApiExplorer();
+
+            // Swagger Configurations
+            builder.Services.AddSwaggerGen(x => {
+                x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    In = ParameterLocation.Header,
+                    Description = "Please enter token",
+                    Name = "Authorization",
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = "bearer"
+                });
+
+                x.AddSecurityRequirement(new OpenApiSecurityRequirement {
+                    {
+                        new OpenApiSecurityScheme{
+                            Reference=new OpenApiReference{
+                                Type=ReferenceType.SecurityScheme,
+                                Id="Bearer"
+                            }
+                        },
+                        new string[] { }
+                    }
+                });
+            });
+
+            var app = builder.Build();
+
+            // Database Initialization
+            app.InitDatabase(builder.Environment);
+            // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
+            app.UseCors(DefaultCorsConfig.Policy);
+
+            app.UseAuthentication();
+
+            app.UseHttpsRedirection();
+
+            app.UseAuthorization();
+
+            app.MapControllers();
+
+            app.Run();
         }
-    });
-});
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    }
 }
-
-app.UseCors(DefaultCorsConfig.Policy);
-
-app.UseAuthentication();
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();

@@ -4,7 +4,7 @@
     {
         public const string Policy = "AllowSpecificOrigin";
 
-        public static IServiceCollection AddCors(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddCorsIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddCors(opts =>
              opts.AddPolicy(Policy, builder =>

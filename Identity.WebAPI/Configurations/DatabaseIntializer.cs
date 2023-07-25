@@ -10,12 +10,12 @@ namespace Identity.WebAPI.Configurations
 
             using (var scope = app.ApplicationServices.CreateScope())
             {
-                var context = scope.ServiceProvider.GetRequiredService<UserManagementSystemContext>();
+                UserManagementSystemContext context = scope.ServiceProvider.GetRequiredService<UserManagementSystemContext>();
 
                 // Only run database migrations in development environment
                 if (env.IsDevelopment())
                 {
-                    if (context.Database.GetPendingMigrations().Any())
+                    if (context != null && context.Database.GetPendingMigrations().Any())
                     {
                         context.Database.Migrate();
                     }

@@ -10,9 +10,9 @@ namespace RedBook.Core
 {
     public static class CoreDependencyResolver<TDbContext> where TDbContext : DbContext
     {
-        public static void RosolveCoreDependencies(IServiceCollection services, Action<DbContextOptionsBuilder> dbOptionsBuilder)
+        public static void RosolveCoreDependencies(IServiceCollection services)
         {
-            services.AddDbContext<DbContext, TDbContext>(dbOptionsBuilder);
+            services.AddDbContext<DbContext, TDbContext>();
 
             // Unit Of Work
             services.AddScoped<IUnitOfWork, EFUnitOfWork>();

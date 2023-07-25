@@ -10,12 +10,12 @@ namespace Inventory.WebAPI.Configurations
 
             using (var scope = app.ApplicationServices.CreateScope())
             {
-                var context = scope.ServiceProvider.GetRequiredService<RedBookInventoryContext>();
+                var context = scope.ServiceProvider.GetService<RedBookInventoryContext>();
 
                 // Only run database migrations in development environment
                 if (env.IsDevelopment())
                 {
-                    if (context.Database.GetPendingMigrations().Any())
+                    if (context != null && context.Database.GetPendingMigrations().Any())
                     {
                         context.Database.Migrate();
                     }
