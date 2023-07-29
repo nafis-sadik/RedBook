@@ -13,9 +13,9 @@ namespace Identity.Data
             {
                 opts.UseMySQL(
                     configuration["ConnectionStrings:Identity"],
-                    //sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory").UseRelationalNulls()
+                    sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory").UseRelationalNulls()
                     //b => b.MigrationsAssembly("Identity")
-                    sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", UserManagementSystemContext.DefaultSchema).UseRelationalNulls()
+                    //sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", UserManagementSystemContext.DefaultSchema).UseRelationalNulls()
                 );
             });
         }

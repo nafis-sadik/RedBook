@@ -1,4 +1,7 @@
-﻿namespace Identity.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Identity.Data.Entities;
 
 public partial class User
 {
@@ -12,11 +15,11 @@ public partial class User
 
     public string Password { get; set; }
 
-    public int? OrganizationId { get; set; }
+    public int OrganizationId { get; set; }
 
-    public int? RoleId { get; set; }
+    public int RoleId { get; set; }
 
-    public char Status { get; set; }
+    public string Status { get; set; }
 
     public int? AccountBalance { get; set; }
 

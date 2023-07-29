@@ -1,4 +1,7 @@
-﻿namespace Identity.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Identity.Data.Entities;
 
 public partial class Organization
 {
@@ -6,7 +9,7 @@ public partial class Organization
 
     public string OrganizationName { get; set; }
 
-    public virtual ICollection<OrganizationRoleMapping> OrganizationRoleMappings { get; } = new List<OrganizationRoleMapping>();
+    public virtual ICollection<OrganizationRoleMapping> OrganizationRoleMappings { get; set; } = new List<OrganizationRoleMapping>();
 
-    public virtual ICollection<User> Users { get; } = new List<User>();
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

@@ -1,4 +1,7 @@
-﻿namespace Identity.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Identity.Data.Entities;
 
 public partial class Application
 {
@@ -6,5 +9,5 @@ public partial class Application
 
     public string ApplicationName { get; set; }
 
-    public virtual ICollection<Route> Routes { get; } = new List<Route>();
+    public virtual ICollection<Route> Routes { get; set; } = new List<Route>();
 }

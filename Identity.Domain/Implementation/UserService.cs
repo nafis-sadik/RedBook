@@ -58,43 +58,40 @@ namespace Identity.Domain.Implementation
         }
         public async Task<string?> SignUpAsync(UserModel userModel)
         {
-            User? existingUser = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName);
+            throw new NotImplementedException();
+            //User? existingUser = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName);
 
-            if (existingUser != null)
-                return null;
+            //if (existingUser != null)
+            //    return null;
 
-            using (var transaction = UnitOfWorkManager.Begin())
-            {
-                User? userEntity = await _userRepo.InsertAsync(new User
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    FirstName = userModel.FirstName,
-                    LastName = userModel.LastName,
-                    UserName = string.IsNullOrEmpty(userModel.UserName) ? userModel.FirstName + userModel.LastName : userModel.UserName,
-                    Status = CommonConstants.StatusTypes.Active,
-                    Password = BCrypt.Net.BCrypt.EnhancedHashPassword(userModel.Password),
-                    AccountBalance = CommonConstants.DefaultCreditBalance,
-                    OrganizationId = null,
-                    RoleId = null
-                });
+            //using (var transaction = UnitOfWorkManager.Begin())
+            //{
+            //    User? userEntity = await _userRepo.InsertAsync(new User
+            //    {
+            //        Id = Guid.NewGuid().ToString(),
+            //        FirstName = userModel.FirstName,
+            //        LastName = userModel.LastName,
+            //        UserName = string.IsNullOrEmpty(userModel.UserName) ? userModel.FirstName + userModel.LastName : userModel.UserName,
+            //        Status = CommonConstants.StatusTypes.Active.ToString(),
+            //        Password = BCrypt.Net.BCrypt.EnhancedHashPassword(userModel.Password),
+            //        AccountBalance = CommonConstants.DefaultCreditBalance,
+            //        OrganizationId = null,
+            //        RoleId = null
+            //    });
 
-                await transaction.SaveChangesAsync();
+            //    await transaction.SaveChangesAsync();
 
-                Role? roleEntity;
-                if (userEntity.RoleId != null)
-                {
-                    roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Id == userEntity.RoleId);
+            //    Role? roleEntity;
 
-                    return GenerateJwtToken(new List<Claim>
-                    {
-                        new Claim("UserId", userEntity.Id),
-                        new Claim(ClaimTypes.Role, roleEntity?.Id.ToString()),
-                        new Claim("OrganizationId", userEntity?.OrganizationId.ToString())
-                    });
-                }
+            //    roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Id == userEntity.RoleId);
 
-                return GenerateJwtToken(new List<Claim> { new Claim("UserId", userEntity.Id) });
-            }
+            //    return GenerateJwtToken(new List<Claim>
+            //        {
+            //            new Claim("UserId", userEntity.Id),
+            //            new Claim(ClaimTypes.Role, roleEntity?.Id.ToString()),
+            //            new Claim("OrganizationId", userEntity?.OrganizationId.ToString())
+            //        });
+            //}
         }
 
         // All User API
@@ -135,7 +132,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 User? userEntity = await _userRepo.GetByIdAsync(userId);
-                userEntity.Status = CommonConstants.StatusTypes.Archived;
+                userEntity.Status = CommonConstants.StatusTypes.Archived.ToString();
                 _userRepo.Update(userEntity);
                 await transaction.SaveChangesAsync();
             }
@@ -202,7 +199,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 User? userEntity = await _userRepo.GetByIdAsync(userId);
-                userEntity.Status = CommonConstants.StatusTypes.Active;
+                userEntity.Status = CommonConstants.StatusTypes.Active.ToString();
                 await _userRepo.DeleteAsync(userEntity);
                 await transaction.SaveChangesAsync();
             }
@@ -222,7 +219,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 User? userEntity = await _userRepo.GetByIdAsync(userId);
-                userEntity.Status = CommonConstants.StatusTypes.Active;
+                userEntity.Status = CommonConstants.StatusTypes.Active.ToString();
                 _userRepo.Update(userEntity);
                 await transaction.SaveChangesAsync();
             }
@@ -244,7 +241,7 @@ namespace Identity.Domain.Implementation
                 OrganizationId = userModel.OrganizationId,
                 Password = BCrypt.Net.BCrypt.EnhancedHashPassword("OBO13nafu."),
                 RoleId = CommonConstants.GenericRoles.AdminRoleId,
-                Status = CommonConstants.StatusTypes.Active,
+                Status = CommonConstants.StatusTypes.Active.ToString(),
                 UserName = userModel.UserName
             };
 

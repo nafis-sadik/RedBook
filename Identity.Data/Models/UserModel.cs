@@ -13,6 +13,6 @@
         public string Password { get; set; }
         public decimal? AccountBalance { get; set; }
         public string DefaultEmail { get; set; }
-        public int? OrganizationId { get; set; }
+        public int OrganizationId { get; set; }
     }
 }
