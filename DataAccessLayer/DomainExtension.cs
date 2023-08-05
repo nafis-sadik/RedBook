@@ -10,8 +10,8 @@ namespace Inventory.Data
         {
             services.AddDbContext<RedBookInventoryContext>(opts =>
             {
-                opts.UseMySQL(
-                    configuration["ConnectionStrings:Inventory"]
+                opts.UseSqlServer(
+                    configuration["ConnectionStrings:InventoryMSSql"]
                     //, sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", RedBookInventoryContext.DefaultSchema).UseRelationalNulls()
                 );
             });
