@@ -11,8 +11,8 @@ namespace Identity.Data
         {
             services.AddDbContext<UserManagementSystemContext>(opts =>
             {
-                opts.UseMySQL(
-                    configuration["ConnectionStrings:Identity"],
+                opts.UseSqlServer(
+                    configuration["ConnectionStrings:IdentityMSSql"],
                     sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory").UseRelationalNulls()
                     //b => b.MigrationsAssembly("Identity")
                     //sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory", UserManagementSystemContext.DefaultSchema).UseRelationalNulls()
