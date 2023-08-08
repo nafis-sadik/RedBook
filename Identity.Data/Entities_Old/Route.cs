@@ -1,8 +1,11 @@
-﻿namespace Identity.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Identity.Data.Entities;
 
 public partial class Route
 {
-    public int RouteId { get; set; }
+    public int Id { get; set; }
 
     public string RouteName { get; set; }
 
@@ -14,5 +17,5 @@ public partial class Route
 
     public virtual Application Application { get; set; }
 
-    public virtual ICollection<RoleRouteMapping> RoleRouteMappings { get; set; } = new List<RoleRouteMapping>();
+    public virtual ICollection<Policy> Policies { get; set; } = new List<Policy>();
 }

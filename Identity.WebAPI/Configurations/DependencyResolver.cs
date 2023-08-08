@@ -11,7 +11,7 @@ namespace Identity.WebAPI.Configurations
     {
         public static void RosolveDependencies(this IServiceCollection services)
         {
-            CoreDependencyResolver<UserManagementSystemContext>.RosolveCoreDependencies(services);
+            CoreDependencyResolver<RedbookIdentityContext>.RosolveCoreDependencies(services);
             // Services
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IRoleService, RoleService>();

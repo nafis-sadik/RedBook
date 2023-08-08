@@ -48,7 +48,7 @@ namespace Identity.Domain.Implementation
             using(var transaction = UnitOfWorkManager.Begin())
             {
                 int[] rolesOfUserOrg = _roleOrganizationMappingRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId).Select(x => x.RoleId).ToArray();
-                roleEntity = _roleRepo.UnTrackableQuery().FirstOrDefault(x => x.RoleName == role.RoleName && rolesOfUserOrg.Contains(x.Id));
+                roleEntity = _roleRepo.UnTrackableQuery().FirstOrDefault(x => x.RoleName == role.RoleName && rolesOfUserOrg.Contains(x.RoleId));
 
                 if (roleEntity != null)
                     throw new ArgumentException($"Role already exists for your organization");
@@ -57,7 +57,7 @@ namespace Identity.Domain.Implementation
                 {
                     roleEntity = await _roleRepo.InsertAsync(new Role
                     {
-                        IsGenericRole = false,
+                        IsGenericRole = 0,
                         RoleName = role.RoleName
                     });
                 }
@@ -65,7 +65,7 @@ namespace Identity.Domain.Implementation
                 {
                     roleEntity = await _roleRepo.InsertAsync(new Role
                     {
-                        IsGenericRole = true,
+                        IsGenericRole = 1,
                         RoleName = role.RoleName
                     });
                 }
@@ -77,7 +77,7 @@ namespace Identity.Domain.Implementation
                 await _roleOrganizationMappingRepo.InsertAsync(new OrganizationRoleMapping
                 {
                     OrganizationId = orgId,
-                    RoleId = roleEntity.Id
+                    RoleId = roleEntity.RoleId
                 });
 
                 await transaction.SaveChangesAsync();
@@ -118,7 +118,7 @@ namespace Identity.Domain.Implementation
             Role? roleEntity = await _roleRepo.GetByIdAsync(roleId);
             Role? userRoleEntity = await _roleRepo.GetByIdAsync(userRoleId);
 
-            if (roleEntity.OrganizationRoleMappings.Where(x => x.Organization.Id.Equals(orgId)).Count() <= 0 && roleEntity.IsGenericRole == false)
+            if (roleEntity.OrganizationRoleMappings.Where(x => x.Organization.OrganizationId.Equals(orgId)).Count() <= 0 && roleEntity.IsGenericRole == 0)
                 throw new ArgumentException($"Role identified by {orgId} does not belong to your organization");
 
             if (!userRoleEntity.RoleName.ToLower().Equals(CommonConstants.GenericRoles.Admin.ToLower()) && !userRoleEntity.RoleName.ToLower().Equals(CommonConstants.GenericRoles.SystemAdmin.ToLower()))
@@ -130,7 +130,7 @@ namespace Identity.Domain.Implementation
         {
             int orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
             //var roleOrgMapping = _roleOrganizationMappingRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId).Select(x => x.RoleId);
-            var roleEntities = _roleRepo.TrackableQuery().Where(x => _roleOrganizationMappingRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId).Select(x => x.RoleId).Contains(x.Id)).ToList();
+            var roleEntities = _roleRepo.TrackableQuery().Where(x => _roleOrganizationMappingRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId).Select(x => x.RoleId).Contains(x.RoleId)).ToList();
             
             List<RoleModel> roleModelCollection = new List<RoleModel>();
             

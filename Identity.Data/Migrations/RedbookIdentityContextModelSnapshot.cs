@@ -3,58 +3,61 @@ using System;
 using Identity.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
 namespace Identity.Data.Migrations
 {
-    [DbContext(typeof(UserManagementSystemContext))]
-    partial class UserManagementSystemContextModelSnapshot : ModelSnapshot
+    [DbContext(typeof(RedbookIdentityContext))]
+    partial class RedbookIdentityContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "7.0.3")
-                .HasAnnotation("Relational:MaxIdentifierLength", 64);
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("Identity.Data.Entities.Application", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("ApplicationId")
                         .HasColumnType("int");
 
                     b.Property<string>("ApplicationName")
                         .IsRequired()
                         .HasMaxLength(50)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
-                    b.HasKey("Id");
+                    b.HasKey("ApplicationId")
+                        .HasName("PK__Applicat__3214EC07D6504A6D");
 
                     b.ToTable("Applications");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Organization", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("OrganizationId")
                         .HasColumnType("int");
 
                     b.Property<string>("OrganizationName")
                         .IsRequired()
                         .HasMaxLength(50)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
-                    b.HasKey("Id");
+                    b.HasKey("OrganizationId");
 
                     b.ToTable("Organizations");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.OrganizationRoleMapping", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("MappingId")
                         .HasColumnType("int");
 
                     b.Property<int>("OrganizationId")
@@ -63,25 +66,37 @@ namespace Identity.Data.Migrations
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("MappingId");
 
-                    b.HasIndex(new[] { "OrganizationId" }, "IX_OrganizationRoleMapping_OrganizationId");
+                    b.HasIndex("OrganizationId");
 
-                    b.HasIndex(new[] { "RoleId" }, "IX_OrganizationRoleMapping_RoleId");
+                    b.HasIndex("RoleId");
 
                     b.ToTable("OrganizationRoleMapping", (string)null);
                 });
 
-            modelBuilder.Entity("Identity.Data.Entities.Policy", b =>
+            modelBuilder.Entity("Identity.Data.Entities.Role", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("RoleId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("Authorize")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<short>("IsGenericRole")
+                        .HasColumnType("smallint");
 
-                    b.Property<int>("OrganizationId")
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.HasKey("RoleId");
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("Identity.Data.Entities.RoleRouteMapping", b =>
+                {
+                    b.Property<int>("MappingId")
                         .HasColumnType("int");
 
                     b.Property<int>("RoleId")
@@ -90,43 +105,18 @@ namespace Identity.Data.Migrations
                     b.Property<int>("RouteId")
                         .HasColumnType("int");
 
-                    b.Property<int>("UserGroupId")
-                        .HasColumnType("int");
+                    b.HasKey("MappingId");
 
-                    b.HasKey("Id");
+                    b.HasIndex("RoleId");
 
-                    b.HasIndex(new[] { "RoleId" }, "IX_Policies_RoleId");
+                    b.HasIndex("RouteId");
 
-                    b.HasIndex(new[] { "RouteId" }, "IX_Policies_RouteId");
-
-                    b.HasIndex(new[] { "UserGroupId" }, "IX_Policies_UserGroupId");
-
-                    b.ToTable("Policies");
-                });
-
-            modelBuilder.Entity("Identity.Data.Entities.Role", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<bool?>("IsGenericRole")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Roles");
+                    b.ToTable("RoleRouteMapping", (string)null);
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Route", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("RouteId")
                         .HasColumnType("int");
 
                     b.Property<int>("ApplicationId")
@@ -134,29 +124,33 @@ namespace Identity.Data.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(max)");
 
                     b.Property<string>("Route1")
                         .IsRequired()
-                        .HasColumnType("longtext")
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(max)")
                         .HasColumnName("Route");
 
                     b.Property<string>("RouteName")
                         .IsRequired()
                         .HasMaxLength(50)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
-                    b.HasKey("Id");
+                    b.HasKey("RouteId");
 
-                    b.HasIndex(new[] { "ApplicationId" }, "IX_Routes_ApplicationId");
+                    b.HasIndex("ApplicationId");
 
                     b.ToTable("Routes");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.User", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<string>("UserId")
                         .HasMaxLength(50)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
                     b.Property<int?>("AccountBalance")
@@ -165,11 +159,13 @@ namespace Identity.Data.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(50)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
                     b.Property<int>("OrganizationId")
@@ -177,7 +173,8 @@ namespace Identity.Data.Migrations
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasColumnType("longtext");
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(max)");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
@@ -185,18 +182,20 @@ namespace Identity.Data.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(1)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(1)");
 
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasMaxLength(100)
+                        .IsUnicode(false)
                         .HasColumnType("varchar(100)");
 
-                    b.HasKey("Id");
+                    b.HasKey("UserId");
 
-                    b.HasIndex(new[] { "OrganizationId" }, "IX_Users_OrganizationId");
+                    b.HasIndex("OrganizationId");
 
-                    b.HasIndex(new[] { "RoleId" }, "IX_Users_RoleId");
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Users");
                 });
@@ -220,19 +219,19 @@ namespace Identity.Data.Migrations
                     b.Navigation("Role");
                 });
 
-            modelBuilder.Entity("Identity.Data.Entities.Policy", b =>
+            modelBuilder.Entity("Identity.Data.Entities.RoleRouteMapping", b =>
                 {
                     b.HasOne("Identity.Data.Entities.Role", "Role")
-                        .WithMany("Policies")
+                        .WithMany("RoleRouteMappings")
                         .HasForeignKey("RoleId")
                         .IsRequired()
-                        .HasConstraintName("FK_Policies_Roles");
+                        .HasConstraintName("FK_RoleRouteMapping_Roles");
 
                     b.HasOne("Identity.Data.Entities.Route", "Route")
-                        .WithMany("Policies")
+                        .WithMany("RoleRouteMappings")
                         .HasForeignKey("RouteId")
                         .IsRequired()
-                        .HasConstraintName("FK_Policies_Routes");
+                        .HasConstraintName("FK_RoleRouteMapping_Routes");
 
                     b.Navigation("Role");
 
@@ -255,14 +254,12 @@ namespace Identity.Data.Migrations
                     b.HasOne("Identity.Data.Entities.Organization", "Organization")
                         .WithMany("Users")
                         .HasForeignKey("OrganizationId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_Users_Organizations");
 
                     b.HasOne("Identity.Data.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_Users_Roles");
 
@@ -287,14 +284,14 @@ namespace Identity.Data.Migrations
                 {
                     b.Navigation("OrganizationRoleMappings");
 
-                    b.Navigation("Policies");
+                    b.Navigation("RoleRouteMappings");
 
                     b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Route", b =>
                 {
-                    b.Navigation("Policies");
+                    b.Navigation("RoleRouteMappings");
                 });
 #pragma warning restore 612, 618
         }

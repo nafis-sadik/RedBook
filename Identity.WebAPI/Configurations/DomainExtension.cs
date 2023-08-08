@@ -9,7 +9,7 @@ namespace Identity.Data
     {
         public static void AddDatabaseConfigurations(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<UserManagementSystemContext>(opts =>
+            services.AddDbContext<RedbookIdentityContext>(opts =>
             {
                 opts.UseSqlServer(
                     configuration["ConnectionStrings:IdentityMSSql"],

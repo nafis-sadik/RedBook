@@ -37,7 +37,7 @@ namespace Identity.Domain.Implementation
         public async Task<string?> LogInAsync(UserModel userModel)
         {
             string userName = userModel.UserName, pass = userModel.Password;
-            User? userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName || x.Id == userModel.UserId);
+            User? userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName || x.UserId == userModel.UserId);
             
             if (userEntity == null)
                 return null;
@@ -45,11 +45,11 @@ namespace Identity.Domain.Implementation
             byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
             if (userEntity != null && BCrypt.Net.BCrypt.EnhancedVerify(userModel.Password, userEntity.Password))
             {
-                var roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Id == userEntity.RoleId);
+                var roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RoleId == userEntity.RoleId);
 
                 return GenerateJwtToken(new List<Claim> {
-                    new Claim("UserId", userEntity.Id),
-                    new Claim(ClaimTypes.Role, roleEntity?.Id.ToString()),
+                    new Claim("UserId", userEntity.UserId),
+                    new Claim(ClaimTypes.Role, roleEntity?.RoleId.ToString()),
                     new Claim("OrganizationId", userEntity?.OrganizationId.ToString())
                 });
             }
@@ -153,7 +153,7 @@ namespace Identity.Domain.Implementation
 
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                newUser.Id = new Guid().ToString();
+                newUser.UserId = new Guid().ToString();
                 newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
                 newUser.OrganizationId = orgId;
                 newUser.RoleId = userModel.RoleId;
@@ -234,7 +234,7 @@ namespace Identity.Domain.Implementation
 
             var userEntity = new User
             {
-                Id = new Guid().ToString(),
+                UserId = new Guid().ToString(),
                 AccountBalance = 0,
                 FirstName = userModel.FirstName,
                 LastName = userModel.LastName,

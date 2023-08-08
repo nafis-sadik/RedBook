@@ -1,8 +1,11 @@
-﻿namespace Identity.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Identity.Data.Entities;
 
 public partial class Organization
 {
-    public int OrganizationId { get; set; }
+    public int Id { get; set; }
 
     public string OrganizationName { get; set; }
 

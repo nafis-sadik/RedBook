@@ -1,8 +1,11 @@
-﻿namespace Identity.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Identity.Data.Entities;
 
 public partial class User
 {
-    public string UserId { get; set; }
+    public string Id { get; set; }
 
     public string UserName { get; set; }
 

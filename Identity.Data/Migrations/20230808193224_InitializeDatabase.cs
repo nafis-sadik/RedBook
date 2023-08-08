@@ -1,168 +1,146 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
-using MySql.EntityFrameworkCore.Metadata;
 
 #nullable disable
 
 namespace Identity.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitializeDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterDatabase()
-                .Annotation("MySQL:Charset", "utf8mb4");
-
             migrationBuilder.CreateTable(
                 name: "Applications",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    ApplicationName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                    ApplicationId = table.Column<int>(type: "int", nullable: false),
+                    ApplicationName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Applications", x => x.Id);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
+                    table.PrimaryKey("PK__Applicat__3214EC07D6504A6D", x => x.ApplicationId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Organizations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    OrganizationName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false)
+                    OrganizationId = table.Column<int>(type: "int", nullable: false),
+                    OrganizationName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Organizations", x => x.Id);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
+                    table.PrimaryKey("PK_Organizations", x => x.OrganizationId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    RoleName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                    IsGenericRole = table.Column<bool>(type: "tinyint(1)", nullable: true)
+                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    RoleName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    IsGenericRole = table.Column<short>(type: "smallint", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Roles", x => x.Id);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
+                    table.PrimaryKey("PK_Roles", x => x.RoleId);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Routes",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    RouteName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                    Route = table.Column<string>(type: "longtext", nullable: false),
-                    Description = table.Column<string>(type: "longtext", nullable: false),
+                    RouteId = table.Column<int>(type: "int", nullable: false),
+                    RouteName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    Route = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
+                    Description = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
                     ApplicationId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Routes", x => x.Id);
+                    table.PrimaryKey("PK_Routes", x => x.RouteId);
                     table.ForeignKey(
                         name: "FK_Routes_Applications",
                         column: x => x.ApplicationId,
                         principalTable: "Applications",
-                        principalColumn: "Id");
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
+                        principalColumn: "ApplicationId");
+                });
 
             migrationBuilder.CreateTable(
                 name: "OrganizationRoleMapping",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
+                    MappingId = table.Column<int>(type: "int", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false),
                     OrganizationId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrganizationRoleMapping", x => x.Id);
+                    table.PrimaryKey("PK_OrganizationRoleMapping", x => x.MappingId);
                     table.ForeignKey(
                         name: "FK_OrganizationRoleMapping_Organizations",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
-                        principalColumn: "Id");
+                        principalColumn: "OrganizationId");
                     table.ForeignKey(
                         name: "FK_OrganizationRoleMapping_Roles",
                         column: x => x.RoleId,
                         principalTable: "Roles",
-                        principalColumn: "Id");
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
+                        principalColumn: "RoleId");
+                });
 
             migrationBuilder.CreateTable(
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                    UserName = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false),
-                    FirstName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                    LastName = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false),
-                    Password = table.Column<string>(type: "longtext", nullable: false),
+                    UserId = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    UserName = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
+                    FirstName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    LastName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    Password = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
                     OrganizationId = table.Column<int>(type: "int", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false),
-                    Status = table.Column<string>(type: "varchar(1)", maxLength: 1, nullable: false),
+                    Status = table.Column<string>(type: "varchar(1)", unicode: false, maxLength: 1, nullable: false),
                     AccountBalance = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.UserId);
                     table.ForeignKey(
                         name: "FK_Users_Organizations",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "OrganizationId");
                     table.ForeignKey(
                         name: "FK_Users_Roles",
                         column: x => x.RoleId,
                         principalTable: "Roles",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
+                        principalColumn: "RoleId");
+                });
 
             migrationBuilder.CreateTable(
-                name: "Policies",
+                name: "RoleRouteMapping",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("MySQL:ValueGenerationStrategy", MySQLValueGenerationStrategy.IdentityColumn),
-                    OrganizationId = table.Column<int>(type: "int", nullable: false),
+                    MappingId = table.Column<int>(type: "int", nullable: false),
                     RouteId = table.Column<int>(type: "int", nullable: false),
-                    RoleId = table.Column<int>(type: "int", nullable: false),
-                    UserGroupId = table.Column<int>(type: "int", nullable: false),
-                    Authorize = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                    RoleId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Policies", x => x.Id);
+                    table.PrimaryKey("PK_RoleRouteMapping", x => x.MappingId);
                     table.ForeignKey(
-                        name: "FK_Policies_Roles",
+                        name: "FK_RoleRouteMapping_Roles",
                         column: x => x.RoleId,
                         principalTable: "Roles",
-                        principalColumn: "Id");
+                        principalColumn: "RoleId");
                     table.ForeignKey(
-                        name: "FK_Policies_Routes",
+                        name: "FK_RoleRouteMapping_Routes",
                         column: x => x.RouteId,
                         principalTable: "Routes",
-                        principalColumn: "Id");
-                })
-                .Annotation("MySQL:Charset", "utf8mb4");
+                        principalColumn: "RouteId");
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrganizationRoleMapping_OrganizationId",
@@ -175,19 +153,14 @@ namespace Identity.Data.Migrations
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Policies_RoleId",
-                table: "Policies",
+                name: "IX_RoleRouteMapping_RoleId",
+                table: "RoleRouteMapping",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Policies_RouteId",
-                table: "Policies",
+                name: "IX_RoleRouteMapping_RouteId",
+                table: "RoleRouteMapping",
                 column: "RouteId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Policies_UserGroupId",
-                table: "Policies",
-                column: "UserGroupId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Routes_ApplicationId",
@@ -212,7 +185,7 @@ namespace Identity.Data.Migrations
                 name: "OrganizationRoleMapping");
 
             migrationBuilder.DropTable(
-                name: "Policies");
+                name: "RoleRouteMapping");
 
             migrationBuilder.DropTable(
                 name: "Users");
