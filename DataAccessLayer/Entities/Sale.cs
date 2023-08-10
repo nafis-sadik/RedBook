@@ -1,25 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#nullable disable
+namespace Inventory.Data.Entities;
 
-namespace Inventory.Data.Entities
+public partial class Sale
 {
-    public partial class Sale
-    {
-        public Sale()
-        {
-            SalesDetails = new HashSet<SalesDetail>();
-            SalesPaymentRecords = new HashSet<SalesPaymentRecord>();
-        }
+    public int SalesId { get; set; }
 
-        public string Id { get; set; }
-        public DateTime SalesDate { get; set; }
-        public string SoldBy { get; set; }
-        public decimal TotalAmount { get; set; }
-        public int OrganizationId { get; set; }
+    public DateTime SalesDate { get; set; }
 
-        public virtual ICollection<SalesDetail> SalesDetails { get; set; }
-        public virtual ICollection<SalesPaymentRecord> SalesPaymentRecords { get; set; }
-    }
+    public string SoldBy { get; set; }
+
+    public decimal TotalAmount { get; set; }
+
+    public int OrganizationId { get; set; }
+
+    public virtual ICollection<SalesDetail> SalesDetails { get; set; } = new List<SalesDetail>();
+
+    public virtual ICollection<SalesPaymentRecord> SalesPaymentRecords { get; set; } = new List<SalesPaymentRecord>();
 }

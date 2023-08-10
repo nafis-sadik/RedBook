@@ -1,4 +1,5 @@
 ﻿using Inventory.Data;
+using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.WebAPI.Configurations
@@ -10,7 +11,7 @@ namespace Inventory.WebAPI.Configurations
 
             using (var scope = app.ApplicationServices.CreateScope())
             {
-                var context = scope.ServiceProvider.GetService<RedBookInventoryContext>();
+                var context = scope.ServiceProvider.GetService<RedbookInventoryContext>();
 
                 // Only run database migrations in development environment
                 if (env.IsDevelopment())

@@ -1,4 +1,5 @@
 ﻿using Inventory.Data;
+using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using RedBook.Core;
 using RedBook.Core.Security;
@@ -9,7 +10,7 @@ namespace Inventory.WebAPI.Configurations
     {
         public static void RosolveDependencies(this IServiceCollection services)
         {
-            CoreDependencyResolver<RedBookInventoryContext>.RosolveCoreDependencies(services);
+            CoreDependencyResolver<RedbookInventoryContext>.RosolveCoreDependencies(services);
 
             // Services
             services.AddScoped<IClaimsPrincipalAccessor, HttpContextClaimsPrincipalAccessor>();
