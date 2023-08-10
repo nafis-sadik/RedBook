@@ -1,9 +1,6 @@
 ﻿using AutoMapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Inventory.Data.Entities;
+using Inventory.Data.Models;
 
 namespace Inventory.Domain
 {
@@ -11,7 +8,8 @@ namespace Inventory.Domain
     {
         public MappingConfig()
         {
-            CreateMap<Project, ProjectVm>().ReverseMap();
+            CreateMap<Purchase, PurchaseModel>().ReverseMap();
+            CreateMap<Data.Entities.Inventory, InventoryModel>().ReverseMap();
         }
     }
 }

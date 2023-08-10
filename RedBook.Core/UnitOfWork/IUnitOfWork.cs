@@ -2,16 +2,27 @@
 
 namespace RedBook.Core.UnitOfWork
 {
-    public interface IUnitOfWork
+    public interface IUnitOfWork: IDisposable
     {
-        /// <summary>
-        /// Starts a unit of work.
-        /// </summary>
-        IUnitOfWorkManager Begin();
 
         /// <summary>
         /// Creates repository object for given entity using the DbContext of UnitOfWork
         /// </summary>
         IRepositoryBase<TEntity> GetRepository<TEntity>() where TEntity : class;
+
+        /// <summary>
+        /// Saves all changes until now in this unit of work.
+        /// </summary>
+        void SaveChanges();
+
+        /// <summary>
+        /// Saves all changes until now in this unit of work.
+        /// </summary>
+        Task SaveChangesAsync();
+
+        /// <summary>
+        /// Removes all entities from tracking
+        /// </summary>
+        void DetachAllEntities();
     }
 }

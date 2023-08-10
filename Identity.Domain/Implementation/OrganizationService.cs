@@ -19,15 +19,13 @@ namespace Identity.Domain.Implementation
         public OrganizationService(
             ILogger<ApplicationService> logger,
             IObjectMapper mapper,
-            IUnitOfWork unitOfWork,
+            IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
         {
             var userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
             if (userRoleId != CommonConstants.GenericRoles.SystemAdminRoleId)
                 throw new ArgumentException($"Only System Admin users have access to execute this operation");
-
-            _orgRepo = unitOfWork.GetRepository<Organization>();
         }
 
         public async Task<OrganizationModel> AddOrganizationAsync(OrganizationModel organizationModel)

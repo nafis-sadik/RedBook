@@ -22,14 +22,10 @@ namespace Identity.Domain.Implementation
         public RoleService(
             ILogger<RoleService> logger,
             IObjectMapper mapper,
-            IUnitOfWork unitOfWork,
+            IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
-        {
-            _userRepo = unitOfWork.GetRepository<User>();
-            _roleRepo = unitOfWork.GetRepository<Role>();
-            _roleOrganizationMappingRepo = unitOfWork.GetRepository<OrganizationRoleMapping>();
-        }
+        {  }
 
         // Testing required
         public async Task<RoleModel> AddRoleAsync(RoleModel role)

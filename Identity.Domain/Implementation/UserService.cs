@@ -19,26 +19,30 @@ namespace Identity.Domain.Implementation
 {
     public class UserService : ServiceBase, IUserService
     {
-        private readonly IRepositoryBase<User> _userRepo;
-        private readonly IRepositoryBase<Role> _roleRepo;
+        private IRepositoryBase<User> _userRepo;
+        private IRepositoryBase<Role> _roleRepo;
 
         public UserService(
             ILogger<UserService> logger,
             IObjectMapper mapper,
-            IUnitOfWork unitOfWork,
+            IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
-        {
-            _userRepo = unitOfWork.GetRepository<User>();
-            _roleRepo = unitOfWork.GetRepository<Role>();
-        }
+        { }
 
         // Public API
         public async Task<string?> LogInAsync(UserModel userModel)
         {
             string userName = userModel.UserName, pass = userModel.Password;
-            User? userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName || x.UserId == userModel.UserId);
-            
+
+            User? userEntity;
+            using (var unitOfWork = UnitOfWorkManager.Begin())
+            {
+                _userRepo = unitOfWork.GetRepository<User>();
+                userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName || x.UserId == userModel.UserId);
+                unitOfWork.Dispose();
+            }
+
             if (userEntity == null)
                 return null;
 

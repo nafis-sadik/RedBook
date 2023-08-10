@@ -2,16 +2,11 @@
 
 namespace RedBook.Core.UnitOfWork
 {
-    public interface IUnitOfWorkManager: IDisposable
+    public interface IUnitOfWorkManager
     {
         /// <summary>
-        /// Saves all changes until now in this unit of work.
+        /// Starts a unit of work.
         /// </summary>
-        void SaveChanges();
-
-        /// <summary>
-        /// Saves all changes until now in this unit of work.
-        /// </summary>
-        Task SaveChangesAsync();
+        IUnitOfWork Begin();
     }
 }
