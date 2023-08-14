@@ -36,25 +36,27 @@ namespace Identity.Domain.Implementation
             string userName = userModel.UserName, pass = userModel.Password;
 
             User? userEntity;
+            Role? roleEntity;
             using (var unitOfWork = UnitOfWorkManager.Begin())
             {
                 _userRepo = unitOfWork.GetRepository<User>();
+                _roleRepo = unitOfWork.GetRepository<Role>();
                 userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName || x.UserId == userModel.UserId);
-                unitOfWork.Dispose();
+                if(userEntity == null) throw new ArgumentException("User not found");
+                roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RoleId == userEntity.RoleId);
+                if (roleEntity == null) throw new ArgumentException("User must have a role");
             }
 
             if (userEntity == null)
                 return null;
 
-            byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
             if (userEntity != null && BCrypt.Net.BCrypt.EnhancedVerify(userModel.Password, userEntity.Password))
             {
-                var roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RoleId == userEntity.RoleId);
-
+                byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
                 return GenerateJwtToken(new List<Claim> {
                     new Claim("UserId", userEntity.UserId),
-                    new Claim(ClaimTypes.Role, roleEntity?.RoleId.ToString()),
-                    new Claim("OrganizationId", userEntity?.OrganizationId.ToString())
+                    new Claim(ClaimTypes.Role, roleEntity.RoleId.ToString()),
+                    new Claim("OrganizationId", userEntity.OrganizationId.ToString())
                 });
             }
             else

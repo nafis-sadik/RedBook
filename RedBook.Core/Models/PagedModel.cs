@@ -4,7 +4,7 @@
     {
         public string? Search { get; set; }
         public string? SortBy { get; set; }
-        public IEnumerable<T>? Items { get; set; }
+        public IEnumerable<T>? SourceData { get; set; }
 
         private int pageNumber { get; set; }
         public int PageNumber
@@ -18,6 +18,12 @@
         {
             get => pageSize;
             set => pageSize = value is <= 0 ? 10 : value;
+        }
+
+        public int Skip
+        {
+            get { return pageSize * (pageNumber - 1); }
+            private set { }
         }
     }
 }

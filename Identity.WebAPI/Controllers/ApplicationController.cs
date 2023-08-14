@@ -2,11 +2,13 @@
 using Identity.Domain.Abstraction;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RedBook.Core.Models;
 
 namespace Identity.WebAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ApplicationController : ControllerBase
     {
         private readonly IApplicationService _applicationService;
@@ -16,23 +18,23 @@ namespace Identity.WebAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize]
-        public async Task<IActionResult> Get(int appId) => Ok(await _applicationService.GetApplication(appId));
+        public async Task<IActionResult> GetAsync(int appId) => Ok(await _applicationService.GetApplicationAsync(appId));
 
         [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> Add(ApplicationInfoModel appInfo) => Ok(await _applicationService.AddApplication(appInfo));
+        public async Task<IActionResult> AddAsync(ApplicationInfoModel appInfo) => Ok(await _applicationService.AddApplicationAsync(appInfo));
 
         [HttpPut]
-        [Authorize]
-        public async Task<IActionResult> Update(ApplicationInfoModel appInfo) => Ok(await _applicationService.UpdateApplication(appInfo));
+        public async Task<IActionResult> UpdateAsync(ApplicationInfoModel appInfo) => Ok(await _applicationService.UpdateApplicationAsync(appInfo));
 
         [HttpDelete]
-        [Authorize]
-        public async Task<IActionResult> Delete(int appId)
+        public async Task<IActionResult> DeleteAsync(int appId)
         {
-            await _applicationService.DeleteApplication(appId);
+            await _applicationService.DeleteApplicationAsync(appId);
             return Ok();
         }
+
+        [HttpGet]
+        [Route("/PagedApplications")]
+        public async Task<IActionResult> GetPagedAsync([FromQuery] PagedModel<ApplicationInfoModel> pagedApplications) => Ok(await _applicationService.GetApplicationsAsync(pagedApplications));
     }
 }

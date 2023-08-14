@@ -28,19 +28,20 @@ namespace RedBook.Core.Repositories
         }
 
         // Read
-        public async Task<TEntity> GetByIdAsync(object id) => await _dbSet.FindAsync(id);
+        public async Task<TEntity?> GetByIdAsync(object id) => await _dbSet.FindAsync(id);
         public async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> query) => await UnTrackableQuery().Where(query).ToListAsync();
-        public Task<PagedModel<TEntity>> GetPagedAsync(PagedModel<TEntity>? pagedModel) => throw new NotImplementedException();
-
+        
         // Update
         public virtual TEntity Update(TEntity entity) => _dbSet.Update(entity).Entity;
 
         // Delete
-        public async Task<TEntity> DeleteAsync(object id)
+        public async Task DeleteAsync(object id)
         {
-            EntityEntry<TEntity> entityEntry = _dbSet.Remove(await GetByIdAsync(id));
-            if (entityEntry.State == EntityState.Modified) return entityEntry.Entity;
-            else throw new InvalidOperationException($"Failed to remove element by identifier {id}");
+            var targetRow = await GetByIdAsync(id);
+            if (targetRow != null)
+                _dbSet.Remove(targetRow);
+            else
+                throw new ArgumentException($"Object with identifier {id} was not found");
         }
         public async Task DeleteAsync(Expression<Func<TEntity, bool>> where)
         {

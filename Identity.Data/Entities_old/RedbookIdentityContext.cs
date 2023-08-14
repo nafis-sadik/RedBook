@@ -39,6 +39,7 @@ public partial class RedbookIdentityContext : DbContext
 
             entity.HasIndex(e => e.OrganizationId, "IX_Applications_OrganizationId");
 
+            entity.Property(e => e.ApplicationId).ValueGeneratedNever();
             entity.Property(e => e.ApplicationName)
                 .IsRequired()
                 .HasMaxLength(50)
@@ -52,6 +53,7 @@ public partial class RedbookIdentityContext : DbContext
 
         modelBuilder.Entity<Organization>(entity =>
         {
+            entity.Property(e => e.OrganizationId).ValueGeneratedNever();
             entity.Property(e => e.OrganizationName)
                 .IsRequired()
                 .HasMaxLength(50)
@@ -60,8 +62,7 @@ public partial class RedbookIdentityContext : DbContext
 
         modelBuilder.Entity<Role>(entity =>
         {
-            entity.HasIndex(e => e.OrganizationId, "IX_Roles_OrganizationId");
-
+            entity.Property(e => e.RoleId).ValueGeneratedNever();
             entity.Property(e => e.RoleName)
                 .IsRequired()
                 .HasMaxLength(50)
@@ -83,6 +84,8 @@ public partial class RedbookIdentityContext : DbContext
 
             entity.HasIndex(e => e.RouteId, "IX_RoleRouteMapping_RouteId");
 
+            entity.Property(e => e.MappingId).ValueGeneratedNever();
+
             entity.HasOne(d => d.Role).WithMany(p => p.RoleRouteMappings)
                 .HasForeignKey(d => d.RoleId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
@@ -98,6 +101,7 @@ public partial class RedbookIdentityContext : DbContext
         {
             entity.HasIndex(e => e.ApplicationId, "IX_Routes_ApplicationId");
 
+            entity.Property(e => e.RouteId).ValueGeneratedNever();
             entity.Property(e => e.Description)
                 .IsRequired()
                 .IsUnicode(false);

@@ -7,7 +7,7 @@ namespace Identity.Domain.Abstraction
     {
         Task<RoleModel> AddRoleAsync(RoleModel role);
         Task<RoleModel> GetRoleAsync(int roleId);
-        PagedModel<RoleModel> GetRolesAsync(PagedModel<RoleModel> pagedRoleModel);
+        Task<PagedModel<RoleModel>> GetRolesAsync(PagedModel<RoleModel> pagedRoleModel);
         Task<RoleModel> UpdateRoleAsync(RoleModel role);
         Task DeleteRoleAsync(int roleId);
     }

@@ -11,22 +11,11 @@ namespace Identity.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Applications",
-                columns: table => new
-                {
-                    ApplicationId = table.Column<int>(type: "int", nullable: false),
-                    ApplicationName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK__Applicat__3214EC07D6504A6D", x => x.ApplicationId);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Organizations",
                 columns: table => new
                 {
-                    OrganizationId = table.Column<int>(type: "int", nullable: false),
+                    OrganizationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     OrganizationName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false)
                 },
                 constraints: table =>
@@ -35,23 +24,50 @@ namespace Identity.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Applications",
+                columns: table => new
+                {
+                    ApplicationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    ApplicationName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    OrganizationId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__Applicat__3214EC07D6504A6D", x => x.ApplicationId);
+                    table.ForeignKey(
+                        name: "FK_Applications_Organizations",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "OrganizationId");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Roles",
                 columns: table => new
                 {
-                    RoleId = table.Column<int>(type: "int", nullable: false),
+                    RoleId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     RoleName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
-                    IsGenericRole = table.Column<short>(type: "smallint", nullable: false)
+                    IsAdminRole = table.Column<short>(type: "smallint", nullable: false),
+                    OrganizationId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Roles", x => x.RoleId);
+                    table.ForeignKey(
+                        name: "FK_Roles_Organizations",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "OrganizationId");
                 });
 
             migrationBuilder.CreateTable(
                 name: "Routes",
                 columns: table => new
                 {
-                    RouteId = table.Column<int>(type: "int", nullable: false),
+                    RouteId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     RouteName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
                     Route = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
                     Description = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
@@ -65,29 +81,6 @@ namespace Identity.Data.Migrations
                         column: x => x.ApplicationId,
                         principalTable: "Applications",
                         principalColumn: "ApplicationId");
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrganizationRoleMapping",
-                columns: table => new
-                {
-                    MappingId = table.Column<int>(type: "int", nullable: false),
-                    RoleId = table.Column<int>(type: "int", nullable: false),
-                    OrganizationId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrganizationRoleMapping", x => x.MappingId);
-                    table.ForeignKey(
-                        name: "FK_OrganizationRoleMapping_Organizations",
-                        column: x => x.OrganizationId,
-                        principalTable: "Organizations",
-                        principalColumn: "OrganizationId");
-                    table.ForeignKey(
-                        name: "FK_OrganizationRoleMapping_Roles",
-                        column: x => x.RoleId,
-                        principalTable: "Roles",
-                        principalColumn: "RoleId");
                 });
 
             migrationBuilder.CreateTable(
@@ -123,7 +116,8 @@ namespace Identity.Data.Migrations
                 name: "RoleRouteMapping",
                 columns: table => new
                 {
-                    MappingId = table.Column<int>(type: "int", nullable: false),
+                    MappingId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     RouteId = table.Column<int>(type: "int", nullable: false),
                     RoleId = table.Column<int>(type: "int", nullable: false)
                 },
@@ -143,14 +137,9 @@ namespace Identity.Data.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrganizationRoleMapping_OrganizationId",
-                table: "OrganizationRoleMapping",
+                name: "IX_Applications_OrganizationId",
+                table: "Applications",
                 column: "OrganizationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrganizationRoleMapping_RoleId",
-                table: "OrganizationRoleMapping",
-                column: "RoleId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoleRouteMapping_RoleId",
@@ -161,6 +150,11 @@ namespace Identity.Data.Migrations
                 name: "IX_RoleRouteMapping_RouteId",
                 table: "RoleRouteMapping",
                 column: "RouteId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Roles_OrganizationId",
+                table: "Roles",
+                column: "OrganizationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Routes_ApplicationId",
@@ -182,9 +176,6 @@ namespace Identity.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "OrganizationRoleMapping");
-
-            migrationBuilder.DropTable(
                 name: "RoleRouteMapping");
 
             migrationBuilder.DropTable(
@@ -194,13 +185,13 @@ namespace Identity.Data.Migrations
                 name: "Routes");
 
             migrationBuilder.DropTable(
-                name: "Organizations");
-
-            migrationBuilder.DropTable(
                 name: "Roles");
 
             migrationBuilder.DropTable(
                 name: "Applications");
+
+            migrationBuilder.DropTable(
+                name: "Organizations");
         }
     }
 }
