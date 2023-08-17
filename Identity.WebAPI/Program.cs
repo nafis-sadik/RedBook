@@ -9,7 +9,8 @@ using RedBook.Core.Constants;
 using System.Reflection;
 using System.Text;
 using Yarkool.SwaggerUI;
-
+using Z.SwaggerUI.Extensions;
+//https://localhost:7093/swagger/index.html#/home
 namespace Identity.WebAPI
 {
     public class Program
@@ -85,11 +86,11 @@ namespace Identity.WebAPI
                 x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Please enter token",
+                    Description = "Format: Bearer {access_token}",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.Http,
-                    BearerFormat = "JWT",
-                    Scheme = "bearer"
+                    Type = SecuritySchemeType.ApiKey,
+                    //BearerFormat = "JWT",
+                    Scheme = "Bearer"
                 });
 
                 x.AddSecurityRequirement(new OpenApiSecurityRequirement {
@@ -100,7 +101,7 @@ namespace Identity.WebAPI
                                 Id="Bearer"
                             }
                         },
-                        new string[] { }
+                        Array.Empty<string>()
                     }
                 });
 
@@ -122,7 +123,7 @@ namespace Identity.WebAPI
             }
 
 
-            //app.MapControllers();
+            app.MapControllers();
 
             app.UseCors(DefaultCorsConfig.Policy);
 
@@ -132,9 +133,11 @@ namespace Identity.WebAPI
 
             app.UseRouting().UseAuthorization().UseEndpoints(endpoints =>
             {
-                endpoints.MapControllers();
+                //endpoints.MapControllers();
                 endpoints.MapSwagger();
             });
+
+            //app.UseZSwaggerUI(title: "/v1/swagger.json", templateName: "V1 Docs");
 
             app.UseYarkoolSwaggerUI(c =>
             {
