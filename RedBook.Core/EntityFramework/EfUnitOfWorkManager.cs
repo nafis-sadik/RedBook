@@ -4,17 +4,17 @@ using RedBook.Core.UnitOfWork;
 
 namespace RedBook.Core.EntityFramework
 {
-    public class EfUnitOfWorkManager : IUnitOfWorkManager
+    public class EFUnitOfWorkManager: IUnitOfWorkManager
     {
-        public readonly DbContext _dbContext;
-
-        public EfUnitOfWorkManager(DbContext dbContext)
+        private readonly DbContext _dbContext;
+        public EFUnitOfWorkManager(DbContext dbContext)
         {
             _dbContext = dbContext;
         }
 
-        public void Dispose() => _dbContext.Dispose();
-        public void SaveChanges() => _dbContext.SaveChanges();
-        public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();
+        public IUnitOfWork Begin()
+        {
+            return new EfUnitOfWork(_dbContext);
+        }
     }
 }

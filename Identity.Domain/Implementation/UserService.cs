@@ -19,38 +19,44 @@ namespace Identity.Domain.Implementation
 {
     public class UserService : ServiceBase, IUserService
     {
-        private readonly IRepositoryBase<User> _userRepo;
-        private readonly IRepositoryBase<Role> _roleRepo;
+        private IRepositoryBase<User> _userRepo;
+        private IRepositoryBase<Role> _roleRepo;
 
         public UserService(
             ILogger<UserService> logger,
             IObjectMapper mapper,
-            IUnitOfWork unitOfWork,
+            IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
-        {
-            _userRepo = unitOfWork.GetRepository<User>();
-            _roleRepo = unitOfWork.GetRepository<Role>();
-        }
+        { }
 
         // Public API
         public async Task<string?> LogInAsync(UserModel userModel)
         {
             string userName = userModel.UserName, pass = userModel.Password;
-            User? userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName || x.Id == userModel.UserId);
-            
+
+            User? userEntity;
+            Role? roleEntity;
+            using (var unitOfWork = UnitOfWorkManager.Begin())
+            {
+                _userRepo = unitOfWork.GetRepository<User>();
+                _roleRepo = unitOfWork.GetRepository<Role>();
+                userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserName == userModel.UserName || x.UserId == userModel.UserId);
+                if(userEntity == null) throw new ArgumentException("User not found");
+                roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RoleId == userEntity.RoleId);
+                if (roleEntity == null) throw new ArgumentException("User must have a role");
+            }
+
             if (userEntity == null)
                 return null;
 
-            byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
             if (userEntity != null && BCrypt.Net.BCrypt.EnhancedVerify(userModel.Password, userEntity.Password))
             {
-                var roleEntity = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Id == userEntity.RoleId);
-
+                byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
                 return GenerateJwtToken(new List<Claim> {
-                    new Claim("UserId", userEntity.Id),
-                    new Claim(ClaimTypes.Role, roleEntity?.Id.ToString()),
-                    new Claim("OrganizationId", userEntity?.OrganizationId.ToString())
+                    new Claim("UserId", userEntity.UserId),
+                    new Claim(ClaimTypes.Role, roleEntity.RoleId.ToString()),
+                    new Claim("OrganizationId", userEntity.OrganizationId.ToString())
                 });
             }
             else
@@ -153,7 +159,7 @@ namespace Identity.Domain.Implementation
 
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                newUser.Id = new Guid().ToString();
+                newUser.UserId = new Guid().ToString();
                 newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
                 newUser.OrganizationId = orgId;
                 newUser.RoleId = userModel.RoleId;
@@ -234,7 +240,7 @@ namespace Identity.Domain.Implementation
 
             var userEntity = new User
             {
-                Id = new Guid().ToString(),
+                UserId = new Guid().ToString(),
                 AccountBalance = 0,
                 FirstName = userModel.FirstName,
                 LastName = userModel.LastName,

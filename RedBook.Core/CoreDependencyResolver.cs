@@ -15,8 +15,8 @@ namespace RedBook.Core
             services.AddDbContext<DbContext, TDbContext>();
 
             // Unit Of Work
-            services.AddScoped<IUnitOfWork, EFUnitOfWork>();
-            services.AddScoped<IUnitOfWorkManager, EfUnitOfWorkManager>();
+            services.AddScoped<IUnitOfWorkManager, EFUnitOfWorkManager>();
+            services.AddScoped<IUnitOfWork, EfUnitOfWork>();
 
             // Claims
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();

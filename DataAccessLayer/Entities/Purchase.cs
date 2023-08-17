@@ -1,39 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Inventory.Data.Entities;
 
-#nullable disable
-
-namespace Inventory.Data.Entities
+public partial class Purchase
 {
-    public partial class Purchase
-    {
-        public Purchase()
-        {
-            Inventories = new HashSet<Inventory>();
-            PurchaseDetails = new HashSet<PurchaseDetail>();
-            PurchasePaymentRecords = new HashSet<PurchasePaymentRecord>();
-            SalesDetails = new HashSet<SalesDetail>();
-        }
+    public int PurchaseId { get; set; }
 
-        public string Id { get; set; }
-        public DateTime PurchaseDate { get; set; }
-        public string PurchasedBy { get; set; }
-        public string AccountNumber { get; set; }
-        public int ToBankId { get; set; }
-        public int ToBankBranchId { get; set; }
-        public int FromBankId { get; set; }
-        public int FromBankBranchId { get; set; }
-        public string CheckNumber { get; set; }
-        public decimal TotalPurchasePrice { get; set; }
-        public int OrganizationId { get; set; }
+    public DateTime PurchaseDate { get; set; }
 
-        public virtual Bank FromBank { get; set; }
-        public virtual BankBranch FromBankBranch { get; set; }
-        public virtual Bank ToBank { get; set; }
-        public virtual BankBranch ToBankBranch { get; set; }
-        public virtual ICollection<Inventory> Inventories { get; set; }
-        public virtual ICollection<PurchaseDetail> PurchaseDetails { get; set; }
-        public virtual ICollection<PurchasePaymentRecord> PurchasePaymentRecords { get; set; }
-        public virtual ICollection<SalesDetail> SalesDetails { get; set; }
-    }
+    public int PurchasedBy { get; set; }
+
+    public int AccountId { get; set; }
+
+    public string CheckNumber { get; set; }
+
+    public decimal TotalPurchasePrice { get; set; }
+
+    public int OrganizationId { get; set; }
+
+    public string ChalanNumber { get; set; }
+
+    public virtual BankAccount Account { get; set; }
+
+    public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
+
+    public virtual ICollection<PurchaseDetail> PurchaseDetails { get; set; } = new List<PurchaseDetail>();
+
+    public virtual ICollection<PurchasePayment> PurchasePayments { get; set; } = new List<PurchasePayment>();
 }

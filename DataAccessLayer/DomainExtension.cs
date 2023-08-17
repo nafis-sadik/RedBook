@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Inventory.Data.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -8,7 +9,7 @@ namespace Inventory.Data
     {
         public static void AddDatabaseConfigurations(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<RedBookInventoryContext>(opts =>
+            services.AddDbContext<RedbookInventoryContext>(opts =>
             {
                 opts.UseSqlServer(
                     configuration["ConnectionStrings:InventoryMSSql"]

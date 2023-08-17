@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#nullable disable
+namespace Inventory.Data.Entities;
 
-namespace Inventory.Data.Entities
+public partial class SalesPaymentRecord
 {
-    public partial class SalesPaymentRecord
-    {
-        public int Id { get; set; }
-        public string MemoNumber { get; set; }
-        public DateTime PaymentDate { get; set; }
-        public decimal PaymentAmount { get; set; }
+    public int SalesPaymentId { get; set; }
 
-        public virtual Sale MemoNumberNavigation { get; set; }
-    }
+    public int SalesId { get; set; }
+
+    public DateTime PaymentDate { get; set; }
+
+    public decimal PaymentAmount { get; set; }
+
+    public virtual Sale Sales { get; set; }
 }

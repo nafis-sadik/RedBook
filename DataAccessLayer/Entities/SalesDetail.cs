@@ -1,21 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#nullable disable
+namespace Inventory.Data.Entities;
 
-namespace Inventory.Data.Entities
+public partial class SalesDetail
 {
-    public partial class SalesDetail
-    {
-        public int Id { get; set; }
-        public string MemoNumber { get; set; }
-        public int ProductId { get; set; }
-        public string ChalanNo { get; set; }
-        public decimal Quantity { get; set; }
-        public decimal UnitPrice { get; set; }
+    public int SalesDetailsId { get; set; }
 
-        public virtual Purchase ChalanNoNavigation { get; set; }
-        public virtual Sale MemoNumberNavigation { get; set; }
-        public virtual Product Product { get; set; }
-    }
+    public int SalesId { get; set; }
+
+    public int ProductId { get; set; }
+
+    public string ChalanNo { get; set; }
+
+    public decimal Quantity { get; set; }
+
+    public decimal UnitPrice { get; set; }
+
+    public int SoldBy { get; set; }
+
+    public virtual Product Product { get; set; }
+
+    public virtual Sale Sales { get; set; }
+
+    public virtual UserCache SoldByNavigation { get; set; }
 }

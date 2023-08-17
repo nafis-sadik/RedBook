@@ -14,19 +14,17 @@ namespace Identity.Domain.Implementation
 {
     public class RouteServices : ServiceBase, IRouteServices
     {
-        private readonly IRepositoryBase<Route> _routeRepo;
+        private IRepositoryBase<Route> _routeRepo;
         public RouteServices(
             ILogger<RouteServices> logger,
             IObjectMapper mapper,
-            IUnitOfWork unitOfWork,
+            IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
         {
             var userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
             if (userRoleId != CommonConstants.GenericRoles.SystemAdminRoleId)
                 throw new ArgumentException($"Only System Admin users have access to execute this operation");
-
-            _routeRepo = unitOfWork.GetRepository<Route>();
         }
 
         public async Task<RouteModel> AddRoute(RouteModel routeModel)
@@ -45,6 +43,7 @@ namespace Identity.Domain.Implementation
         public async Task DeleteRoute(int routeId)
         {
             using(var transaction = UnitOfWorkManager.Begin()) {
+                _routeRepo = transaction.GetRepository<Route>();
                 Route routeEntity = await _routeRepo.GetByIdAsync(routeId);
                 await _routeRepo.DeleteAsync(routeEntity);
                 await transaction.SaveChangesAsync();

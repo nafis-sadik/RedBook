@@ -1,21 +1,10 @@
-﻿#nullable disable
+﻿namespace Inventory.Data.Entities;
 
-namespace Inventory.Data.Entities
+public partial class Bank
 {
-    public partial class Bank
-    {
-        public Bank()
-        {
-            BankBranches = new HashSet<BankBranch>();
-            PurchaseFromBanks = new HashSet<Purchase>();
-            PurchaseToBanks = new HashSet<Purchase>();
-        }
+    public int BankId { get; set; }
 
-        public int Id { get; set; }
-        public string BankName { get; set; }
+    public string BankName { get; set; }
 
-        public virtual ICollection<BankBranch> BankBranches { get; set; }
-        public virtual ICollection<Purchase> PurchaseFromBanks { get; set; }
-        public virtual ICollection<Purchase> PurchaseToBanks { get; set; }
-    }
+    public virtual ICollection<BankBranch> BankBranches { get; set; } = new List<BankBranch>();
 }
