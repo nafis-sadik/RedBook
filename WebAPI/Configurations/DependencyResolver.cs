@@ -1,5 +1,4 @@
 ﻿using Inventory.Data;
-using Microsoft.EntityFrameworkCore;
 using RedBook.Core;
 using RedBook.Core.Security;
 
