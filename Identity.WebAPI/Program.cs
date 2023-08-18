@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RedBook.Core.Constants;
+using System.Reflection;
 using System.Text;
+using Yarkool.SwaggerUI;
 
 namespace Identity.WebAPI
 {
@@ -53,30 +55,36 @@ namespace Identity.WebAPI
                 x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Please enter token",
+                    Description = "Format: Bearer {access_token}",
                     Name = "Authorization",
                     Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",
-                    Scheme = "bearer"
+                    Scheme = "Bearer"
                 });
 
                 x.AddSecurityRequirement(new OpenApiSecurityRequirement {
                     {
                         new OpenApiSecurityScheme{
                             Reference=new OpenApiReference{
-                                Type=ReferenceType.SecurityScheme,
-                                Id="Bearer"
+                                Id="Bearer", //The name of the previously defined security scheme.
+                                Type=ReferenceType.SecurityScheme
                             }
                         },
                         new string[] { }
                     }
                 });
+
+                // Configure Swagger to use the XML file that's generated with the preceding instructions.
+                // For Linux or non-Windows operating systems, file names and paths can be case-sensitive.
+                // For example, a TodoApi.XML file is valid on Windows but not CentOS.
+                x.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
             });
 
             var app = builder.Build();
 
             // Database Initialization
             app.InitDatabase(builder.Environment);
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -93,6 +101,17 @@ namespace Identity.WebAPI
             app.UseAuthorization();
 
             app.MapControllers();
+
+            //app.UseRouting().UseAuthorization().UseEndpoints(endpoints =>
+            //{
+            //    endpoints.MapControllers();
+            //    endpoints.MapSwagger();
+            //});
+
+            //app.UseYarkoolSwaggerUI(c =>
+            //{
+            //    c.SwaggerEndpoint("/v1/swagger.json", "V1 Docs");
+            //});
 
             app.Run();
         }

@@ -56,7 +56,7 @@ namespace Identity.Domain.Implementation
 
             if (applicationEntity == null)
                 throw new ArgumentException($"Application {applicationId} not found");
-
+            
             return Mapper.Map<ApplicationInfoModel>(applicationEntity);
         }
 
@@ -97,7 +97,8 @@ namespace Identity.Domain.Implementation
                     .Select(x => new ApplicationInfoModel
                     {
                         Id = x.ApplicationId,
-                        ApplicationName = x.ApplicationName
+                        ApplicationName = x.ApplicationName,
+                        OrganizationId = x.OrganizationId,
                     })
                     .ToListAsync();
             }
