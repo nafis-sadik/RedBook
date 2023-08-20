@@ -42,6 +42,7 @@ namespace RedBook.Core.Repositories
             if (entityEntry.State == EntityState.Modified) return entityEntry.Entity;
             else throw new InvalidOperationException($"Failed to remove element by identifier {id}");
         }
+
         public async Task DeleteAsync(Expression<Func<TEntity, bool>> where)
         {
             var objects = await UnTrackableQuery().Where(where).ToArrayAsync();
