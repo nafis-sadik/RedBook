@@ -1,12 +1,14 @@
 ﻿using Identity.Data.Models;
+using RedBook.Core.Models;
 
 namespace Identity.Domain.Abstraction
 {
     public interface IApplicationService
     {
-        Task<ApplicationInfoModel> AddApplication(ApplicationInfoModel applicationModel);
-        Task<ApplicationInfoModel> UpdateApplication(ApplicationInfoModel applicationModel);
-        Task DeleteApplication(int applicationId);
-        Task<ApplicationInfoModel> GetApplication(int applicationId);
+        Task<ApplicationInfoModel> AddApplicationAsync(ApplicationInfoModel applicationModel);
+        Task<ApplicationInfoModel> UpdateApplicationAsync(ApplicationInfoModel applicationModel);
+        Task DeleteApplicationAsync(int applicationId);
+        Task<ApplicationInfoModel> GetApplicationAsync(int applicationId);
+        Task<PagedModel<ApplicationInfoModel>> GetApplicationsAsync(PagedModel<ApplicationInfoModel> applicationModel);
     }
 }

@@ -14,7 +14,7 @@ namespace Identity.Domain.Implementation
 {
     public class RouteServices : ServiceBase, IRouteServices
     {
-        private readonly IRepositoryBase<Route> _routeRepo;
+        private IRepositoryBase<Route> _routeRepo;
         public RouteServices(
             ILogger<RouteServices> logger,
             IObjectMapper mapper,
@@ -43,6 +43,7 @@ namespace Identity.Domain.Implementation
         public async Task DeleteRoute(int routeId)
         {
             using(var transaction = UnitOfWorkManager.Begin()) {
+                _routeRepo = transaction.GetRepository<Route>();
                 Route routeEntity = await _routeRepo.GetByIdAsync(routeId);
                 await _routeRepo.DeleteAsync(routeEntity);
                 await transaction.SaveChangesAsync();

@@ -11,5 +11,6 @@ namespace Identity.Data.Models
         public int Id { get; set; }
         public string RoleName { get; set; }
         public int OrganizationId { get; set; }
+        public bool IsAdminRole { get; set; }
     }
 }

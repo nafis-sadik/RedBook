@@ -22,56 +22,56 @@ namespace Identity.WebAPI.Configurations
 
                         // Eager load all resources
                         context.Applications.Include(r => r.Routes).Load();
-                        context.OrganizationRoleMappings.Load();
                         context.Organizations.Load();
                         context.Users.Load();
 
-                        // Load Seed Data for Applications
-                        context.Applications.AddAsync(new Application
-                        {
-                            ApplicationId = 1,
-                            ApplicationName = "Redbook"
-                        });
+                        // Load Seed Data for Organizations
+                        var org = context.Organizations.Find(1);
+                        if (org == null)
+                            context.Organizations.AddAsync(new Organization
+                            {
+                                OrganizationName = "Blume Digital Corp."
+                            });
+                        else
+                            org.OrganizationName = "Blume Digital Corp.";
 
-                        // Load Seed Data for Routes
-                        context.Routes.AddAsync(new Data.Entities.Route
-                        {
-                            RouteId = 1,
-                            RouteName = "Redbook",
-                            Route1 = "",
-                            Description = "",
-                            ApplicationId = 1
-                        });
-
-                        // Load Seed Data for Role-Route Mapping
-                        context.RoleRouteMappings.AddAsync(new RoleRouteMapping
-                        {
-                            MappingId = 1,
-                            RoleId = 1,
-                            RouteId = 1
-                        });
+                        context.SaveChanges();
 
                         // Load Seed Data for Users
-                        context.Roles.AddAsync(new Role
+                        var orgRole = context.Roles.Find(1);
+                        if (orgRole == null)
+                            context.Roles.AddAsync(new Role
+                            {
+                                RoleName = "System Admin",
+                                OrganizationId = 1,
+                                IsAdminRole = 1,
+                            });
+                        else
                         {
-                            RoleId = 1,
-                            IsGenericRole = 1,
-                            RoleName = "System Admin",
-                        });
+                            orgRole.RoleName = "System Admin";
+                            orgRole.OrganizationId = 1;
+                            orgRole.IsAdminRole = 1;
+                        }
 
-                        // Load Seed Data for Organization-Role Mapping
-                        context.OrganizationRoleMappings.AddAsync(new OrganizationRoleMapping { 
-                            MappingId = 1,
-                            RoleId= 1,
-                            OrganizationId = 1
-                        });
+                        context.SaveChanges();
 
-                        // Load Seed Data for Organizations
-                        context.Organizations.AddAsync(new Organization
+                        // Load Seed Data for Applications
+                        var application = context.Applications.Find(1);
+                        if(application == null)
                         {
-                            OrganizationId = 1,
-                            OrganizationName = "Blume Digital Corp."
-                        });
+                            context.Applications.AddAsync(new Application
+                            {
+                                ApplicationName = "Redbook",
+                                OrganizationId = 1
+                            });
+                        }
+                        else
+                        {
+                            application.ApplicationName = "Redbook";
+                            application.OrganizationId = 1;
+                        }
+
+                        context.SaveChanges();
 
                         // Load Seed Data for Users
                         context.Users.AddAsync(new User

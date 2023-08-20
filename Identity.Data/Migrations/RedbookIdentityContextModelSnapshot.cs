@@ -25,7 +25,10 @@ namespace Identity.Data.Migrations
             modelBuilder.Entity("Identity.Data.Entities.Application", b =>
                 {
                     b.Property<int>("ApplicationId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ApplicationId"));
 
                     b.Property<string>("ApplicationName")
                         .IsRequired()
@@ -33,8 +36,13 @@ namespace Identity.Data.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int");
+
                     b.HasKey("ApplicationId")
                         .HasName("PK__Applicat__3214EC07D6504A6D");
+
+                    b.HasIndex(new[] { "OrganizationId" }, "IX_Applications_OrganizationId");
 
                     b.ToTable("Applications");
                 });
@@ -42,7 +50,10 @@ namespace Identity.Data.Migrations
             modelBuilder.Entity("Identity.Data.Entities.Organization", b =>
                 {
                     b.Property<int>("OrganizationId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrganizationId"));
 
                     b.Property<string>("OrganizationName")
                         .IsRequired()
@@ -55,33 +66,19 @@ namespace Identity.Data.Migrations
                     b.ToTable("Organizations");
                 });
 
-            modelBuilder.Entity("Identity.Data.Entities.OrganizationRoleMapping", b =>
-                {
-                    b.Property<int>("MappingId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OrganizationId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
-
-                    b.HasKey("MappingId");
-
-                    b.HasIndex("OrganizationId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("OrganizationRoleMapping", (string)null);
-                });
-
             modelBuilder.Entity("Identity.Data.Entities.Role", b =>
                 {
                     b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<short>("IsGenericRole")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<short>("IsAdminRole")
                         .HasColumnType("smallint");
+
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int");
 
                     b.Property<string>("RoleName")
                         .IsRequired()
@@ -91,13 +88,18 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("RoleId");
 
+                    b.HasIndex(new[] { "OrganizationId" }, "IX_Roles_OrganizationId");
+
                     b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.RoleRouteMapping", b =>
                 {
                     b.Property<int>("MappingId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MappingId"));
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
@@ -107,9 +109,9 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("MappingId");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex(new[] { "RoleId" }, "IX_RoleRouteMapping_RoleId");
 
-                    b.HasIndex("RouteId");
+                    b.HasIndex(new[] { "RouteId" }, "IX_RoleRouteMapping_RouteId");
 
                     b.ToTable("RoleRouteMapping", (string)null);
                 });
@@ -117,7 +119,10 @@ namespace Identity.Data.Migrations
             modelBuilder.Entity("Identity.Data.Entities.Route", b =>
                 {
                     b.Property<int>("RouteId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RouteId"));
 
                     b.Property<int>("ApplicationId")
                         .HasColumnType("int");
@@ -141,7 +146,7 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("RouteId");
 
-                    b.HasIndex("ApplicationId");
+                    b.HasIndex(new[] { "ApplicationId" }, "IX_Routes_ApplicationId");
 
                     b.ToTable("Routes");
                 });
@@ -193,30 +198,33 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("UserId");
 
-                    b.HasIndex("OrganizationId");
+                    b.HasIndex(new[] { "OrganizationId" }, "IX_Users_OrganizationId");
 
-                    b.HasIndex("RoleId");
+                    b.HasIndex(new[] { "RoleId" }, "IX_Users_RoleId");
 
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("Identity.Data.Entities.OrganizationRoleMapping", b =>
+            modelBuilder.Entity("Identity.Data.Entities.Application", b =>
                 {
                     b.HasOne("Identity.Data.Entities.Organization", "Organization")
-                        .WithMany("OrganizationRoleMappings")
+                        .WithMany("Applications")
                         .HasForeignKey("OrganizationId")
                         .IsRequired()
-                        .HasConstraintName("FK_OrganizationRoleMapping_Organizations");
-
-                    b.HasOne("Identity.Data.Entities.Role", "Role")
-                        .WithMany("OrganizationRoleMappings")
-                        .HasForeignKey("RoleId")
-                        .IsRequired()
-                        .HasConstraintName("FK_OrganizationRoleMapping_Roles");
+                        .HasConstraintName("FK_Applications_Organizations");
 
                     b.Navigation("Organization");
+                });
 
-                    b.Navigation("Role");
+            modelBuilder.Entity("Identity.Data.Entities.Role", b =>
+                {
+                    b.HasOne("Identity.Data.Entities.Organization", "Organization")
+                        .WithMany("Roles")
+                        .HasForeignKey("OrganizationId")
+                        .IsRequired()
+                        .HasConstraintName("FK_Roles_Organizations");
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.RoleRouteMapping", b =>
@@ -275,15 +283,15 @@ namespace Identity.Data.Migrations
 
             modelBuilder.Entity("Identity.Data.Entities.Organization", b =>
                 {
-                    b.Navigation("OrganizationRoleMappings");
+                    b.Navigation("Applications");
+
+                    b.Navigation("Roles");
 
                     b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Role", b =>
                 {
-                    b.Navigation("OrganizationRoleMappings");
-
                     b.Navigation("RoleRouteMappings");
 
                     b.Navigation("Users");
