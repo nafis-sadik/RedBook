@@ -25,6 +25,8 @@ namespace Inventory.Domain
 
             CreateMap<RoleModel, Role>()
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Id));
+
+            CreateMap<User, UserModel>().ReverseMap();
         }
     }
 }

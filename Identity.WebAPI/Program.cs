@@ -116,12 +116,12 @@ namespace Identity.WebAPI
             app.InitDatabase(builder.Environment);
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                //app.UseSwaggerUI();
-            }
-
+            //if (app.Environment.IsDevelopment())
+            //{
+            //    app.UseSwagger();
+            //    //app.UseSwaggerUI();
+            //}
+            app.UseSwagger();
 
             app.MapControllers();
 
@@ -139,10 +139,12 @@ namespace Identity.WebAPI
 
             //app.UseZSwaggerUI(title: "/v1/swagger.json", templateName: "V1 Docs");
 
-            app.UseYarkoolSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/v1/swagger.json", "V1 Docs");
-            });
+            //app.UseYarkoolSwaggerUI(c =>
+            //{
+            //    c.SwaggerEndpoint("/v1/swagger.json", "V1 Docs");
+            //});
+
+            app.UseSwaggerUI();
 
             //app.UseRouting().UseAuthorization().UseEndpoints(endpoints =>
             //{

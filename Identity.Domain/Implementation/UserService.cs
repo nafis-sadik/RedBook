@@ -62,6 +62,7 @@ namespace Identity.Domain.Implementation
             else
                 return "";
         }
+        
         public async Task<string?> SignUpAsync(UserModel userModel)
         {
             throw new NotImplementedException();
@@ -100,7 +101,7 @@ namespace Identity.Domain.Implementation
             //}
         }
 
-        // All User API
+        // User API
         public async Task<UserModel> UpdateOwnInformation(UserModel userModel)
         {
             var requestSenderId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
@@ -122,6 +123,7 @@ namespace Identity.Domain.Implementation
 
             return Mapper.Map<UserModel>(userEntity);
         }
+
         public async Task<UserModel?> GetOwnInformation()
         {
             var userId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId", StringComparison.InvariantCultureIgnoreCase))?.Value;
@@ -129,6 +131,7 @@ namespace Identity.Domain.Implementation
             User? userEntity = await _userRepo.GetByIdAsync(userId);
             return Mapper.Map<UserModel>(userEntity);
         }
+
         public async Task<bool> ArchiveAccount()
         {
             var userId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId", StringComparison.InvariantCultureIgnoreCase))?.Value;
@@ -149,20 +152,45 @@ namespace Identity.Domain.Implementation
         // Organization Admin API
         public async Task<UserModel> RegisterNewUser(UserModel userModel)
         {
-            int roleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
-            int orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
-
-            if (roleId != CommonConstants.GenericRoles.SystemAdminRoleId && roleId != CommonConstants.GenericRoles.AdminRoleId)
-                throw new ArgumentException($"Only admin user can add new user to his organization");
-
-            var newUser = Mapper.Map<User>(userModel);
-
+            var requestSenderId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
+            
+            User newUser;
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                newUser.UserId = new Guid().ToString();
+                _userRepo = transaction.GetRepository<User>();
+
+                User? requestSenderUser = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.UserId == requestSenderId);
+
+                if (requestSenderUser == null)
+                    throw new ArgumentException($"User {requestSenderId} was not found");
+
+                int? senderRoleId = requestSenderUser?.RoleId;
+
+                if (senderRoleId == null)
+                    throw new ArgumentException($"User {requestSenderId} has no role assigned or doesn't exist");
+
+                _roleRepo = transaction.GetRepository<Role>();
+
+                Role? senderRole = await _roleRepo.GetByIdAsync(senderRoleId);
+
+                if (senderRole == null)
+                    throw new ArgumentException("Invalid sender role");
+
+                if (senderRole.IsAdminRole == 0)
+                    throw new ArgumentException($"Only admin user can add new user to his organization");
+
+                int orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
+
+                newUser = Mapper.Map<User>(userModel);
+                
+                newUser.UserId = Guid.NewGuid().ToString();
                 newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
-                newUser.OrganizationId = orgId;
-                newUser.RoleId = userModel.RoleId;
+                newUser.Status = CommonConstants.StatusTypes.Active.ToString();
+                if(senderRole.RoleName.ToLower().Contains("system admin"))
+                    newUser.OrganizationId = senderRole.RoleId;
+                else
+                    newUser.OrganizationId = orgId;
+
                 newUser = await _userRepo.InsertAsync(newUser);
 
                 await transaction.SaveChangesAsync();
