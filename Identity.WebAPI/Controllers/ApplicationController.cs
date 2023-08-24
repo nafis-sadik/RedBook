@@ -9,7 +9,7 @@ using Swashbuckle.AspNetCore.Annotations;
 namespace Identity.WebAPI.Controllers
 {
     /// <summary>
-    /// Authentication Module
+    /// Application Module
     /// </summary>
     [Authorize]
     [ApiController]
@@ -19,7 +19,7 @@ namespace Identity.WebAPI.Controllers
         private readonly IApplicationService _applicationService;
 
         /// <summary>
-        /// Authentication Module Controller
+        /// Application Module Constructor
         /// </summary>
         /// <param name="applicationService">An implementation of IApplicationService injected by IOC Controller</param>
         public ApplicationController(IApplicationService applicationService)
@@ -37,12 +37,24 @@ namespace Identity.WebAPI.Controllers
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
         public async Task<IActionResult> GetAsync(int appId) => Ok(await _applicationService.GetApplicationAsync(appId));
 
+        /// <summary>
+        /// For adding new application to eco system
+        /// </summary>
+        /// <param name="appInfo">Application View Model Object</param>
         [HttpPost]
         public async Task<IActionResult> AddAsync(ApplicationInfoModel appInfo) => Ok(await _applicationService.AddApplicationAsync(appInfo));
 
+        /// <summary>
+        /// For updating existing application data
+        /// </summary>
+        /// <param name="appInfo">Application View Model Object</param>
         [HttpPut]
         public async Task<IActionResult> UpdateAsync(ApplicationInfoModel appInfo) => Ok(await _applicationService.UpdateApplicationAsync(appInfo));
 
+        /// <summary>
+        /// For retiring an existing application
+        /// </summary>
+        /// <param name="appId">Application Id or unique identifier which is the primary key of the application</param>
         [HttpDelete]
         public async Task<IActionResult> DeleteAsync(int appId)
         {
@@ -50,6 +62,10 @@ namespace Identity.WebAPI.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// For retrieving application list in paginated form
+        /// </summary>
+        /// <param name="pagedApplications">Paginated application view model passed over query parameters</param>
         [HttpGet]
         [Route("/PagedApplications")]
         public async Task<IActionResult> GetPagedAsync([FromQuery] PagedModel<ApplicationInfoModel> pagedApplications) => Ok(await _applicationService.GetApplicationsAsync(pagedApplications));

@@ -43,12 +43,24 @@ namespace Identity.Domain.Implementation
 
                 if (userRoleEntity.IsAdminRole == 1)
                 {
-                    roleEntity = await _roleRepo.InsertAsync(new Role
+                    if(userRoleId == 1 && orgId == 1)
                     {
-                        RoleName = role.RoleName,
-                        IsAdminRole = (short)(role.IsAdminRole == true ? 1 : 0),
-                        OrganizationId = orgId
-                    });
+                        roleEntity = await _roleRepo.InsertAsync(new Role
+                        {
+                            RoleName = role.RoleName,
+                            IsAdminRole = (short)(role.IsAdminRole == true ? 1 : 0),
+                            OrganizationId = role.OrganizationId
+                        });
+                    }
+                    else
+                    {
+                        roleEntity = await _roleRepo.InsertAsync(new Role
+                        {
+                            RoleName = role.RoleName,
+                            IsAdminRole = (short)(role.IsAdminRole == true ? 1 : 0),
+                            OrganizationId = orgId
+                        });
+                    }
                 }
                 else
                     throw new ArgumentException("Only admin users are authorized to execute this operation");
