@@ -73,19 +73,35 @@ namespace Identity.WebAPI.Configurations
 
                         context.SaveChanges();
 
-                        // Load Seed Data for Users
-                        context.Users.AddAsync(new User
+                        var user = context.Users.Find("00000000-0000-0000-0000-000000000000");
+                        if (user == null)
+                            // Load Seed Data for Users
+                            context.Users.AddAsync(new User
+                            {
+                                UserId = new Guid().ToString(),
+                                AccountBalance = int.MaxValue,
+                                FirstName = "Md. Nafis",
+                                LastName = "Sadik",
+                                UserName = "nafis_sadik",
+                                Email = "nafis_sadik@outlook.com",
+                                Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23"),
+                                Status = CommonConstants.StatusTypes.Active.ToString(),
+                                RoleId = 1,
+                                OrganizationId = 1,
+                            });
+                        else
                         {
-                            UserId = new Guid().ToString(),
-                            AccountBalance = int.MaxValue,
-                            FirstName = "Md. Nafis",
-                            LastName = "Sadik",
-                            UserName = "nafis_sadik",
-                            Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23"),
-                            Status = CommonConstants.StatusTypes.Active.ToString(),
-                            RoleId = 1,
-                            OrganizationId = 1,
-                        });
+                            user.UserId = "00000000-0000-0000-0000-000000000000";
+                            user.AccountBalance = int.MaxValue;
+                            user.FirstName = "Md. Nafis";
+                            user.LastName = "Sadik";
+                            user.UserName = "nafis_sadik";
+                            user.Email = "nafis_sadik@outlook.com";
+                            user.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23");
+                            user.Status = CommonConstants.StatusTypes.Active.ToString();
+                            user.RoleId = 1;
+                            user.OrganizationId = 1;
+                        }
 
                         context.SaveChanges();
 

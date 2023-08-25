@@ -10,7 +10,6 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System.Linq;
 using System.Security.Claims;
 
 namespace Identity.Domain.Implementation

@@ -21,6 +21,8 @@ public partial class User
 
     public string Status { get; set; }
 
+    public string Email { get; set; }
+
     public int? AccountBalance { get; set; }
 
     public virtual Organization Organization { get; set; }
