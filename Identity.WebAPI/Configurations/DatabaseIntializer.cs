@@ -8,7 +8,6 @@ namespace Identity.WebAPI.Configurations
     {
         public static void InitDatabase(this IApplicationBuilder app, IWebHostEnvironment env)
         {
-
             using (var scope = app.ApplicationServices.CreateScope())
             {
                 RedbookIdentityContext context = scope.ServiceProvider.GetRequiredService<RedbookIdentityContext>();

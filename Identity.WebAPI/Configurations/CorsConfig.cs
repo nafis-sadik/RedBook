@@ -1,29 +1,41 @@
-﻿namespace Identity.WebAPI.Configurations
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace Identity.WebAPI.Configurations
 {
+    /// <summary>
+    /// Extension methods for setting up CORS Configurations.
+    /// </summary>
     public static class CorsConfig
     {
-        public const string Policy = "AllowSpecificOrigin";
+        /// <summary>
+        /// CORS Policy name of custom configured policy
+        /// </summary>
+        public static string CorsPolicy = "CustomCors";
 
-        public static IServiceCollection AddCorsIdentity(this IServiceCollection services, IConfiguration configuration)
+        /// <summary>
+        /// Registers CORS allowed domains from appsettings.json under "CORS:AllowedOrigins"
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection"/>.</param>
+        /// <param name="configuration">The <see cref="IConfiguration"/>.</param>
+        public static void AddCorsIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddCors(opts =>
-             opts.AddPolicy(Policy, builder =>
-             {
-                 var corsConfiguration = configuration.GetSection("CORS:AllowedOrigins");
-
-                 var corsOrigins = corsConfiguration.Get<string[]>();
-                 if (corsOrigins != null)
+            opts.AddPolicy(CorsPolicy,
+                 policy =>
                  {
-                     builder
-                         .WithOrigins(corsOrigins)
-                         .WithExposedHeaders("x-total-count")
-                         .AllowAnyHeader()
-                         .AllowAnyMethod()
-                         .AllowCredentials();
-                 }
-             }));
+                     var corsConfiguration = configuration.GetSection("CORS:AllowedHosts");
 
-            return services;
+                     var corsOrigins = corsConfiguration.Get<string[]>();
+                     if (corsOrigins != null)
+                     {
+                         policy
+                             .WithOrigins(corsOrigins)
+                             .WithExposedHeaders("x-total-count")
+                             .AllowAnyHeader()
+                             .AllowAnyMethod()
+                             .AllowCredentials();
+                     }
+                 }));
         }
     }
 }

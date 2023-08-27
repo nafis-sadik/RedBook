@@ -5,21 +5,17 @@ namespace Identity.Domain.Abstraction
     public interface IUserService
     {
         // Public API
-        Task<string?> SignUpAsync(UserModel userModel);
         Task<string?> LogInAsync(UserModel userModel);
 
-        // Organization Admin API
+        // User API
+        Task<UserModel> UpdateAsync(UserModel userModel);
+        Task<UserModel?> GetById(string userId);
+        Task<bool> ArchiveAccount(string userId);
+        Task ResetPassword(string userId);
+
+        // Admin Only API
+        Task DeleteAccount(string userId);
+        Task UnArchiveAccount(string userId);
         Task<UserModel> RegisterNewUser(UserModel userModel);
-        Task<bool> ResetPassword(string userId);
-
-        // All User API
-        Task<UserModel> UpdateOwnInformation(UserModel userModel);
-        Task<UserModel?> GetOwnInformation();
-        Task<bool> ArchiveAccount();
-
-        // System Admin API
-        Task<bool> DeleteAccount(string userId);
-        Task<bool> UnArchiveAccount(string userId);
-        Task<UserModel> RegisterAdminUser(UserModel userModel);
     }
 }

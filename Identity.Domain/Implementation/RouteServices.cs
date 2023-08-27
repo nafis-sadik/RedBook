@@ -1,6 +1,7 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Constants;
@@ -15,17 +16,14 @@ namespace Identity.Domain.Implementation
     public class RouteServices : ServiceBase, IRouteServices
     {
         private IRepositoryBase<Route> _routeRepo;
+        private IRepositoryBase<Role> _roleRepo;
         public RouteServices(
             ILogger<RouteServices> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
-        {
-            var userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
-            if (userRoleId != CommonConstants.GenericRoles.SystemAdminRoleId)
-                throw new ArgumentException($"Only System Admin users have access to execute this operation");
-        }
+        { }
 
         public async Task<RouteModel> AddRoute(RouteModel routeModel)
         {

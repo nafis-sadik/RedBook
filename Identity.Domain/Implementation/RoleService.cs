@@ -81,7 +81,7 @@ namespace Identity.Domain.Implementation
             int userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
             Role? userRoleEntity = await _roleRepo.GetByIdAsync(userRoleId);
 
-            if (!userRoleEntity.RoleName.ToLower().Equals(CommonConstants.GenericRoles.Admin.ToLower()) && !userRoleEntity.RoleName.ToLower().Equals(CommonConstants.GenericRoles.SystemAdmin.ToLower()))
+            if (userRoleEntity?.IsAdminRole != 1)
                 throw new ArgumentException("Only admin users are authorized to execute this operation");
 
             // An user can delete the roles of his organization only
@@ -107,7 +107,7 @@ namespace Identity.Domain.Implementation
 
             if (userRoleEntity == null) throw new ArgumentException($"Role with identifier {userRoleId} was not found");
 
-            if (!userRoleEntity.RoleName.ToLower().Equals(CommonConstants.GenericRoles.Admin.ToLower()) && !userRoleEntity.RoleName.ToLower().Equals(CommonConstants.GenericRoles.SystemAdmin.ToLower()))
+            if (userRoleEntity?.IsAdminRole != 1)
                 throw new ArgumentException("Only admin users are authorized to execute this operation");
 
             return Mapper.Map<RoleModel>(userRoleEntity);

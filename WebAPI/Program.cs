@@ -60,6 +60,8 @@ namespace Inventory.WebAPI
             // Database Initialization
             app.InitDatabase(builder.Environment);
 
+            app.UseCors();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {

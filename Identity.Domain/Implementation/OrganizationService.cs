@@ -17,17 +17,15 @@ namespace Identity.Domain.Implementation
     public class OrganizationService : ServiceBase, IOrganizationService
     {
         private IRepositoryBase<Organization> _orgRepo;
+        private IRepositoryBase<Role> _roleRepo;
+
         public OrganizationService(
             ILogger<ApplicationService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
-        {
-            var userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
-            if (userRoleId != CommonConstants.GenericRoles.SystemAdminRoleId)
-                throw new ArgumentException($"Only System Admin users of Blume Digital Cor. have access to execute this operation");
-        }
+        { }
 
         public async Task<OrganizationModel> AddOrganizationAsync(OrganizationModel organizationModel)
         {

@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Constants;
 using Swashbuckle.AspNetCore.Annotations;
-using System.ComponentModel;
 
 namespace Identity.WebAPI.Controllers
 {
@@ -14,7 +13,7 @@ namespace Identity.WebAPI.Controllers
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
-    public class AuthController : ControllerBase
+    public class UserController : ControllerBase
     {
         private readonly IUserService _userServices;
 
@@ -22,7 +21,7 @@ namespace Identity.WebAPI.Controllers
         /// User Module Constructor
         /// </summary>
         /// <param name="userServices">An implementation of IUserService injected by IOC Controller</param>
-        public AuthController(IUserService userServices)
+        public UserController(IUserService userServices)
         {
             _userServices = userServices;
         }
@@ -59,37 +58,41 @@ namespace Identity.WebAPI.Controllers
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
         public async Task<IActionResult> RegisterUser(UserModel user) => Ok(await _userServices.RegisterNewUser(user));
 
+        /// <summary>
+        /// Archive own account or an user under own organization (admin user only)
+        /// </summary>
+        /// <param name="userId">User unique identifier<see cref="string"/>.</param>
         [HttpDelete]
         [Authorize]
-        [Route("Archive")]
-        public async Task<IActionResult> ArchiveAccount()
+        [Route("Archive/{userId}")]
+        public async Task<IActionResult> ArchiveAccount(string userId)
         {
-            if (await _userServices.ArchiveAccount())
+            if (await _userServices.ArchiveAccount(userId))
                 return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
             else
                 return new ForbidResult();
         }
 
+        /// <summary>
+        /// Unarchive own account or an user under own organization (admin user only)
+        /// </summary>
+        /// <param name="userId">Application Id or unique identifier which is the primary key of the application</param>
         [HttpPut]
         [Authorize]
         [Route("Unarchive/{id}")]
-        public async Task<IActionResult> UnArchiveAccount(string id)
+        public async Task<IActionResult> UnArchiveAccount(string userId)
         {
-            if (await _userServices.UnArchiveAccount(id))
-                return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
-            else
-                return new ForbidResult();
+            await _userServices.UnArchiveAccount(userId);
+            return Ok();
         }
 
         [HttpDelete]
         [Authorize]
-        [Route("Delete/{id}")]
-        public async Task<IActionResult> PermanantDelete(string id)
+        [Route("{id}")]
+        public async Task<IActionResult> Delete(string id)
         {
-            if (await _userServices.DeleteAccount(id))
-                return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
-            else
-                return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
+            await _userServices.DeleteAccount(id);
+            return Ok();
         }
         
         [HttpPut]
@@ -97,45 +100,19 @@ namespace Identity.WebAPI.Controllers
         [Route("ResetPassword/{id}")]
         public async Task<IActionResult> ResetPassword(string id)
         {
-            if (await _userServices.ResetPassword(id))
-                return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
-            else
-                return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
-        }
-
-        [HttpGet]
-        [Authorize]
-        [Route("GetOwnInformation")]
-        public async Task<IActionResult> GetOwnInformation()
-        {
-            var userData = await _userServices.GetOwnInformation();
-            if (userData != null)
-                return new OkObjectResult(new { Response = userData });
-            else
-                return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
+            await _userServices.ResetPassword(id);
+            return Ok();
         }
 
         [HttpPut]
         [Authorize]
-        [Route("UpdateOwnInformation")]
-        public async Task<IActionResult> UpdateOwnInformation(UserModel user)
+        public async Task<IActionResult> Update(UserModel user)
         {
-            var userData = await _userServices.UpdateOwnInformation(user);
+            var userData = await _userServices.UpdateAsync(user);
             if (userData != null)
                 return new OkObjectResult(new { Response = userData });
             else
                 return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
-        }
-
-        [HttpPost]
-        [Route("RegisterAdmin")]
-        public async Task<IActionResult> RegisterAdminToOrganization(UserModel user)
-        {
-            user = await _userServices.RegisterAdminUser(user);
-            if (user != null)
-                return Ok(new { Response = user });
-
-            return Conflict(new { Response = user });
         }
     }
 }

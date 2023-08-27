@@ -4,7 +4,6 @@ using Identity.Domain.Abstraction;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
-using RedBook.Core.Constants;
 using RedBook.Core.Domain;
 using RedBook.Core.Models;
 using RedBook.Core.Repositories;
@@ -16,26 +15,23 @@ namespace Identity.Domain.Implementation
 {
     public class ApplicationService : ServiceBase, IApplicationService
     {
-        private IRepositoryBase<Application> _appRepository;
+        private IRepositoryBase<Application> _appRepo;
+        private IRepositoryBase<Role> _roleRepo;
         public ApplicationService(
             ILogger<ApplicationService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
-        {
-            var userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
-            if (userRoleId != CommonConstants.GenericRoles.SystemAdminRoleId)
-                throw new ArgumentException($"Only System Admin users of Blume Digital Corp. have access to execute this operation");
-        }
+        { }
 
         public async Task<ApplicationInfoModel> AddApplicationAsync(ApplicationInfoModel applicationModel)
         {
             Application applicationEntity = Mapper.Map<Application>(applicationModel);
             using(var transaction = UnitOfWorkManager.Begin())
             {
-                _appRepository = transaction.GetRepository<Application>();
-                applicationEntity = await _appRepository.InsertAsync(new Application {
+                _appRepo = transaction.GetRepository<Application>();
+                applicationEntity = await _appRepo.InsertAsync(new Application {
                     ApplicationName = applicationModel.ApplicationName,
                     OrganizationId = applicationModel.OrganizationId
                 });
@@ -50,8 +46,8 @@ namespace Identity.Domain.Implementation
             Application? applicationEntity;
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                _appRepository = transaction.GetRepository<Application>();
-                applicationEntity = await _appRepository.GetByIdAsync(applicationId);
+                _appRepo = transaction.GetRepository<Application>();
+                applicationEntity = await _appRepo.GetByIdAsync(applicationId);
             }
 
             if (applicationEntity == null)
@@ -65,11 +61,11 @@ namespace Identity.Domain.Implementation
             Application? applicationEntity;
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                _appRepository = transaction.GetRepository<Application>();
-                applicationEntity = await _appRepository.GetByIdAsync(applicationModel.Id);
+                _appRepo = transaction.GetRepository<Application>();
+                applicationEntity = await _appRepo.GetByIdAsync(applicationModel.Id);
                 applicationEntity = Mapper.Map(applicationModel, applicationEntity);
                 if(applicationEntity == null) throw new ArgumentException($"Application {applicationModel.Id} not found");
-                applicationEntity = _appRepository.Update(applicationEntity);
+                applicationEntity = _appRepo.Update(applicationEntity);
                 await transaction.SaveChangesAsync();
             }
             return Mapper.Map<ApplicationInfoModel>(applicationEntity);
@@ -79,7 +75,7 @@ namespace Identity.Domain.Implementation
         {
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                await _appRepository.DeleteAsync(applicationId);
+                await _appRepo.DeleteAsync(applicationId);
                 await transaction.SaveChangesAsync();
             }
         }
@@ -88,8 +84,8 @@ namespace Identity.Domain.Implementation
         {
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                _appRepository = transaction.GetRepository<Application>();
-                applicationModel.SourceData = await _appRepository
+                _appRepo = transaction.GetRepository<Application>();
+                applicationModel.SourceData = await _appRepo
                     .UnTrackableQuery()
                     .Where(x => x.ApplicationId > 0)
                     .Skip(applicationModel.Skip)

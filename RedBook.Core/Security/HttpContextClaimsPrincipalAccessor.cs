@@ -5,13 +5,23 @@ namespace RedBook.Core.Security
 {
     public class HttpContextClaimsPrincipalAccessor : IClaimsPrincipalAccessor
     {
-        protected IHttpContextAccessor HttpContextAccessor { get; }
+        private IHttpContextAccessor HttpContextAccessor { get; }
 
         public HttpContextClaimsPrincipalAccessor(IHttpContextAccessor accessor)
         {
             HttpContextAccessor = accessor;
         }
 
-        public virtual ClaimsPrincipal? GetCurrentPrincipal() => HttpContextAccessor?.HttpContext?.User;
+        public virtual ClaimsPrincipal GetCurrentPrincipal()
+        {
+            if(HttpContextAccessor == null)
+                throw new ArgumentException("Error in HttpContextAccessor");
+
+            if(HttpContextAccessor.HttpContext == null)
+                throw new ArgumentException("Error in HttpContextAccessor.HttpContext");
+            
+            return HttpContextAccessor.HttpContext.User;
+
+        }
     }
 }

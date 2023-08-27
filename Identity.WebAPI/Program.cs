@@ -1,14 +1,12 @@
-using Identity.Data;
 using Identity.WebAPI.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc.Controllers;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RedBook.Core.Constants;
+using System.Configuration;
 using System.Reflection;
 using System.Text;
-using Yarkool.SwaggerUI;
 
 namespace Identity.WebAPI
 {
@@ -16,20 +14,19 @@ namespace Identity.WebAPI
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
             // Cross-Origin Requests (CORS)
             builder.Services.AddCorsIdentity(builder.Configuration);
 
-            // Database Configuration
-            builder.Services.AddDatabaseConfigurations(builder.Configuration);
-
             // IoC Container & DbContext
-            builder.Services.RosolveDependencies();
+            builder.Services.RosolveDependencies(builder.Configuration);
 
-            // Add Controllers
-            builder.Services.AddControllers();
+            builder.Services.AddControllers(options =>
+            {
+                options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+            });
 
             // JWT Bearer token based authentication
             builder.Services.AddAuthentication(x =>
@@ -54,7 +51,8 @@ namespace Identity.WebAPI
 
             // Swagger Configurations
             builder.Services.AddSwaggerGen(x => {
-                x.SwaggerDoc("v1", new OpenApiInfo {
+                x.SwaggerDoc("v1", new OpenApiInfo
+                {
                     Title = "Blume Digital Corp. - Identity API",
                     Version = "v1",
                     Description = "A JWT based user management system to authenticate and manage users, their roles, rights and other user related features for all applications developed and maintained by Blume Digital Corp.",
@@ -110,52 +108,25 @@ namespace Identity.WebAPI
                 x.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
             });
 
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
             // Database Initialization
             app.InitDatabase(builder.Environment);
 
+            app.UseCors(CorsConfig.CorsPolicy);;
+
             // Configure the HTTP request pipeline.
-            //if (app.Environment.IsDevelopment())
-            //{
-            //    app.UseSwagger();
-            //    //app.UseSwaggerUI();
-            //}
-            app.UseSwagger();
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
 
-            app.MapControllers();
-
-            app.UseCors(DefaultCorsConfig.Policy);
-
-            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseHttpsRedirection();
 
-            app.UseRouting().UseAuthorization().UseEndpoints(endpoints =>
-            {
-                //endpoints.MapControllers();
-                endpoints.MapSwagger();
-            });
-
-            //app.UseZSwaggerUI(title: "/v1/swagger.json", templateName: "V1 Docs");
-
-            //app.UseYarkoolSwaggerUI(c =>
-            //{
-            //    c.SwaggerEndpoint("/v1/swagger.json", "V1 Docs");
-            //});
-
-            app.UseSwaggerUI();
-
-            //app.UseRouting().UseAuthorization().UseEndpoints(endpoints =>
-            //{
-            //    endpoints.MapControllers();
-            //    endpoints.MapSwagger();
-            //});
-
-            //app.UseYarkoolSwaggerUI(c =>
-            //{
-            //    c.SwaggerEndpoint("/v1/swagger.json", "V1 Docs");
-            //});
+            app.MapControllers();
 
             app.Run();
         }

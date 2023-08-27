@@ -2,22 +2,6 @@
 {
     public static class CommonConstants
     {
-        public static class GenericRoles
-        {
-            public const string Admin = "Admin";
-            public const string SystemAdmin = "System Admin";
-            public const int SystemAdminRoleId = 1;
-            public const int AdminRoleId = 2;
-        }
-        public static class Boolean
-        {
-            public const char TrueCh = 'Y';
-            public const char FalseCh = 'N';
-
-            public const string True = "Y";
-            public const string False = "N";
-        }
-
         public static class PasswordConfig
         {
             public static string Salt
@@ -28,16 +12,7 @@
             public const double SaltExpire = 7;
             public const int SaltGeneratorLogRounds = 12;
         }
-        public static int StandardPageSize
-        {
-            get { return 10; }
-            private set { }
-        }
-        public static class SortingParam
-        {
-            public const int Price_LowToHigh = 1;
-            public const int Price_HighToLow = 2;
-        }
+
         public static class StatusTypes
         {
             public const char Active = 'A';
@@ -45,6 +20,7 @@
             public const char Archived = 'D';
             public const char Pending = 'P';
         }
+
         public static class HttpResponseMessages
         {
             // Generic
@@ -58,8 +34,11 @@
             public const string UserNotFound = "User Not Found";
             public const string PasswordMismatched = "Password Mismatched";
             public const string MailExists = "Account with this Email Id already exists, Try resting password";
-        }
+            public const string InvalidToken = "Http request was sent using invalid token";
 
-        public const int DefaultCreditBalance = 1000;
+            // Access control
+            public const string NotAllowed = "User not allowed to perform this operation";
+            public const string AdminAccessRequired = "Only admin user can perform this peration";
+        }
     }
 }
