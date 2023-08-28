@@ -8,7 +8,7 @@ namespace Identity.Data.Models
 {
     public class OrganizationModel
     {
-        public int Id { get; set; }
+        public int OrganizationId { get; set; }
         public string OrganizationName { get; set; }
     }
 }

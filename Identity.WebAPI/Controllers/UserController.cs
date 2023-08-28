@@ -53,13 +53,12 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         /// <param name="user">Application Id or unique identifier which is the primary key of the application</param>
         [HttpPost]
-        [Route("RegisterUser")]
         [SwaggerResponse(statusCode: 200, type: typeof(string), description: "Return JWT token")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
         public async Task<IActionResult> RegisterUser(UserModel user) => Ok(await _userServices.RegisterNewUser(user));
 
         /// <summary>
-        /// Archive own account or an user under own organization (admin user only)
+        /// Archive own account only. User may join a different organization under redbook, thus organization admins should not hold the right to archive an user.
         /// </summary>
         /// <param name="userId">User unique identifier<see cref="string"/>.</param>
         [HttpDelete]
@@ -86,24 +85,36 @@ namespace Identity.WebAPI.Controllers
             return Ok();
         }
 
+        /// <summary>
+        /// Permanantly delete user information (system admin user only)
+        /// </summary>
+        /// <param name="userId">Application Id or unique identifier which is the primary key of the application</param>
         [HttpDelete]
         [Authorize]
         [Route("{id}")]
-        public async Task<IActionResult> Delete(string id)
+        public async Task<IActionResult> Delete(string userId)
         {
-            await _userServices.DeleteAccount(id);
-            return Ok();
-        }
-        
-        [HttpPut]
-        [Authorize]
-        [Route("ResetPassword/{id}")]
-        public async Task<IActionResult> ResetPassword(string id)
-        {
-            await _userServices.ResetPassword(id);
+            await _userServices.DeleteAccount(userId);
             return Ok();
         }
 
+        /// <summary>
+        /// Reset own or user password (system admin user only)
+        /// </summary>
+        /// <param name="userId">Application Id or unique identifier which is the primary key of the application</param>
+        [HttpPut]
+        [Authorize]
+        [Route("ResetPassword/{id}")]
+        public async Task<IActionResult> ResetPassword(string userId)
+        {
+            await _userServices.ResetPassword(userId);
+            return Ok();
+        }
+
+        /// <summary>
+        /// Update own user information
+        /// </summary>
+        /// <param name="user">User details object<see cref="UserModel"/>.</param>
         [HttpPut]
         [Authorize]
         public async Task<IActionResult> Update(UserModel user)

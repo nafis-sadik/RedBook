@@ -1,12 +1,13 @@
 using Identity.WebAPI.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RedBook.Core.Constants;
-using System.Configuration;
 using System.Reflection;
 using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Identity.WebAPI
 {
@@ -26,7 +27,20 @@ namespace Identity.WebAPI
             builder.Services.AddControllers(options =>
             {
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
-            });
+                //options.Filters.Add<HttpResponseExceptionFilter>();
+            }).ConfigureApiBehaviorOptions(options =>
+                {
+                    options.InvalidModelStateResponseFactory = context =>
+                        new BadRequestObjectResult(context.ModelState)
+                        {
+                            ContentTypes =
+                            {
+                                // using static System.Net.Mime.MediaTypeNames;
+                                Application.Json,
+                                Application.Xml
+                            }
+                        };
+                }).AddXmlSerializerFormatters();
 
             // JWT Bearer token based authentication
             builder.Services.AddAuthentication(x =>
@@ -121,6 +135,8 @@ namespace Identity.WebAPI
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseAuthorization();
 

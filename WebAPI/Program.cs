@@ -21,7 +21,7 @@ namespace Inventory.WebAPI
             builder.Services.AddDatabaseConfigurations(builder.Configuration);
 
             // IoC Container & DbContext
-            builder.Services.RosolveDependencies();
+            builder.Services.RosolveDependencies(builder.Configuration);
 
             builder.Services.AddControllers();
 

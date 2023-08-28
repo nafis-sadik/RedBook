@@ -37,7 +37,7 @@
             public const string InvalidToken = "Http request was sent using invalid token";
 
             // Access control
-            public const string NotAllowed = "User not allowed to perform this operation";
+            public const string NotAllowed = "You not allowed to perform this operation";
             public const string AdminAccessRequired = "Only admin user can perform this peration";
         }
     }

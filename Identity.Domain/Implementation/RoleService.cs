@@ -41,14 +41,14 @@ namespace Identity.Domain.Implementation
                 if (userRoleEntity == null)
                     throw new ArgumentException($"Role with identifier {userRoleId} was not found");
 
-                if (userRoleEntity.IsAdminRole == 1)
+                if (userRoleEntity.IsAdmin)
                 {
                     if(userRoleId == 1 && orgId == 1)
                     {
                         roleEntity = await _roleRepo.InsertAsync(new Role
                         {
                             RoleName = role.RoleName,
-                            IsAdminRole = (short)(role.IsAdminRole == true ? 1 : 0),
+                            IsAdmin = role.IsAdmin,
                             OrganizationId = role.OrganizationId
                         });
                     }
@@ -57,7 +57,7 @@ namespace Identity.Domain.Implementation
                         roleEntity = await _roleRepo.InsertAsync(new Role
                         {
                             RoleName = role.RoleName,
-                            IsAdminRole = (short)(role.IsAdminRole == true ? 1 : 0),
+                            IsAdmin = role.IsAdmin,
                             OrganizationId = orgId
                         });
                     }
@@ -81,7 +81,10 @@ namespace Identity.Domain.Implementation
             int userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
             Role? userRoleEntity = await _roleRepo.GetByIdAsync(userRoleId);
 
-            if (userRoleEntity?.IsAdminRole != 1)
+            if (userRoleEntity == null)
+                throw new ArgumentException($"Role with identifier {roleId} was not found");
+
+            if (userRoleEntity.IsAdmin)
                 throw new ArgumentException("Only admin users are authorized to execute this operation");
 
             // An user can delete the roles of his organization only
@@ -107,7 +110,7 @@ namespace Identity.Domain.Implementation
 
             if (userRoleEntity == null) throw new ArgumentException($"Role with identifier {userRoleId} was not found");
 
-            if (userRoleEntity?.IsAdminRole != 1)
+            if (userRoleEntity.IsAdmin)
                 throw new ArgumentException("Only admin users are authorized to execute this operation");
 
             return Mapper.Map<RoleModel>(userRoleEntity);
@@ -123,7 +126,7 @@ namespace Identity.Domain.Implementation
                 Role? requestingUserRole = await _roleRepo.GetByIdAsync(roleId);
                 if (requestingUserRole == null) throw new ArgumentException($"Role with identifier {roleId} not found");
                 List<RoleModel> roleModelCollection = new List<RoleModel>();
-                if (requestingUserRole.IsAdminRole == 1)
+                if (requestingUserRole.IsAdmin)
                 {
                     pagedRoleModel.SourceData = _roleRepo.TrackableQuery()
                         .Where(x => x.OrganizationId == orgId)
@@ -155,7 +158,7 @@ namespace Identity.Domain.Implementation
                 roleEntity = await _roleRepo.GetByIdAsync(role.Id);
                 if (roleEntity == null) throw new ArgumentException($"Role with identifier {role.Id} was not found");
                 roleEntity.RoleName = role.RoleName;
-                roleEntity.IsAdminRole = (short)(role.IsAdminRole == true ? 1 : 0);
+                roleEntity.IsAdmin = role.IsAdmin;
                 roleEntity.OrganizationId = orgId;
                 roleEntity = _roleRepo.Update(roleEntity);
                 await transaction.SaveChangesAsync();

@@ -9,7 +9,11 @@ public partial class Role
 
     public string RoleName { get; set; }
 
-    public short IsAdminRole { get; set; }
+    public bool IsAdmin { get; set; }
+
+    public bool IsSystemAdmin { get; set; }
+
+    public bool IsRetailer { get; set; }
 
     public int OrganizationId { get; set; }
 

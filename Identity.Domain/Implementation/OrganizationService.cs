@@ -29,17 +29,46 @@ namespace Identity.Domain.Implementation
 
         public async Task<OrganizationModel> AddOrganizationAsync(OrganizationModel organizationModel)
         {
-            Organization orgEntity;
+            Organization? orgEntity = null;
+
+            string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
+            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
+                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
+            string? requesterUserId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
+            if (string.IsNullOrEmpty(requesterUserId))
+                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                orgEntity = Mapper.Map<Organization>(organizationModel);
                 _orgRepo = transaction.GetRepository<Organization>();
-                orgEntity = await _orgRepo.InsertAsync(new Organization {
-                    OrganizationName = organizationModel.OrganizationName,
-                });
+                _roleRepo = transaction.GetRepository<Role>();
+
+                // Get role to check permissions
+                Role? requesterRole = await _roleRepo.GetByIdAsync(requesterRoleId);
+                if (requesterRole == null)
+                    throw new ArgumentException($"Requester role with identifier {requesterRoleId} was not found");
+
+                // A retailer can add new organization to onboard new customer
+                // An admin user can add new organization to manage multiple businesses from redbook
+                if(requesterRole.IsAdmin || requesterRole.IsRetailer)
+                {
+                    orgEntity = Mapper.Map<Organization>(organizationModel);
+                    orgEntity.OrganizationId = 0;
+                    orgEntity.CreateDate = DateTime.UtcNow;
+                    orgEntity.CreatedBy = requesterUserId;
+                    orgEntity = await _orgRepo.InsertAsync(orgEntity);
+                }
+                 
                 await transaction.SaveChangesAsync();
             }
-            return Mapper.Map<OrganizationModel>(orgEntity);
+
+            if (orgEntity != null)
+                organizationModel = Mapper.Map<OrganizationModel>(orgEntity);
+            else
+                throw new ArgumentException("Failed to add new organization, internal error occured");
+
+            return organizationModel;
         }
 
         public async Task DeleteOrganizationAsync(int OrganizationId)
@@ -75,7 +104,7 @@ namespace Identity.Domain.Implementation
                     .Skip(pagedOrganizationModel.Skip)
                     .Take(pagedOrganizationModel.PageSize)
                     .Select(x => new OrganizationModel {
-                        Id = x.OrganizationId,
+                        OrganizationId = x.OrganizationId,
                         OrganizationName = x.OrganizationName
                     }).ToListAsync();
             }
@@ -89,8 +118,8 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _orgRepo = transaction.GetRepository<Organization>();
-                orgEntity = await _orgRepo.GetByIdAsync(organizationModel.Id);
-                if (orgEntity == null) throw new ArgumentException($"Organization with identifier {organizationModel.Id} was not found");
+                orgEntity = await _orgRepo.GetByIdAsync(organizationModel.OrganizationId);
+                if (orgEntity == null) throw new ArgumentException($"Organization with identifier {organizationModel.OrganizationId} was not found");
                 orgEntity = Mapper.Map(organizationModel, orgEntity);
                 orgEntity = _orgRepo.Update(orgEntity);
                 await transaction.SaveChangesAsync();

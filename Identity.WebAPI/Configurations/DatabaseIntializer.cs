@@ -20,19 +20,24 @@ namespace Identity.WebAPI.Configurations
                         context.Database.Migrate();
 
                         // Eager load all resources
-                        context.Applications.Include(r => r.Routes).Load();
-                        context.Organizations.Load();
-                        context.Users.Load();
+                        //context.Applications.Include(r => r.Routes).Load();
+                        //context.Organizations.Load();
+                        //context.Users.Load();
 
                         // Load Seed Data for Organizations
                         var org = context.Organizations.Find(1);
                         if (org == null)
                             context.Organizations.AddAsync(new Organization
                             {
-                                OrganizationName = "Blume Digital Corp."
+                                OrganizationName = "Blume Digital Corp.",
+                                CreateDate = DateTime.Now,
+                                CreatedBy = "00000000-0000-0000-0000-000000000000",
                             });
-                        else
+                        else {
                             org.OrganizationName = "Blume Digital Corp.";
+                            org.CreateDate = DateTime.Now;
+                            org.CreatedBy = "00000000-0000-0000-0000-000000000000";
+                        }
 
                         context.SaveChanges();
 
@@ -43,13 +48,17 @@ namespace Identity.WebAPI.Configurations
                             {
                                 RoleName = "System Admin",
                                 OrganizationId = 1,
-                                IsAdminRole = 1,
+                                IsSystemAdmin = true,
+                                IsAdmin = true,
+                                IsRetailer = true,
                             });
                         else
                         {
                             orgRole.RoleName = "System Admin";
                             orgRole.OrganizationId = 1;
-                            orgRole.IsAdminRole = 1;
+                            orgRole.IsAdmin = true;
+                            orgRole.IsSystemAdmin = true;
+                            orgRole.IsRetailer = true;
                         }
 
                         context.SaveChanges();

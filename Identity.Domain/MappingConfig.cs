@@ -14,11 +14,15 @@ namespace Inventory.Domain
             CreateMap<ApplicationInfoModel, Application>()
                 .ForMember(dest => dest.ApplicationId, opt => opt.MapFrom(src => src.Id));
 
-            CreateMap<Organization, OrganizationModel>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.OrganizationId));
+            CreateMap<Organization, OrganizationModel>();
 
+            // Putting a create date is gonna cause problem on update operations
+            // It wouldn't help anything except create
             CreateMap<OrganizationModel, Organization>()
-                .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.CreatedBy, opt => opt.MapFrom(src => ""))
+                .ForMember(dest => dest.UpdatededBy, opt => opt.MapFrom(src => ""))
+                .ForMember(dest => dest.CreateDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateDate, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<Role, RoleModel>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.RoleId));

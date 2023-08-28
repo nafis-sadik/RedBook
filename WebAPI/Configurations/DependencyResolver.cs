@@ -1,22 +1,21 @@
-﻿using Inventory.Data;
-using Inventory.Data.Entities;
-using Microsoft.EntityFrameworkCore;
+﻿using Inventory.Data.Entities;
 using RedBook.Core;
+using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 
 namespace Inventory.WebAPI.Configurations
 {
     public static class DependencyResolver
     {
-        public static void RosolveDependencies(this IServiceCollection services)
+        public static void RosolveDependencies(this IServiceCollection services, IConfiguration configuration)
         {
-            CoreDependencyResolver<RedbookInventoryContext>.RosolveCoreDependencies(services);
+            CoreDependencyResolver<RedbookInventoryContext>.RosolveCoreDependencies(services, configuration);
 
             // Services
             services.AddScoped<IClaimsPrincipalAccessor, HttpContextClaimsPrincipalAccessor>();
 
             // Repositories
-            //services.AddScoped<IRepositoryBase<User>, RepositoryBase<User>>();
+            services.AddScoped<IRepositoryBase<Bank>, RepositoryBase<Bank>>();
         }
     }
 }
