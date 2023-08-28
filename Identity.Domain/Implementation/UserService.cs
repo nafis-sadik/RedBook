@@ -273,12 +273,10 @@ namespace Identity.Domain.Implementation
 
                 // Admin users can register his employees as new users
                 // Retail user can register his new customers as new users
-                if (requestSenderRole.IsRetailer)
-                    newUser.OrganizationId = requestSenderRole.OrganizationId;
-                else if(requestSenderRole.IsAdmin)
-                    newUser.OrganizationId = requesterOrgId;
-                else
+                if (!requestSenderRole.IsRetailer && !requestSenderRole.IsAdmin)
                     throw new ArgumentException($"Only admin & retail user can register new user");
+                if(requestSenderRole.IsAdmin && !requestSenderRole.IsRetailer)
+                    newUser.OrganizationId = requesterOrgId;
 
                 newUser = await _userRepo.InsertAsync(newUser);
 
