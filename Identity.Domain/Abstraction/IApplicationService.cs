@@ -9,6 +9,7 @@ namespace Identity.Domain.Abstraction
         Task<ApplicationInfoModel> UpdateApplicationAsync(ApplicationInfoModel applicationModel);
         Task DeleteApplicationAsync(int applicationId);
         Task<ApplicationInfoModel> GetApplicationAsync(int applicationId);
+        Task<IEnumerable<ApplicationInfoModel>> GetAllApplicationAsync();
         Task<PagedModel<ApplicationInfoModel>> GetApplicationsAsync(PagedModel<ApplicationInfoModel> applicationModel);
     }
 }

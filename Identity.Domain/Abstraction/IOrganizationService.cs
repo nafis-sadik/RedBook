@@ -7,7 +7,8 @@ namespace Identity.Domain.Abstraction
     {
         Task<OrganizationModel> AddOrganizationAsync(OrganizationModel Organization);
         Task<OrganizationModel> GetOrganizationAsync(int OrganizationId);
-        Task<PagedModel<OrganizationModel>> GetOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel);
+        Task<IEnumerable<OrganizationModel>> GetOrganizationsAsync();
+        Task<PagedModel<OrganizationModel>> GetPagedOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel);
         Task<OrganizationModel> UpdateOrganizationAsync(OrganizationModel Organization);
         Task DeleteOrganizationAsync(int OrganizationId);
     }

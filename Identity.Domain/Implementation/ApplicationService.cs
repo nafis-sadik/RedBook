@@ -101,5 +101,25 @@ namespace Identity.Domain.Implementation
 
             return applicationModel;
         }
+
+        public async Task<IEnumerable<ApplicationInfoModel>> GetAllApplicationAsync()
+        {
+            List<ApplicationInfoModel> applicationModelCollection = new List<ApplicationInfoModel>();
+
+            using (var transaction = UnitOfWorkManager.Begin())
+            {
+                _appRepo = transaction.GetRepository<Application>();
+                applicationModelCollection = await _appRepo
+                    .UnTrackableQuery()
+                    .Where(x => x.ApplicationId > 0)
+                    .Select(x => new ApplicationInfoModel
+                    {
+                        Id = x.ApplicationId,
+                        ApplicationName = x.ApplicationName
+                    }).ToListAsync();
+            }
+
+            return applicationModelCollection;
+        }
     }
 }

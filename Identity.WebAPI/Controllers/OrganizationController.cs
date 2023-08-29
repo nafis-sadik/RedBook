@@ -51,8 +51,8 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         /// <param name="orgPagedCollection">Paginated Organization list for paging table</param>
         [HttpGet]
-        [Route("/PagedOrganizations")]
-        public async Task<IActionResult> GetPagedAsync([FromQuery] PagedModel<OrganizationModel> orgPagedCollection) => Ok(await _organizationService.GetOrganizationsAsync(orgPagedCollection));
+        [Route("PagedOrganizations")]
+        public async Task<IActionResult> GetPagedAsync([FromQuery] PagedModel<OrganizationModel> orgPagedCollection) => Ok(await _organizationService.GetPagedOrganizationsAsync(orgPagedCollection));
 
         /// <summary>
         /// Delete existing organization with details

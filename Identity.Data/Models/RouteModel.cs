@@ -6,7 +6,7 @@
 
         public string RouteName { get; set; }
 
-        public string Route1 { get; set; }
+        public string RouteValue { get; set; }
 
         public string Description { get; set; }
 

@@ -1,6 +1,7 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Identity.Domain.Implementation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;
@@ -61,6 +62,13 @@ namespace Identity.WebAPI.Controllers
             await _applicationService.DeleteApplicationAsync(appId);
             return Ok();
         }
+
+        /// <summary>
+        /// Get collection of all applications
+        /// </summary>
+        [HttpGet]
+        [Route("GetAll")]
+        public async Task<IActionResult> GetAllAsync() => Ok(await _applicationService.GetAllApplicationAsync());
 
         /// <summary>
         /// For retrieving application list in paginated form

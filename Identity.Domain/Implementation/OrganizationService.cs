@@ -94,7 +94,25 @@ namespace Identity.Domain.Implementation
             return Mapper.Map<OrganizationModel>(orgEntity);
         }
 
-        public async Task<PagedModel<OrganizationModel>> GetOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel)
+        public async Task<IEnumerable<OrganizationModel>> GetOrganizationsAsync()
+        {
+            List<OrganizationModel> organizationModels = new List<OrganizationModel>();
+            using (var transaction = UnitOfWorkManager.Begin())
+            {
+                _orgRepo = transaction.GetRepository<Organization>();
+                organizationModels = await _orgRepo.UnTrackableQuery()
+                    .Where(x => x.OrganizationId > 0)
+                    .Select(x => new OrganizationModel
+                    {
+                        OrganizationId = x.OrganizationId,
+                        OrganizationName = x.OrganizationName
+                    }).ToListAsync();
+            }
+
+            return organizationModels;
+        }
+
+        public async Task<PagedModel<OrganizationModel>> GetPagedOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel)
         {
             using (var transaction = UnitOfWorkManager.Begin())
             {
