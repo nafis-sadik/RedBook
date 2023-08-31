@@ -2,6 +2,7 @@
 using Identity.Domain.Abstraction;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RedBook.Core.Models;
 
 namespace Identity.WebAPI.Controllers
 {
@@ -15,6 +16,14 @@ namespace Identity.WebAPI.Controllers
         {
             _routeServices = routeService;
         }
+
+        /// <summary>
+        /// Paginated list of application routes (System Admin User Only)
+        /// </summary>
+        /// <param name="pagedRouteCollection">An implementation of IApplicationService injected by IOC Controller</param>
+        [HttpGet]
+        [Route("GetPaged")]
+        public async Task<IActionResult> GetPaged([FromQuery] PagedModel<RouteModel> pagedRouteCollection) => Ok(await _routeServices.GetPagedRoutes(pagedRouteCollection));
 
         [HttpGet]
         [Route("GetAll/{userId}")]

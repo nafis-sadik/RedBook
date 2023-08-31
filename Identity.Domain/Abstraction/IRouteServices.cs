@@ -1,4 +1,5 @@
 ﻿using Identity.Data.Models;
+using RedBook.Core.Models;
 
 namespace Identity.Domain.Abstraction
 {
@@ -9,5 +10,6 @@ namespace Identity.Domain.Abstraction
         Task DeleteRoute(int routeId);
         Task<RouteModel?> GetRoute(int routeId);
         Task<IEnumerable<RouteModel>> GetAllRoutes(string userId);
+        Task<PagedModel<RouteModel>> GetPagedRoutes(PagedModel<RouteModel> pagedRoutes);
     }
 }

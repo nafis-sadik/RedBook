@@ -2,7 +2,7 @@
 {
     public class PagedModel<T> where T : class
     {
-        public string? Search { get; set; }
+        public string? SearchString { get; set; }
         public string? SortBy { get; set; }
         public IEnumerable<T>? SourceData { get; set; }
 
@@ -25,5 +25,7 @@
             get { return pageSize * (pageNumber - 1); }
             private set { }
         }
+
+        public int TotalItems { get; set; }
     }
 }

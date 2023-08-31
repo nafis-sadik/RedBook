@@ -31,6 +31,12 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Id));
 
             CreateMap<User, UserModel>().ReverseMap();
+
+            CreateMap<RouteModel, Route>()
+                .ForMember(dest => dest.RouteId, opt => opt.MapFrom(src => src.Id));
+
+            CreateMap<Route, RouteModel>()
+                .ForMember(dest => dest.ApplicationName, opt => opt.Ignore());
         }
     }
 }
