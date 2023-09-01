@@ -48,6 +48,7 @@ namespace Identity.Domain.Implementation
                     throw new ArgumentException($"Only system admin user have access to perform this operation");
 
                 routeEntity = Mapper.Map<Route>(routeModel);
+
                 routeEntity = await _routeRepo.InsertAsync(routeEntity);
                 await transaction.SaveChangesAsync();
             }

@@ -44,7 +44,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex(new[] { "OrganizationId" }, "IX_Applications_OrganizationId");
 
-                    b.ToTable("Applications");
+                    b.ToTable("Applications", (string)null);
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Organization", b =>
@@ -77,7 +77,7 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("OrganizationId");
 
-                    b.ToTable("Organizations");
+                    b.ToTable("Organizations", (string)null);
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Role", b =>
@@ -110,7 +110,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex(new[] { "OrganizationId" }, "IX_Roles_OrganizationId");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.RoleRouteMapping", b =>
@@ -168,7 +168,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex(new[] { "ApplicationId" }, "IX_Routes_ApplicationId");
 
-                    b.ToTable("Routes");
+                    b.ToTable("Routes", (string)null);
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.User", b =>
@@ -226,7 +226,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex(new[] { "RoleId" }, "IX_Users_RoleId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Application", b =>
