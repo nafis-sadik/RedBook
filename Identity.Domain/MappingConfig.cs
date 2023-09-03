@@ -38,6 +38,7 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description == null? "" : src.Description));
 
             CreateMap<Route, RouteModel>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.RouteId))
                 .ForMember(dest => dest.ApplicationName, opt => opt.Ignore())
                 .ForMember(dest => dest.RouteValue, opt => opt.MapFrom(src => src.Route1))
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description == null ? "" : src.Description));

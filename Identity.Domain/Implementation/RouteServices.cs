@@ -80,15 +80,24 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<IEnumerable<RouteModel>> GetAllRoutes(string userId)
+        public async Task<IEnumerable<RouteModel>> GetAllRoutes()
         {
+            string? requesterUserIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
+            if (string.IsNullOrEmpty(requesterUserIdStr))
+                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _userRepo = transaction.GetRepository<User>();
                 _roleRepo = transaction.GetRepository<Role>();
                 _routeRepo = transaction.GetRepository<Route>();
 
-                var requester = await _userRepo.UnTrackableQuery().Where(x => x.UserId == userId).Select(x => x.Role.RoleRouteMappings).ToListAsync();
+                var requester = await _userRepo
+                    .UnTrackableQuery()
+                    .Where(x => x.UserId == requesterUserIdStr)
+                    .Select(x => x.Role.RoleRouteMappings)
+                    .ToListAsync();
+
                 if (requester == null)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
@@ -132,6 +141,8 @@ namespace Identity.Domain.Implementation
                         RouteValue = x.Route1,
                         ApplicationName = x.Application.ApplicationName
                     }).ToListAsync();
+
+                pagedRoutes.TotalItems = await _routeRepo.UnTrackableQuery().Where(x => x.RouteId > 0).CountAsync();
             }
 
             return pagedRoutes;
