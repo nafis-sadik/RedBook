@@ -17,8 +17,8 @@ namespace Identity.Domain.Implementation
     public class RouteServices : ServiceBase, IRouteServices
     {
         private IRepositoryBase<Route> _routeRepo;
-        private IRepositoryBase<User> _userRepo;
         private IRepositoryBase<Role> _roleRepo;
+        private IRepositoryBase<RoleRouteMapping> _roleMappingRepo;
         public RouteServices(
             ILogger<RouteServices> logger,
             IObjectMapper mapper,
@@ -38,6 +38,7 @@ namespace Identity.Domain.Implementation
             {
                 _routeRepo = transaction.GetRepository<Route>();
                 _roleRepo = transaction.GetRepository<Role>();
+                _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
 
                 Role? requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
                 if (requesterRoleEntity == null)
@@ -50,6 +51,20 @@ namespace Identity.Domain.Implementation
                 routeEntity = Mapper.Map<Route>(routeModel);
 
                 routeEntity = await _routeRepo.InsertAsync(routeEntity);
+
+                await transaction.SaveChangesAsync();
+
+                var sysAdminRoles = await _roleRepo.UnTrackableQuery().Where(x => x.IsSystemAdmin == true).ToListAsync();
+
+                foreach(var role in sysAdminRoles)
+                {
+                    await _roleMappingRepo.InsertAsync(new RoleRouteMapping
+                    {
+                        RoleId = role.RoleId,
+                        RouteId = routeEntity.RouteId,
+                    });
+                }
+
                 await transaction.SaveChangesAsync();
             }
 
@@ -82,31 +97,25 @@ namespace Identity.Domain.Implementation
 
         public async Task<IEnumerable<RouteModel>> GetAllRoutes()
         {
-            string? requesterUserIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
-            if (string.IsNullOrEmpty(requesterUserIdStr))
-                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+            int requesterRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value);
 
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                _userRepo = transaction.GetRepository<User>();
-                _roleRepo = transaction.GetRepository<Role>();
-                _routeRepo = transaction.GetRepository<Route>();
+                _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
 
-                var requester = await _userRepo
+                List<RouteModel> requester = await _roleMappingRepo
                     .UnTrackableQuery()
-                    .Where(x => x.UserId == requesterUserIdStr)
-                    .Select(x => x.Role.RoleRouteMappings)
-                    .ToListAsync();
+                    .Where(x => x.RoleId == requesterRoleId)
+                    .Select(x => new RouteModel {
+                        Id = x.RouteId,
+                        RouteName = x.Route.RouteName
+                    }).ToListAsync();
 
                 if (requester == null)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
-                //Role? roleEntity = await _roleRepo.GetByIdAsync(requester.RoleId);
-                //if (roleEntity == null)
-                //    throw new ArgumentException($"No role found for user with identifier {userId}");
+                return requester;
             }
-
-            return new List<RouteModel>();
         }
 
         public async Task<PagedModel<RouteModel>> GetPagedRoutes(PagedModel<RouteModel> pagedRoutes)

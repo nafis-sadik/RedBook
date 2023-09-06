@@ -12,6 +12,8 @@
 
         public int ApplicationId { get; set; }
 
+        public int? ParentRouteId { get; set; }
+
         public string ApplicationName { get; set; }
     }
 }
