@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Identity.Data.Entities;
+﻿namespace Identity.Data.Entities;
 
 public partial class Route
 {

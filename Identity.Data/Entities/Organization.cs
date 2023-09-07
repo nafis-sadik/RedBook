@@ -11,11 +11,11 @@ public partial class Organization
 
     public DateTime CreateDate { get; set; }
 
-    public string CreatedBy { get; set; }
+    public string? CreatedBy { get; set; }
 
     public DateTime UpdateDate { get; set; }
 
-    public string UpdatededBy { get; set; }
+    public string? UpdatededBy { get; set; }
 
     public virtual ICollection<Application> Applications { get; set; } = new List<Application>();
 
