@@ -95,26 +95,75 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<IEnumerable<RouteModel>> GetAllRoutes()
+        public async Task<IEnumerable<RouteModel>> GetAppMenuRoutes(int appId)
         {
             int requesterRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value);
 
             using (var transaction = UnitOfWorkManager.Begin())
-            {
+            { 
                 _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
 
-                List<RouteModel> requester = await _roleMappingRepo
+                List<RouteModel> requesterMenu = await _roleMappingRepo
                     .UnTrackableQuery()
-                    .Where(x => x.RoleId == requesterRoleId)
-                    .Select(x => new RouteModel {
+                    .Where(x => x.RoleId == requesterRoleId && x.Route.ApplicationId == appId)
+                    .Select(x => new RouteModel
+                    {
                         Id = x.RouteId,
-                        RouteName = x.Route.RouteName
+                        RouteName = x.Route.RouteName,
+                        RouteValue = x.Route.Route1,
+                        Description = x.Route.Description,
                     }).ToListAsync();
 
-                if (requester == null)
+                if (requesterMenu == null)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
-                return requester;
+                return requesterMenu;
+            }
+        }
+
+        public async Task<IEnumerable<RouteModel>> GetAllAppRoutes(int appId)
+        {
+            List<RouteModel> routeList;
+            int requesterRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value);
+
+            using (var transaction = UnitOfWorkManager.Begin())
+            {
+                _roleRepo = transaction.GetRepository<Role>();
+                _routeRepo = transaction.GetRepository<Route>();
+
+                Role? requesterRole = await _roleRepo.GetByIdAsync(requesterRoleId);
+                if (requesterRole == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+                if (requesterRole.IsSystemAdmin)
+                {
+                    routeList = await _routeRepo
+                    .UnTrackableQuery()
+                    .Where(x => x.ApplicationId == appId)
+                    .Select(x => new RouteModel
+                    {
+                        Id = x.RouteId,
+                        RouteValue = x.Route1,
+                        RouteName = x.RouteName,
+                        Description = x.Description,
+                        ParentRouteId = x.ParentRouteId
+                    }).ToListAsync();
+                } else {
+                    routeList = await _roleMappingRepo
+                    .UnTrackableQuery()
+                    .Where(x => x.RoleId == requesterRoleId && x.Route.ApplicationId == appId)
+                    .Select(x => new RouteModel
+                    {
+                        Id = x.RouteId,
+                        RouteValue = x.Route.Route1,
+                        RouteName = x.Route.RouteName,
+                        Description = x.Route.Description,
+                        ParentRouteId = x.Route.ParentRouteId
+                    }).ToListAsync();
+                }                
+
+                if (routeList == null)
+                    throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
+                return routeList;
             }
         }
 
@@ -146,6 +195,7 @@ namespace Identity.Domain.Implementation
                             Description = x.Description,
                             RouteName = x.RouteName,
                             RouteValue = x.Route1,
+                            ParentRouteId = x.ParentRouteId,
                             ApplicationName = x.Application.ApplicationName
                         }).ToListAsync();
 
@@ -158,8 +208,10 @@ namespace Identity.Domain.Implementation
                         .UnTrackableQuery()
                         .Where(x =>
                             x.RouteId > 0 &&
-                            (x.RouteName.Contains(pagedRoutes.SearchString)
-                            || x.Route1.Contains(pagedRoutes.SearchString)))
+                            (x.RouteName.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.Route1.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.Description.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.Application.ApplicationName.ToLower().Contains(pagedRoutes.SearchString.ToLower())))
                         .Skip(pagedRoutes.Skip)
                         .Take(pagedRoutes.PageSize)
                         .Select(x => new RouteModel
@@ -169,14 +221,18 @@ namespace Identity.Domain.Implementation
                             Description = x.Description,
                             RouteName = x.RouteName,
                             RouteValue = x.Route1,
+                            ParentRouteId = x.ParentRouteId,
                             ApplicationName = x.Application.ApplicationName
                         }).ToListAsync();
 
                     pagedRoutes.TotalItems = await _routeRepo.UnTrackableQuery()
-                        .Where(x => x.RouteId > 0 &&
-                                (x.RouteName.Contains(pagedRoutes.SearchString)
-                                || x.Route1.Contains(pagedRoutes.SearchString))).CountAsync();
-                
+                        .Where(x =>
+                            x.RouteId > 0 &&
+                            (x.RouteName.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.Route1.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.Description.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.Application.ApplicationName.ToLower().Contains(pagedRoutes.SearchString.ToLower())))
+                        .CountAsync();                
                 }
 
             }

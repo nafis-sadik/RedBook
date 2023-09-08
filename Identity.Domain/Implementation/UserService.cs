@@ -38,6 +38,7 @@ namespace Identity.Domain.Implementation
             {
                 _userRepo = unitOfWork.GetRepository<User>();
                 _roleRepo = unitOfWork.GetRepository<Role>();
+
                 userEntity = await _userRepo
                     .UnTrackableQuery()
                     .FirstOrDefaultAsync(x => 
@@ -46,9 +47,11 @@ namespace Identity.Domain.Implementation
                         || x.Email == userModel.Email
                     );
                 if(userEntity == null) throw new ArgumentException("User not found");
+
                 roleEntity = await _roleRepo
                     .UnTrackableQuery()
                     .FirstOrDefaultAsync(x => x.RoleId == userEntity.RoleId);
+
                 if (roleEntity == null) throw new ArgumentException("User must have a role");
             }
 
