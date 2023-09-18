@@ -278,12 +278,17 @@ namespace Identity.Domain.Implementation
                 if (routeEntity == null)
                     throw new ArgumentException($"Not route with identifier {routeModel.Id} was found");
 
-                routeEntity = Mapper.Map(routeModel, routeEntity);
+                routeEntity.RouteName = routeModel.RouteName;
+                routeEntity.Route1 = routeModel.RouteValue;
+                routeEntity.ApplicationId = routeModel.ApplicationId;
+                routeEntity.ParentRouteId = routeModel.ParentRouteId;
+                routeEntity.Description = routeModel.Description;
+
                 routeEntity = _routeRepo.Update(routeEntity);
 
                 await transaction.SaveChangesAsync();
             }
-
+            var data = Mapper.Map<RouteModel>(routeEntity);
             return Mapper.Map<RouteModel>(routeEntity);
         }
     }

@@ -2,14 +2,24 @@
 
 namespace Identity.WebAPI.Configurations
 {
+    /// <summary>
+    /// Global Exception Handeller Middleware
+    /// </summary>
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;
+
+        /// <summary>
+        /// Middleware Constructor
+        /// </summary>
         public ExceptionMiddleware(RequestDelegate next)
         {
             _next = next;
         }
 
+        /// <summary>
+        /// Pass execution to next level
+        /// </summary>
         public async Task InvokeAsync(HttpContext httpContext)
         {
             try
