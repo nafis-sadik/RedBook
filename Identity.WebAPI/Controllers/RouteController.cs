@@ -73,6 +73,7 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         /// <param name="routeId">User unique identifier<see cref="int"/>.</param>
         [HttpDelete]
+        [Route("{routeId}")]
         public async Task<IActionResult> Delete(int routeId)
         {
             await _routeServices.DeleteRoute(routeId);

@@ -1,6 +1,4 @@
 ﻿using Identity.Data.Entities;
-using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using RedBook.Core.Constants;
 
@@ -111,144 +109,134 @@ namespace Identity.WebAPI.Configurations
                     await context.SaveChangesAsync();
 
                     var existingRoutes = await context.Routes.Where(r => r.RouteId > 1).ToListAsync();
+                    if (!existingRoutes.Any())
+                    {
+                        context.Routes.RemoveRange(context.Routes);
 
-                    context.Routes.RemoveRange(context.Routes);
+                        var dashboardRoute = await context.Routes.AddAsync(
+                            new Data.Entities.Route
+                            {
+                                RouteName = "Dashboards",
+                                Route1 = "/dashboard/home",
+                                Description = "keypad",
+                                ApplicationId = 1,
+                                ParentRouteId = null,
+                            });
 
-                    var dashboardRoute = await context.Routes.AddAsync(
-                        new Data.Entities.Route {
-                            RouteName = "Dashboards",
-                            Route1 = "/dashboard/home",
-                            Description = "keypad",
-                            ApplicationId = 1,
-                            ParentRouteId = null,
+                        await context.SaveChangesAsync();
+
+                        var operationsRoute = await context.Routes.AddAsync(
+                            new Data.Entities.Route
+                            {
+                                RouteName = "Business Operations",
+                                Route1 = "",
+                                Description = "layers",
+                                ApplicationId = 1,
+                                ParentRouteId = null,
+                            });
+
+                        await context.SaveChangesAsync();
+
+                        await context.Routes.AddRangeAsync(new[] {
+                            new Data.Entities.Route {
+                                RouteName = "Purchase - Invoice",
+                                Route1 = "/dashboard/purchase",
+                                Description = "shopping-bag",
+                                ApplicationId = 1,
+                                ParentRouteId = operationsRoute.Entity.RouteId,
+                            },
+                            new Data.Entities.Route {
+                                RouteName = "Purchase - Sales",
+                                Route1 = "/dashboard/sales",
+                                Description = "shopping-cart",
+                                ApplicationId = 1,
+                                ParentRouteId = operationsRoute.Entity.RouteId,
+                            }
                         });
 
-                    await context.SaveChangesAsync();
+                        await context.SaveChangesAsync();
 
-                    var operationsRoute = await context.Routes.AddAsync(
-                        new Data.Entities.Route
-                        {
-                            RouteName = "Business Operations",
-                            Route1 = "",
-                            Description = "layers",
-                            ApplicationId = 1,
-                            ParentRouteId = null,
+                        var crmRoute = await context.Routes.AddAsync(
+                            new Data.Entities.Route
+                            {
+                                RouteName = "CRM",
+                                Route1 = "",
+                                Description = "people",
+                                ApplicationId = 1,
+                                ParentRouteId = null,
+                            });
+
+                        await context.SaveChangesAsync();
+
+                        await context.Routes.AddAsync(
+                            new Data.Entities.Route
+                            {
+                                RouteName = "Customers",
+                                Route1 = "/dashboard/customers",
+                                Description = "person",
+                                ApplicationId = 1,
+                                ParentRouteId = crmRoute.Entity.RouteId,
+                            });
+
+                        await context.SaveChangesAsync();
+
+                        var settingsRoute = await context.Routes.AddAsync(
+                            new Data.Entities.Route
+                            {
+                                RouteName = "Settings",
+                                Route1 = "",
+                                Description = "settings",
+                                ApplicationId = 1,
+                                ParentRouteId = null,
+                            });
+
+                        await context.SaveChangesAsync();
+
+                        await context.Routes.AddRangeAsync(new[] {
+                            new Data.Entities.Route {
+                                RouteName = "General Settings",
+                                Route1 = "/dashboard/settings",
+                                Description = "briefcase",
+                                ApplicationId = 1,
+                                ParentRouteId = settingsRoute.Entity.RouteId,
+                            },
+                            new Data.Entities.Route {
+                                RouteName = "Product List",
+                                Route1 = "/dashboard/products",
+                                Description = "cube",
+                                ApplicationId = 1,
+                                ParentRouteId = settingsRoute.Entity.RouteId,
+                            },
+                            new Data.Entities.Route {
+                                RouteName = "Product Categories",
+                                Route1 = "/dashboard/category",
+                                Description = "cube",
+                                ApplicationId = 1,
+                                ParentRouteId = settingsRoute.Entity.RouteId,
+                            }
                         });
 
-                    await context.SaveChangesAsync();
+                        await context.SaveChangesAsync();
 
-                    await context.Routes.AddRangeAsync(new[] {
-                        new Data.Entities.Route {
-                            RouteName = "Purchase - Invoice",
-                            Route1 = "/dashboard/purchase",
-                            Description = "shopping-bag",
-                            ApplicationId = 1,
-                            ParentRouteId = operationsRoute.Entity.RouteId,
-                        },
-                        new Data.Entities.Route {
-                            RouteName = "Purchase - Sales",
-                            Route1 = "/dashboard/sales",
-                            Description = "shopping-cart",
-                            ApplicationId = 1,
-                            ParentRouteId = operationsRoute.Entity.RouteId,
-                        } 
-                    });
-
-                    await context.SaveChangesAsync();
-
-                    var crmRoute = await context.Routes.AddAsync(
-                        new Data.Entities.Route
-                        {
-                            RouteName = "CRM",
-                            Route1 = "",
-                            Description = "people",
-                            ApplicationId = 1,
-                            ParentRouteId = null,
+                        await context.Routes.AddRangeAsync(new[] {
+                            new Data.Entities.Route {
+                                RouteName = "Onboarding",
+                                Route1 = "/dashboard/onboarding",
+                                Description = "person-add",
+                                ApplicationId = 1,
+                                ParentRouteId = null,
+                            },
+                            new Data.Entities.Route {
+                                RouteName = "Platform Settings",
+                                Route1 = "/dashboard/platform-settings",
+                                Description = "settings-2",
+                                ApplicationId = 1,
+                                ParentRouteId = null,
+                            },
                         });
 
-                    await context.SaveChangesAsync();
-                    
-                    await context.Routes.AddAsync(
-                        new Data.Entities.Route
-                        {
-                            RouteName = "Customers",
-                            Route1 = "/dashboard/customers",
-                            Description = "person",
-                            ApplicationId = 1,
-                            ParentRouteId = crmRoute.Entity.RouteId,
-                        });
-
-                    await context.SaveChangesAsync();
-
-                    var settingsRoute = await context.Routes.AddAsync(
-                        new Data.Entities.Route
-                        {
-                            RouteName = "Settings",
-                            Route1 = "",
-                            Description = "settings",
-                            ApplicationId = 1,
-                            ParentRouteId = null,
-                        });
-
-                    await context.SaveChangesAsync();
-
-                    await context.Routes.AddAsync(
-                        new Data.Entities.Route {
-                            RouteName = "General Settings",
-                            Route1 = "/dashboard/settings",
-                            Description = "briefcase",
-                            ApplicationId = 1,
-                            ParentRouteId = settingsRoute.Entity.RouteId,
-                        });
-
-                    var productManagementRoute = await context.Routes.AddAsync(
-                        new Data.Entities.Route {
-                            RouteName = "Product Management",
-                            Route1 = "",
-                            Description = "cube",
-                            ApplicationId = 1,
-                            ParentRouteId = settingsRoute.Entity.RouteId,
-                        });
-
-                    await context.SaveChangesAsync();
-
-                    await context.Routes.AddRangeAsync(new[] {
-                        new Data.Entities.Route {
-                            RouteName = "Categories",
-                            Route1 = "/dashboard/categories",
-                            Description = "cube",
-                            ApplicationId = 1,
-                            ParentRouteId = productManagementRoute.Entity.RouteId,
-                        },
-                        new Data.Entities.Route {
-                            RouteName = "Products",
-                            Route1 = "/dashboard/products",
-                            Description = "cube",
-                            ApplicationId = 1,
-                            ParentRouteId = productManagementRoute.Entity.RouteId,
-                        }
-                    });
-
-                    await context.SaveChangesAsync();
-
-                    await context.Routes.AddRangeAsync(new[] {
-                        new Data.Entities.Route {
-                            RouteName = "Onboarding",
-                            Route1 = "/dashboard/onboarding",
-                            Description = "person-add",
-                            ApplicationId = 1,
-                            ParentRouteId = null,
-                        },
-                        new Data.Entities.Route {
-                            RouteName = "Platform Settings",
-                            Route1 = "/dashboard/platform-settings",
-                            Description = "settings-2",
-                            ApplicationId = 1,
-                            ParentRouteId = null,
-                        },
-                    } );
-
-                    await context.SaveChangesAsync();
+                        await context.SaveChangesAsync();
+                    }
 
                     await context.DisposeAsync();
                 }
