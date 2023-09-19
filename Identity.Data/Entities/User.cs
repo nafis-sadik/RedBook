@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Identity.Data.Entities;
+﻿namespace Identity.Data.Entities;
 
 public partial class User
 {
@@ -15,17 +12,11 @@ public partial class User
 
     public string Password { get; set; }
 
-    public int OrganizationId { get; set; }
-
-    public int RoleId { get; set; }
-
     public string Status { get; set; }
 
     public string Email { get; set; }
 
     public int? AccountBalance { get; set; }
 
-    public virtual Organization Organization { get; set; }
-
-    public virtual Role Role { get; set; }
+    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }

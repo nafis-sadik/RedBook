@@ -6,7 +6,7 @@ namespace Identity.Domain.Abstraction
     public interface IOrganizationService
     {
         Task<OrganizationModel> AddOrganizationAsync(OrganizationModel Organization);
-        Task<OrganizationModel> GetOrganizationAsync(int OrganizationId);
+        Task<OrganizationModel> GetOrganizationAsync(int orgId);
         Task<IEnumerable<OrganizationModel>> GetOrganizationsAsync();
         Task<PagedModel<OrganizationModel>> GetPagedOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel);
         Task<OrganizationModel> UpdateOrganizationAsync(OrganizationModel Organization);

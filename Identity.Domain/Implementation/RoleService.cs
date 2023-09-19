@@ -70,32 +70,45 @@ namespace Identity.Domain.Implementation
 
             return Mapper.Map<RoleModel>(roleEntity);
         }
+
         public async Task DeleteRoleAsync(int roleId)
         {
-            // If there are users under this role, this role can not be deleted
-            bool roleHasUsers = _userRepo.UnTrackableQuery().Where(x => x.RoleId == roleId).Count() > 0;
-            if (roleHasUsers) throw new ArgumentException("One or more users hold this role");
+            string? requesterRoleIdCollectionStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
+            if (string.IsNullOrEmpty(requesterRoleIdCollectionStr))
+                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
-            // Only an admin user has the right to delete a roles
-            int orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
-            int userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
-            Role? userRoleEntity = await _roleRepo.GetByIdAsync(userRoleId);
-
-            if (userRoleEntity == null)
-                throw new ArgumentException($"Role with identifier {roleId} was not found");
-
-            if (userRoleEntity.IsAdmin)
-                throw new ArgumentException("Only admin users are authorized to execute this operation");
-
-            // An user can delete the roles of his organization only
-            Role? roleToDelete = await _roleRepo.GetByIdAsync(roleId);
-
+            int[] userRoleIds = Array.ConvertAll(requesterRoleIdCollectionStr.Split(','), int.Parse);
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                await _roleRepo.DeleteAsync(roleToDelete);
-                await transaction.SaveChangesAsync();
+                int adminOrg = 0;
+                bool isAdmin = false;
+                Role? requestingUserRoleEntity = null;
+                foreach (int userRolePk in userRoleIds)
+                {
+                    requestingUserRoleEntity = await _roleRepo.GetByIdAsync(userRolePk);
+
+                    // Role existance check
+                    if (requestingUserRoleEntity == null)
+                        throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
+                    if (requestingUserRoleEntity.IsAdmin)
+                    {
+                        isAdmin = true;
+                        adminOrg = requestingUserRoleEntity.Organization.OrganizationId;
+                        break;
+                    }
+                }
+
+                if (requestingUserRoleEntity == null) throw new ArgumentException("Role not found");
+
+                if (isAdmin && requestingUserRoleEntity.Organization.OrganizationId == adminOrg)
+                {
+                    await _roleRepo.DeleteAsync(requestingUserRoleEntity);
+                    await transaction.SaveChangesAsync();
+                }
             }
         }
+
         public async Task<RoleModel> GetRoleAsync(int roleId)
         {
             // Only an admin user has the right to delete a roles
@@ -115,6 +128,7 @@ namespace Identity.Domain.Implementation
 
             return Mapper.Map<RoleModel>(userRoleEntity);
         }
+
         public async Task<PagedModel<RoleModel>> GetRolesAsync(PagedModel<RoleModel> pagedRoleModel)
         {
             int orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
@@ -145,6 +159,7 @@ namespace Identity.Domain.Implementation
 
             return pagedRoleModel;
         }
+
         public async Task<RoleModel> UpdateRoleAsync(RoleModel role)
         {
             // Only an admin user has the right to delete a roles

@@ -130,6 +130,7 @@ namespace Identity.Domain.Implementation
             {
                 _roleRepo = transaction.GetRepository<Role>();
                 _routeRepo = transaction.GetRepository<Route>();
+                _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
 
                 Role? requesterRole = await _roleRepo.GetByIdAsync(requesterRoleId);
                 if (requesterRole == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
@@ -137,7 +138,7 @@ namespace Identity.Domain.Implementation
                 {
                     routeList = await _routeRepo
                     .UnTrackableQuery()
-                    .Where(x => x.ApplicationId == appId)
+                    .Where(x => x.ApplicationId > 0)
                     .Select(x => new RouteModel
                     {
                         Id = x.RouteId,

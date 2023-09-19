@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Identity.Data.Entities;
+﻿namespace Identity.Data.Entities;
 
 public partial class Role
 {
@@ -21,5 +18,5 @@ public partial class Role
 
     public virtual ICollection<RoleRouteMapping> RoleRouteMappings { get; set; } = new List<RoleRouteMapping>();
 
-    public virtual ICollection<User> Users { get; set; } = new List<User>();
+    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }

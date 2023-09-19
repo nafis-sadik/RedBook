@@ -20,6 +20,7 @@ namespace Identity.Domain.Implementation
     {
         private IRepositoryBase<User> _userRepo;
         private IRepositoryBase<Role> _roleRepo;
+        private IRepositoryBase<UserRole> _userRoleRepo;
 
         public UserService(
             ILogger<UserService> logger,
@@ -33,11 +34,11 @@ namespace Identity.Domain.Implementation
         public async Task<string?> LogInAsync(UserModel userModel)
         {
             User? userEntity;
-            Role? roleEntity;
+            string userRoles = "";
             using (var unitOfWork = UnitOfWorkManager.Begin())
             {
                 _userRepo = unitOfWork.GetRepository<User>();
-                _roleRepo = unitOfWork.GetRepository<Role>();
+                _userRoleRepo = unitOfWork.GetRepository<UserRole>();
 
                 userEntity = await _userRepo
                     .UnTrackableQuery()
@@ -46,25 +47,23 @@ namespace Identity.Domain.Implementation
                         || x.UserId == userModel.UserId
                         || x.Email == userModel.Email
                     );
+
                 if(userEntity == null) throw new ArgumentException("User not found");
 
-                roleEntity = await _roleRepo
-                    .UnTrackableQuery()
-                    .FirstOrDefaultAsync(x => x.RoleId == userEntity.RoleId);
+                var userRolesIds = await _userRoleRepo.UnTrackableQuery()
+                                .Where(x => x.UserId == userEntity.UserId)
+                                .Select(x => x.RoleId)
+                                .ToListAsync();
 
-                if (roleEntity == null) throw new ArgumentException("User must have a role");
+                userRoles = string.Join(",", userRolesIds);
             }
-
-            if (userEntity == null)
-                return null;
 
             if (userEntity != null && BCrypt.Net.BCrypt.EnhancedVerify(userModel.Password, userEntity.Password))
             {
                 byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
                 return GenerateJwtToken(new List<Claim> {
                     new Claim("UserId", userEntity.UserId),
-                    new Claim(ClaimTypes.Role, roleEntity.RoleId.ToString()),
-                    new Claim("OrganizationId", userEntity.OrganizationId.ToString())
+                    new Claim(ClaimTypes.Role, userRoles)
                 });
             }
             else
@@ -103,7 +102,6 @@ namespace Identity.Domain.Implementation
                     userEntity.FirstName = userModel.FirstName;
                     userEntity.LastName = userModel.LastName;
                     userEntity.UserName = userModel.UserName;
-                    userEntity.OrganizationId = userModel.OrganizationId;
                 }
                 
                 userEntity = _userRepo.Update(userEntity);
@@ -121,7 +119,7 @@ namespace Identity.Domain.Implementation
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
             string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
-            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
+            if (string.IsNullOrEmpty(requesterRoleIdStr))
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
             User? userEntity;
@@ -135,25 +133,46 @@ namespace Identity.Domain.Implementation
                 // Admin requesting employee details
                 else
                 {
-                    _roleRepo = transaction.GetRepository<Role>();
-                    Role? requestingUserRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
+                    int[] userRoleIds = Array.ConvertAll(requesterRoleIdStr.Split(','), int.Parse);
 
-                    // Role existance check
-                    if(requestingUserRoleEntity == null)
-                        throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+                    _roleRepo = transaction.GetRepository<Role>();
+                    bool isAdmin = false;
+                    int adminOrg = 0;
+                    foreach(int roleId in userRoleIds){
+                        Role? requestingUserRoleEntity = await _roleRepo.GetByIdAsync(roleId);
+
+                        // Role existance check
+                        if (requestingUserRoleEntity == null)
+                            throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
+                        if (requestingUserRoleEntity.IsAdmin)
+                        {
+                            isAdmin = true;
+                            adminOrg = requestingUserRoleEntity.Organization.OrganizationId;
+                            break;
+                        }
+                    }
 
                     // Admin priviledge check
-                    if (requestingUserRoleEntity.IsAdmin)
+                    if (isAdmin)
                         throw new ArgumentException(CommonConstants.HttpResponseMessages.AdminAccessRequired);
 
                     userEntity = await _userRepo.GetByIdAsync(userId);
-                }
+                    if (userEntity == null)
+                        throw new ArgumentException(CommonConstants.HttpResponseMessages.UserNotFound);
 
-                if(userEntity == null)
-                    throw new ArgumentException($"User with identifier {userId} was not found");
+                    // Target user must belong to organization of admin user
+                    foreach(var userEntityRole in userEntity.UserRoles)
+                    {
+                        if(userEntityRole.Role.OrganizationId == adminOrg)
+                        {
+                            return Mapper.Map<UserModel>(userEntity);
+                        }
+                    }
+                }
             }
 
-            return Mapper.Map<UserModel>(userEntity);
+            return null;
         }
 
         public async Task<bool> ArchiveAccount(string userId)
@@ -205,13 +224,6 @@ namespace Identity.Domain.Implementation
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
-                Organization? orgEntity = await _orgRepo.GetByIdAsync(userEntity.OrganizationId);
-                if (orgEntity == null)
-                    throw new ArgumentException($"User with identifier {userId} was not found");
-
-                if(!orgEntity.OrganizationName.Trim().ToLower().Contains("blumedigital"))
-                    throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-
                 // Role Id for System Admin should always be 1
                 // Only System Admin user can unarchive an user
                 var requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
@@ -233,55 +245,69 @@ namespace Identity.Domain.Implementation
         public async Task<UserModel> RegisterNewUser(UserModel userModel)
         {
             string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
-            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
+            if (string.IsNullOrEmpty(requesterRoleIdStr))
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
-            int requesterOrgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
-            if (requesterOrgId <= 0)
-                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-            User newUser;
+            User newUser = Mapper.Map<User>(userModel);
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                newUser = Mapper.Map<User>(userModel);
                 _userRepo = transaction.GetRepository<User>();
                 _roleRepo = transaction.GetRepository<Role>();
+                _userRoleRepo = transaction.GetRepository<UserRole>();
 
-                Role? requestSenderRole = await _roleRepo.GetByIdAsync(requesterRoleId);
-
-                if (requestSenderRole == null)
-                    throw new ArgumentException("Invalid sender role");
-
-                // In case of registering the first admin user, we need to create an admin role first
-                Role? adminRole = null;
-                int adminRoleCount = _roleRepo.UnTrackableQuery().Where(x => x.IsAdmin && x.OrganizationId == userModel.OrganizationId).Count();
-                if(adminRoleCount <= 0)
+                bool isApproved = false;
+                int[] requesterRoleIds = Array.ConvertAll(requesterRoleIdStr.Split(','), int.Parse);
+                foreach (int id in requesterRoleIds)
                 {
-                    adminRole = await _roleRepo.InsertAsync(new Role {
-                        RoleName = "Admin",
-                        OrganizationId = userModel.OrganizationId,
-                        IsAdmin = true,
-                    });
-
-                    await _roleRepo.SaveChangesAsync();
+                    var requesterRole = await _roleRepo.GetByIdAsync(id);
+                    if (requesterRole == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+                    if(requesterRole.IsSystemAdmin || requesterRole.IsRetailer)
+                    {
+                        isApproved = true;
+                        break;
+                    }
                 }
-                
+
+                if(!isApproved) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                Role? orgAdminRole = await _roleRepo.InsertAsync(new Role
+                {
+                    RoleName = "Admin",
+                    OrganizationId = userModel.OrganizationId,
+                    IsAdmin = true,
+                });
+
+                await _roleRepo.SaveChangesAsync();
+
+                if (orgAdminRole == null) throw new ArgumentException("Unable to create organization admin, contact support.");
+
                 newUser.UserId = Guid.NewGuid().ToString();
                 newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
                 newUser.Status = CommonConstants.StatusTypes.Active.ToString();
-                if (adminRole == null)
-                    newUser.RoleId = userModel.RoleId;
-                else
-                    newUser.RoleId = adminRole.RoleId;
-
-                // Admin users can register his employees as new users
-                // Retail user can register his new customers as new users
-                if (!requestSenderRole.IsRetailer && !requestSenderRole.IsAdmin)
-                    throw new ArgumentException($"Only admin & retail user can register new user");
-                if(requestSenderRole.IsAdmin && !requestSenderRole.IsRetailer)
-                    newUser.OrganizationId = requesterOrgId;
 
                 newUser = await _userRepo.InsertAsync(newUser);
+
+                await transaction.SaveChangesAsync();
+
+                UserRole userRole = await _userRoleRepo.InsertAsync(new UserRole {
+                    RoleId = orgAdminRole.RoleId,
+                    UserId = newUser.UserId,
+                });
+
+                await transaction.SaveChangesAsync();
+
+                // Allow Org admin Routes
+                var _routeRepo = transaction.GetRepository<Route>();
+                var _routeRouteRepo = transaction.GetRepository<RoleRouteMapping>();
+                var allRoutesOfApp = _routeRepo.UnTrackableQuery().Where(x => x.ApplicationId == userModel.ApplicationId);
+                foreach (var route in allRoutesOfApp)
+                {
+                    await _routeRouteRepo.InsertAsync(new RoleRouteMapping
+                    {
+                        RoleId = orgAdminRole.RoleId,
+                        RouteId = route.RouteId,
+                    });
+                }
 
                 await transaction.SaveChangesAsync();
             }

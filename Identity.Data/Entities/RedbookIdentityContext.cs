@@ -25,6 +25,8 @@ public partial class RedbookIdentityContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UserRole> UserRoles { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=RedbookIdentity;User ID=sa;TrustServerCertificate=True;Encrypt=False;Trusted_Connection=True;");
@@ -116,10 +118,6 @@ public partial class RedbookIdentityContext : DbContext
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.HasIndex(e => e.OrganizationId, "IX_Users_OrganizationId");
-
-            entity.HasIndex(e => e.RoleId, "IX_Users_RoleId");
-
             entity.Property(e => e.UserId)
                 .HasMaxLength(50)
                 .IsUnicode(false);
@@ -142,16 +140,6 @@ public partial class RedbookIdentityContext : DbContext
                 .IsRequired()
                 .HasMaxLength(100)
                 .IsUnicode(false);
-
-            entity.HasOne(d => d.Organization).WithMany(p => p.Users)
-                .HasForeignKey(d => d.OrganizationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Users_Organizations");
-
-            entity.HasOne(d => d.Role).WithMany(p => p.Users)
-                .HasForeignKey(d => d.RoleId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Users_Roles");
         });
 
         OnModelCreatingPartial(modelBuilder);

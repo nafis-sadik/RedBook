@@ -37,19 +37,38 @@ namespace Identity.WebAPI.Configurations
                     await context.SaveChangesAsync();
 
                     // Load Seed Data for Applications
-                    var application = await context.Applications.FindAsync(1);
-                    if (application == null)
+                    var blumeIdentity = await context.Applications.FindAsync(1);
+                    if (blumeIdentity == null)
                     {
-                        await context.Applications.AddAsync(new Application
+                        blumeIdentity = new Application
                         {
-                            ApplicationName = "Redbook",
+                            ApplicationName = "Blume Identity",
                             OrganizationId = 1
-                        });
+                        };
+
+                        await context.Applications.AddAsync(blumeIdentity);
                     }
                     else
                     {
-                        application.ApplicationName = "Redbook";
-                        application.OrganizationId = 1;
+                        blumeIdentity.ApplicationName = "Redbook";
+                        blumeIdentity.OrganizationId = 1;
+                    }
+
+                    // Load Seed Data for Applications
+                    var redbook = await context.Applications.FindAsync(2);
+                    if (redbook == null)
+                    {
+                        redbook = new Application
+                        {
+                            ApplicationName = "Redbook",
+                            OrganizationId = 1
+                        };
+                        await context.Applications.AddAsync(redbook);
+                    }
+                    else
+                    {
+                        redbook.ApplicationName = "Redbook";
+                        redbook.OrganizationId = 1;
                     }
 
                     await context.SaveChangesAsync();
@@ -57,14 +76,18 @@ namespace Identity.WebAPI.Configurations
                     // Load Seed Data for Users
                     var orgRole = await context.Roles.FindAsync(1);
                     if (orgRole == null)
-                        await context.Roles.AddAsync(new Role
+                    {
+                        orgRole = new Role
                         {
                             RoleName = "System Admin",
                             OrganizationId = 1,
                             IsSystemAdmin = true,
                             IsAdmin = true,
                             IsRetailer = true,
-                        });
+                        };
+
+                        await context.Roles.AddAsync(orgRole);
+                    }
                     else
                     {
                         orgRole.RoleName = "System Admin";
@@ -78,8 +101,9 @@ namespace Identity.WebAPI.Configurations
 
                     var user = await context.Users.FindAsync("00000000-0000-0000-0000-000000000000");
                     if (user == null)
+                    {
                         // Load Seed Data for Users
-                        await context.Users.AddAsync(new User
+                        user = new User
                         {
                             UserId = new Guid().ToString(),
                             AccountBalance = int.MaxValue,
@@ -89,9 +113,10 @@ namespace Identity.WebAPI.Configurations
                             Email = "nafis_sadik@outlook.com",
                             Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23"),
                             Status = CommonConstants.StatusTypes.Active.ToString(),
-                            RoleId = 1,
-                            OrganizationId = 1,
-                        });
+                        };
+
+                        await context.Users.AddAsync(user);
+                    }
                     else
                     {
                         user.UserId = "00000000-0000-0000-0000-000000000000";
@@ -102,10 +127,17 @@ namespace Identity.WebAPI.Configurations
                         user.Email = "nafis_sadik@outlook.com";
                         user.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23");
                         user.Status = CommonConstants.StatusTypes.Active.ToString();
-                        user.RoleId = 1;
-                        user.OrganizationId = 1;
                     }
 
+                    await context.SaveChangesAsync();
+
+                    List<UserRole> userRoleMapping = await context.UserRoles.Where(x => x.UserRoleId > 0).ToListAsync();
+                    context.RemoveRange(userRoleMapping);
+                    await context.SaveChangesAsync();
+                    await context.UserRoles.AddAsync(new UserRole {
+                        RoleId = orgRole.RoleId,
+                        UserId = user.UserId
+                    });
                     await context.SaveChangesAsync();
 
                     var existingRoutes = await context.Routes.Where(r => r.RouteId > 1).ToListAsync();
@@ -119,7 +151,7 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "Dashboards",
                                 Route1 = "/dashboard/home",
                                 Description = "keypad",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = null,
                             });
 
@@ -131,7 +163,7 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "Business Operations",
                                 Route1 = "",
                                 Description = "layers",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = null,
                             });
 
@@ -142,14 +174,14 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "Purchase - Invoice",
                                 Route1 = "/dashboard/purchase",
                                 Description = "shopping-bag",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = operationsRoute.Entity.RouteId,
                             },
                             new Data.Entities.Route {
                                 RouteName = "Purchase - Sales",
                                 Route1 = "/dashboard/sales",
                                 Description = "shopping-cart",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = operationsRoute.Entity.RouteId,
                             }
                         });
@@ -162,7 +194,7 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "CRM",
                                 Route1 = "",
                                 Description = "people",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = null,
                             });
 
@@ -174,7 +206,7 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "Customers",
                                 Route1 = "/dashboard/customers",
                                 Description = "person",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = crmRoute.Entity.RouteId,
                             });
 
@@ -186,7 +218,7 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "Settings",
                                 Route1 = "",
                                 Description = "settings",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = null,
                             });
 
@@ -197,21 +229,21 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "General Settings",
                                 Route1 = "/dashboard/settings",
                                 Description = "briefcase",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = settingsRoute.Entity.RouteId,
                             },
                             new Data.Entities.Route {
                                 RouteName = "Product List",
                                 Route1 = "/dashboard/products",
                                 Description = "cube",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = settingsRoute.Entity.RouteId,
                             },
                             new Data.Entities.Route {
                                 RouteName = "Product Categories",
                                 Route1 = "/dashboard/category",
                                 Description = "cube",
-                                ApplicationId = 1,
+                                ApplicationId = redbook.ApplicationId,
                                 ParentRouteId = settingsRoute.Entity.RouteId,
                             }
                         });
@@ -223,14 +255,14 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "Onboarding",
                                 Route1 = "/dashboard/onboarding",
                                 Description = "person-add",
-                                ApplicationId = 1,
+                                ApplicationId = blumeIdentity.ApplicationId,
                                 ParentRouteId = null,
                             },
                             new Data.Entities.Route {
                                 RouteName = "Platform Settings",
                                 Route1 = "/dashboard/platform-settings",
                                 Description = "settings-2",
-                                ApplicationId = 1,
+                                ApplicationId = blumeIdentity.ApplicationId,
                                 ParentRouteId = null,
                             },
                         });

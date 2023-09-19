@@ -96,6 +96,12 @@ namespace Identity.Domain.Implementation
 
         public async Task<IEnumerable<OrganizationModel>> GetOrganizationsAsync()
         {
+            string? requesterUserStr = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
+
+            string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(""))?.Value;
+            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
+                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
             List<OrganizationModel> organizationModels = new List<OrganizationModel>();
             using (var transaction = UnitOfWorkManager.Begin())
             {
