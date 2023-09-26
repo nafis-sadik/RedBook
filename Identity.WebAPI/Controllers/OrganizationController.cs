@@ -30,7 +30,15 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         /// <param name="orgId">Organization Id or unique identifier which is the primary key of organization table</param>
         [HttpGet]
+        [Route("{orgId}")]
         public async Task<IActionResult> Get(int orgId) => Ok(await _organizationService.GetOrganizationAsync(orgId));
+
+        /// <summary>
+        /// Get all organizations
+        /// </summary>
+        [HttpGet]
+        [Route("GetAll")]
+        public async Task<IActionResult> GetAll() => Ok(await _organizationService.GetOrganizationsAsync());
 
         /// <summary>
         /// Add new organization with details

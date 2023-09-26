@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using RedBook.Core.UnitOfWork;
 using Identity.Domain.Abstraction;
 using RedBook.Core.Security;
+using Microsoft.AspNetCore.Http;
 
 namespace Identity.Domain.Implementation
 {
@@ -26,8 +27,9 @@ namespace Identity.Domain.Implementation
             ILogger<UserService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
-            IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
+            IClaimsPrincipalAccessor claimsPrincipalAccessor,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor)
         { }
 
         // Public API
@@ -40,6 +42,7 @@ namespace Identity.Domain.Implementation
                 _userRepo = unitOfWork.GetRepository<User>();
                 _userRoleRepo = unitOfWork.GetRepository<UserRole>();
 
+                // Find user
                 userEntity = await _userRepo
                     .UnTrackableQuery()
                     .FirstOrDefaultAsync(x => 
@@ -50,10 +53,11 @@ namespace Identity.Domain.Implementation
 
                 if(userEntity == null) throw new ArgumentException("User not found");
 
-                var userRolesIds = await _userRoleRepo.UnTrackableQuery()
+                int[] userRolesIds = await _userRoleRepo.UnTrackableQuery()
                                 .Where(x => x.UserId == userEntity.UserId)
                                 .Select(x => x.RoleId)
-                                .ToListAsync();
+                                .ToArrayAsync();
+
 
                 userRoles = string.Join(",", userRolesIds);
             }

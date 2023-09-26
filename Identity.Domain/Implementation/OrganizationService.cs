@@ -98,21 +98,39 @@ namespace Identity.Domain.Implementation
         {
             string? requesterUserStr = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
 
-            string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(""))?.Value;
-            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
+            string? roleIds = User?.Claims?.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value;
+            int[] requesterRoleIds;
+            if (!string.IsNullOrEmpty(roleIds))
+            {
+                string[] strArray = roleIds.Split(',');
+                requesterRoleIds = Array.ConvertAll(strArray, int.Parse);
+            }
+            else
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
             List<OrganizationModel> organizationModels = new List<OrganizationModel>();
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _orgRepo = transaction.GetRepository<Organization>();
-                organizationModels = await _orgRepo.UnTrackableQuery()
-                    .Where(x => x.OrganizationId > 0)
-                    .Select(x => new OrganizationModel
+                _roleRepo = transaction.GetRepository<Role>();
+
+                foreach (int roleId in requesterRoleIds)
+                {
+                    var roleEntity = await _roleRepo.GetByIdAsync(roleId);
+
+                    if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
+                    if(roleEntity.IsAdmin)
                     {
-                        OrganizationId = x.OrganizationId,
-                        OrganizationName = x.OrganizationName
-                    }).ToListAsync();
+                        organizationModels.AddRange(await _orgRepo.UnTrackableQuery()
+                            .Where(x => x.OrganizationId == roleEntity.OrganizationId)
+                            .Select(x => new OrganizationModel
+                            {
+                                OrganizationId = x.OrganizationId,
+                                OrganizationName = x.OrganizationName
+                            }).ToArrayAsync());
+                    }
+                }
             }
 
             return organizationModels;

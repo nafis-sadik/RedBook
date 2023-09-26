@@ -4,6 +4,7 @@ using Identity.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Identity.Data.Migrations
 {
     [DbContext(typeof(RedbookIdentityContext))]
-    partial class RedbookIdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20230926093713_ApplicationUrlIntroduced")]
+    partial class ApplicationUrlIntroduced
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -169,38 +172,13 @@ namespace Identity.Data.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
 
-                    b.Property<int?>("RouteTypeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RouteTypesId")
-                        .HasColumnType("int");
-
                     b.HasKey("RouteId");
 
                     b.HasIndex("ParentRouteId");
 
-                    b.HasIndex("RouteTypeId");
-
                     b.HasIndex(new[] { "ApplicationId" }, "IX_Routes_ApplicationId");
 
                     b.ToTable("Routes");
-                });
-
-            modelBuilder.Entity("Identity.Data.Entities.RouteType", b =>
-                {
-                    b.Property<int>("RouteTypeId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RouteTypeId"));
-
-                    b.Property<string>("RouteTypeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("RouteTypeId");
-
-                    b.ToTable("RouteTypes");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.User", b =>
@@ -333,15 +311,9 @@ namespace Identity.Data.Migrations
                         .WithMany()
                         .HasForeignKey("ParentRouteId");
 
-                    b.HasOne("Identity.Data.Entities.RouteType", "RouteType")
-                        .WithMany("Routes")
-                        .HasForeignKey("RouteTypeId");
-
                     b.Navigation("Application");
 
                     b.Navigation("ParentRoute");
-
-                    b.Navigation("RouteType");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.User", b =>
@@ -394,11 +366,6 @@ namespace Identity.Data.Migrations
             modelBuilder.Entity("Identity.Data.Entities.Route", b =>
                 {
                     b.Navigation("RoleRouteMappings");
-                });
-
-            modelBuilder.Entity("Identity.Data.Entities.RouteType", b =>
-                {
-                    b.Navigation("Routes");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.User", b =>

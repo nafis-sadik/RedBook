@@ -1,4 +1,5 @@
-﻿using Identity.Data.Entities;
+﻿using Identity.Data;
+using Identity.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using RedBook.Core.Constants;
 
@@ -18,259 +19,281 @@ namespace Identity.WebAPI.Configurations
                     if (context.Database.GetPendingMigrations().Any())
                     {
                         context.Database.Migrate();
-                    }
 
-                    // Load Seed Data for Organizations
-                    var org = await context.Organizations.FindAsync(1);
-                    if (org == null)
-                        await context.Organizations.AddAsync(new Organization
+                        // Route types
+                        if (await context.RouteTypes.Where(x => x.RouteTypeId > 0).CountAsync() <= 0)
                         {
-                            OrganizationName = "Blume Digital Corp.",
-                            CreateDate = DateTime.Now,
-                        });
-                    else
-                    {
-                        org.OrganizationName = "Blume Digital Corp.";
-                        org.CreateDate = DateTime.Now;
-                    }
+                            var routeTypes = await context.RouteTypes.Where(x => x.RouteTypeId > 0).ToListAsync();
+                            context.RouteTypes.RemoveRange(routeTypes);
 
-                    await context.SaveChangesAsync();
+                            // Load Seed Data for Organizations
+                            await context.RouteTypes.AddRangeAsync(
+                                RouteTypeConsts.GenericRoute,
+                                RouteTypeConsts.AdminRoute,
+                                RouteTypeConsts.RetailerRoute,
+                                RouteTypeConsts.SysAdminRoute
+                            );
+                            await context.SaveChangesAsync();
+                        }
+                        else {
+                            RouteTypeConsts.GenericRoute = await context.RouteTypes.FirstAsync(x => x.RouteTypeName == RouteTypeConsts.GenericRoute.RouteTypeName);
+                            RouteTypeConsts.AdminRoute = await context.RouteTypes.FirstAsync(x => x.RouteTypeName == RouteTypeConsts.AdminRoute.RouteTypeName);
+                            RouteTypeConsts.RetailerRoute = await context.RouteTypes.FirstAsync(x => x.RouteTypeName == RouteTypeConsts.RetailerRoute.RouteTypeName);
+                            RouteTypeConsts.SysAdminRoute = await context.RouteTypes.FirstAsync(x => x.RouteTypeName == RouteTypeConsts.SysAdminRoute.RouteTypeName);
+                        }
 
-                    // Load Seed Data for Applications
-                    var blumeIdentity = await context.Applications.FindAsync(1);
-                    if (blumeIdentity == null)
-                    {
-                        blumeIdentity = new Application
+                        // Organization
+                        if (await context.Organizations.Where(x => x.OrganizationName == "Blume Digital Corp.").CountAsync() <= 0)
+                        {
+                            var orgs = await context.Organizations.Where(x => x.OrganizationId > 0).ToListAsync();
+                            context.Organizations.RemoveRange(orgs);
+
+                            // Load Seed Data for Organizations
+                            await context.Organizations.AddAsync(new Organization
+                            {
+                                OrganizationName = "Blume Digital Corp.",
+                                CreateDate = DateTime.Now,
+                            });
+                            await context.SaveChangesAsync();
+                        }
+
+                        var existingApplications = await context.Applications.Where(x => x.ApplicationId > 0).ToListAsync();
+                        context.Applications.RemoveRange(existingApplications);
+
+                        // Load Seed Data for Applications
+                        var blumeIdentity = new Application
                         {
                             ApplicationName = "Blume Identity",
-                            OrganizationId = 1
-                        };
-
-                        await context.Applications.AddAsync(blumeIdentity);
-                    }
-                    else
-                    {
-                        blumeIdentity.ApplicationName = "Redbook";
-                        blumeIdentity.OrganizationId = 1;
-                    }
-
-                    // Load Seed Data for Applications
-                    var redbook = await context.Applications.FindAsync(2);
-                    if (redbook == null)
-                    {
-                        redbook = new Application
-                        {
-                            ApplicationName = "Redbook",
-                            OrganizationId = 1
-                        };
-                        await context.Applications.AddAsync(redbook);
-                    }
-                    else
-                    {
-                        redbook.ApplicationName = "Redbook";
-                        redbook.OrganizationId = 1;
-                    }
-
-                    await context.SaveChangesAsync();
-
-                    // Load Seed Data for Users
-                    var orgRole = await context.Roles.FindAsync(1);
-                    if (orgRole == null)
-                    {
-                        orgRole = new Role
-                        {
-                            RoleName = "System Admin",
                             OrganizationId = 1,
-                            IsSystemAdmin = true,
-                            IsAdmin = true,
-                            IsRetailer = true,
+                            ApplicationUrl = "http://localhost:5062"
                         };
-
-                        await context.Roles.AddAsync(orgRole);
-                    }
-                    else
-                    {
-                        orgRole.RoleName = "System Admin";
-                        orgRole.OrganizationId = 1;
-                        orgRole.IsAdmin = true;
-                        orgRole.IsSystemAdmin = true;
-                        orgRole.IsRetailer = true;
-                    }
-
-                    await context.SaveChangesAsync();
-
-                    var user = await context.Users.FindAsync("00000000-0000-0000-0000-000000000000");
-                    if (user == null)
-                    {
-                        // Load Seed Data for Users
-                        user = new User
+                        var redbookAPI = new Application
                         {
-                            UserId = new Guid().ToString(),
-                            AccountBalance = int.MaxValue,
-                            FirstName = "Md. Nafis",
-                            LastName = "Sadik",
-                            UserName = "nafis_sadik",
-                            Email = "nafis_sadik@outlook.com",
-                            Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23"),
-                            Status = CommonConstants.StatusTypes.Active.ToString(),
+                            ApplicationName = "Redbook API",
+                            OrganizationId = 1,
+                            ApplicationUrl = "http://localhost:7238"
                         };
+                        var redbookFrontend = new Application
+                        {
+                            ApplicationName = "Redbook Frontend",
+                            OrganizationId = 1,
+                            ApplicationUrl = "http://localhost:4200"
+                        };
+                        await context.Applications.AddRangeAsync(blumeIdentity, redbookAPI, redbookFrontend);
+                        await context.SaveChangesAsync();
 
-                        await context.Users.AddAsync(user);
-                    }
-                    else
-                    {
-                        user.UserId = "00000000-0000-0000-0000-000000000000";
-                        user.AccountBalance = int.MaxValue;
-                        user.FirstName = "Md. Nafis";
-                        user.LastName = "Sadik";
-                        user.UserName = "nafis_sadik";
-                        user.Email = "nafis_sadik@outlook.com";
-                        user.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23");
-                        user.Status = CommonConstants.StatusTypes.Active.ToString();
-                    }
-
-                    await context.SaveChangesAsync();
-
-                    List<UserRole> userRoleMapping = await context.UserRoles.Where(x => x.UserRoleId > 0).ToListAsync();
-                    context.RemoveRange(userRoleMapping);
-                    await context.SaveChangesAsync();
-                    await context.UserRoles.AddAsync(new UserRole {
-                        RoleId = orgRole.RoleId,
-                        UserId = user.UserId
-                    });
-                    await context.SaveChangesAsync();
-
-                    var existingRoutes = await context.Routes.Where(r => r.RouteId > 1).ToListAsync();
-                    if (!existingRoutes.Any())
-                    {
-                        context.Routes.RemoveRange(context.Routes);
-
-                        var dashboardRoute = await context.Routes.AddAsync(
-                            new Data.Entities.Route
+                        // Load Seed Data for Users
+                        Role? sysAdminRole = await context.Roles.FindAsync(1);
+                        if (sysAdminRole == null)
+                        {
+                            sysAdminRole = new Role
                             {
-                                RouteName = "Dashboards",
-                                Route1 = "/dashboard/home",
-                                Description = "keypad",
-                                ApplicationId = redbook.ApplicationId,
-                                ParentRouteId = null,
-                            });
+                                RoleName = "System Admin",
+                                OrganizationId = 1,
+                                IsSystemAdmin = true,
+                                IsAdmin = true,
+                                IsRetailer = true,
+                            };
+                            await context.Roles.AddAsync(sysAdminRole);
+                        }
+                        else
+                        {
+                            sysAdminRole.RoleName = "System Admin";
+                            sysAdminRole.OrganizationId = 1;
+                            sysAdminRole.IsAdmin = true;
+                            sysAdminRole.IsSystemAdmin = true;
+                            sysAdminRole.IsRetailer = true;
+                        }
 
                         await context.SaveChangesAsync();
 
-                        var operationsRoute = await context.Routes.AddAsync(
-                            new Data.Entities.Route
+                        // Register seed user
+                        var user = await context.Users.FindAsync("00000000-0000-0000-0000-000000000000");
+                        if (user == null)
+                        {
+                            // Load Seed Data for Users
+                            user = new User
                             {
-                                RouteName = "Business Operations",
-                                Route1 = "",
-                                Description = "layers",
-                                ApplicationId = redbook.ApplicationId,
-                                ParentRouteId = null,
-                            });
+                                UserId = new Guid().ToString(),
+                                AccountBalance = int.MaxValue,
+                                FirstName = "Md. Nafis",
+                                LastName = "Sadik",
+                                UserName = "nafis_sadik",
+                                Email = "nafis_sadik@outlook.com",
+                                Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23"),
+                                Status = CommonConstants.StatusTypes.Active.ToString(),
+                            };
 
+                            await context.Users.AddAsync(user);
+                        }
+                        else
+                        {
+                            user.UserId = "00000000-0000-0000-0000-000000000000";
+                            user.AccountBalance = int.MaxValue;
+                            user.FirstName = "Md. Nafis";
+                            user.LastName = "Sadik";
+                            user.UserName = "nafis_sadik";
+                            user.Email = "nafis_sadik@outlook.com";
+                            user.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("SHARMIN<3nafis23");
+                            user.Status = CommonConstants.StatusTypes.Active.ToString();
+                        }
                         await context.SaveChangesAsync();
 
-                        await context.Routes.AddRangeAsync(new[] {
+                        // Make seed user sys admin
+                        List<UserRole> userRoleMapping = await context.UserRoles.Where(x => x.UserRoleId > 0).ToListAsync();
+                        context.RemoveRange(userRoleMapping);
+                        await context.SaveChangesAsync();
+                        await context.UserRoles.AddAsync(new UserRole
+                        {
+                            RoleId = sysAdminRole.RoleId,
+                            UserId = user.UserId
+                        });
+                        await context.SaveChangesAsync();
+
+                        var existingRoutes = await context.Routes.Where(r => r.RouteId > 1).ToListAsync();
+                        if (!existingRoutes.Any())
+                        {
+                            context.Routes.RemoveRange(context.Routes);
+
+                            var dashboardRoute = await context.Routes.AddAsync(
+                                new Data.Entities.Route
+                                {
+                                    RouteName = "Dashboards",
+                                    Route1 = "/dashboard/home",
+                                    Description = "keypad",
+                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ParentRouteId = null,
+                                    RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
+                                });
+
+                            await context.SaveChangesAsync();
+
+                            var operationsRoute = await context.Routes.AddAsync(
+                                new Data.Entities.Route
+                                {
+                                    RouteName = "Business Operations",
+                                    Route1 = "",
+                                    Description = "layers",
+                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ParentRouteId = null,
+                                    RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
+                                });
+
+                            await context.SaveChangesAsync();
+
+                            await context.Routes.AddRangeAsync(new[] {
                             new Data.Entities.Route {
                                 RouteName = "Purchase - Invoice",
                                 Route1 = "/dashboard/purchase",
                                 Description = "shopping-bag",
-                                ApplicationId = redbook.ApplicationId,
+                                ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = operationsRoute.Entity.RouteId,
+                                RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
                             },
                             new Data.Entities.Route {
                                 RouteName = "Purchase - Sales",
                                 Route1 = "/dashboard/sales",
                                 Description = "shopping-cart",
-                                ApplicationId = redbook.ApplicationId,
+                                ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = operationsRoute.Entity.RouteId,
+                                RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
                             }
                         });
 
-                        await context.SaveChangesAsync();
+                            await context.SaveChangesAsync();
 
-                        var crmRoute = await context.Routes.AddAsync(
-                            new Data.Entities.Route
-                            {
-                                RouteName = "CRM",
-                                Route1 = "",
-                                Description = "people",
-                                ApplicationId = redbook.ApplicationId,
-                                ParentRouteId = null,
-                            });
+                            var crmRoute = await context.Routes.AddAsync(
+                                new Data.Entities.Route
+                                {
+                                    RouteName = "CRM",
+                                    Route1 = "",
+                                    Description = "people",
+                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ParentRouteId = null,
+                                    RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
+                                });
 
-                        await context.SaveChangesAsync();
+                            await context.SaveChangesAsync();
 
-                        await context.Routes.AddAsync(
-                            new Data.Entities.Route
-                            {
-                                RouteName = "Customers",
-                                Route1 = "/dashboard/customers",
-                                Description = "person",
-                                ApplicationId = redbook.ApplicationId,
-                                ParentRouteId = crmRoute.Entity.RouteId,
-                            });
+                            await context.Routes.AddAsync(
+                                new Data.Entities.Route
+                                {
+                                    RouteName = "Customers",
+                                    Route1 = "/dashboard/customers",
+                                    Description = "person",
+                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ParentRouteId = crmRoute.Entity.RouteId,
+                                    RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
+                                });
 
-                        await context.SaveChangesAsync();
+                            await context.SaveChangesAsync();
 
-                        var settingsRoute = await context.Routes.AddAsync(
-                            new Data.Entities.Route
-                            {
-                                RouteName = "Settings",
-                                Route1 = "",
-                                Description = "settings",
-                                ApplicationId = redbook.ApplicationId,
-                                ParentRouteId = null,
-                            });
+                            var settingsRoute = await context.Routes.AddAsync(
+                                new Data.Entities.Route
+                                {
+                                    RouteName = "Settings",
+                                    Route1 = "",
+                                    Description = "settings",
+                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ParentRouteId = null,
+                                    RouteTypesId = RouteTypeConsts.AdminRoute.RouteTypeId
+                                });
 
-                        await context.SaveChangesAsync();
+                            await context.SaveChangesAsync();
 
-                        await context.Routes.AddRangeAsync(new[] {
+                            await context.Routes.AddRangeAsync(new[] {
                             new Data.Entities.Route {
                                 RouteName = "General Settings",
                                 Route1 = "/dashboard/settings",
                                 Description = "briefcase",
-                                ApplicationId = redbook.ApplicationId,
+                                ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = settingsRoute.Entity.RouteId,
+                                RouteTypesId = RouteTypeConsts.AdminRoute.RouteTypeId
                             },
                             new Data.Entities.Route {
                                 RouteName = "Product List",
                                 Route1 = "/dashboard/products",
                                 Description = "cube",
-                                ApplicationId = redbook.ApplicationId,
+                                ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = settingsRoute.Entity.RouteId,
+                                RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
                             },
                             new Data.Entities.Route {
                                 RouteName = "Product Categories",
                                 Route1 = "/dashboard/category",
                                 Description = "cube",
-                                ApplicationId = redbook.ApplicationId,
+                                ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = settingsRoute.Entity.RouteId,
+                                RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
                             }
                         });
 
-                        await context.SaveChangesAsync();
+                            await context.SaveChangesAsync();
 
-                        await context.Routes.AddRangeAsync(new[] {
+                            await context.Routes.AddRangeAsync(new[] {
                             new Data.Entities.Route {
                                 RouteName = "Onboarding",
                                 Route1 = "/dashboard/onboarding",
                                 Description = "person-add",
-                                ApplicationId = blumeIdentity.ApplicationId,
+                                ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = null,
+                                RouteTypesId = RouteTypeConsts.RetailerRoute.RouteTypeId
                             },
                             new Data.Entities.Route {
                                 RouteName = "Platform Settings",
                                 Route1 = "/dashboard/platform-settings",
                                 Description = "settings-2",
-                                ApplicationId = blumeIdentity.ApplicationId,
+                                ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = null,
+                                RouteTypesId = RouteTypeConsts.SysAdminRoute.RouteTypeId
                             },
                         });
 
-                        await context.SaveChangesAsync();
-                    }
+                            await context.SaveChangesAsync();
+                        }
 
-                    await context.DisposeAsync();
+                        await context.DisposeAsync();
+                    }
                 }
             }
         }

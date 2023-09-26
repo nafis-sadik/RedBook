@@ -14,9 +14,13 @@ public partial class Route
 
     public int ApplicationId { get; set; }
 
+    public int RouteTypesId { get; set; }
+
     public virtual Application Application { get; set; }
 
     public virtual Route? ParentRoute { get; set; }
+
+    public virtual RouteType? RouteType { get; set; }
 
     public virtual ICollection<RoleRouteMapping> RoleRouteMappings { get; set; } = new List<RoleRouteMapping>();
 }
