@@ -68,7 +68,7 @@ namespace Identity.Domain.Implementation
                 return GenerateJwtToken(new List<Claim> {
                     new Claim("UserId", userEntity.UserId),
                     new Claim(ClaimTypes.Role, userRoles)
-                });
+                }, userModel.RememberMe);
             }
             else
                 return "";
@@ -384,23 +384,40 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        private string GenerateJwtToken(List<Claim> claimList)
+        private string GenerateJwtToken(List<Claim> claimList, bool rememberMe)
         {
             // generate token that is valid for 7 days
             var tokenHandler = new JwtSecurityTokenHandler();
             byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
 
-            SecurityToken token = new JwtSecurityToken
-            (
-                issuer: "Blume.Id",
-                audience: "User",
-                expires: DateTime.UtcNow.AddDays(CommonConstants.PasswordConfig.SaltExpire),
-                signingCredentials: new SigningCredentials(
-                    new SymmetricSecurityKey(tokenKey),
-                    SecurityAlgorithms.HmacSha256Signature
-                ),
-                claims: claimList
-            );
+            SecurityToken token;
+            if (!rememberMe)
+            {
+                token = new JwtSecurityToken
+                (
+                    issuer: "Blume.Id",
+                    audience: "User",
+                    expires: DateTime.UtcNow.AddDays(CommonConstants.PasswordConfig.SaltExpire),
+                    signingCredentials: new SigningCredentials(
+                        new SymmetricSecurityKey(tokenKey),
+                        SecurityAlgorithms.HmacSha256Signature
+                    ),
+                    claims: claimList
+                );
+            }else
+            {
+                token = new JwtSecurityToken
+                (
+                    issuer: "Blume.Id",
+                    audience: "User",
+                    expires: DateTime.UtcNow.AddDays(DateTime.MaxValue.Day),
+                    signingCredentials: new SigningCredentials(
+                        new SymmetricSecurityKey(tokenKey),
+                        SecurityAlgorithms.HmacSha256Signature
+                    ),
+                    claims: claimList
+                );
+            }
 
             return tokenHandler.WriteToken(token);
         }
