@@ -23,6 +23,7 @@ namespace Identity.Domain.Implementation
         private IRepositoryBase<Application> _appRepo;
         private IRepositoryBase<RoleRouteMapping> _roleMappingRepo;
         private IRepositoryBase<RouteType> _routeTypeRepo;
+        private int[] requesterRoleIds;
 
         public RouteServices(
             ILogger<RouteServices> logger,
@@ -31,7 +32,16 @@ namespace Identity.Domain.Implementation
             IClaimsPrincipalAccessor claimsPrincipalAccessor,
             IHttpContextAccessor httpContextAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor)
-        { }
+        {
+            string? roleIds = User?.Claims?.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value;
+            if (!string.IsNullOrEmpty(roleIds))
+            {
+                string[] strArray = roleIds.Split(',');
+                requesterRoleIds = Array.ConvertAll(strArray, int.Parse);
+            }
+            else
+                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+        }
 
         public async Task<RouteModel> AddRoute(RouteModel routeModel)
         {
@@ -80,7 +90,7 @@ namespace Identity.Domain.Implementation
         public async Task DeleteRoute(int routeId)
         {
             string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
-            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
+            if (string.IsNullOrEmpty(requesterRoleIdStr))
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
             using (var transaction = UnitOfWorkManager.Begin())
@@ -88,13 +98,16 @@ namespace Identity.Domain.Implementation
                 _routeRepo = transaction.GetRepository<Route>();
                 _roleRepo = transaction.GetRepository<Role>();
 
-                Role? requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
-                if (requesterRoleEntity == null)
-                    throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+                foreach (int requesterRoleId in requesterRoleIds)
+                {
+                    Role? requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
+                    if (requesterRoleEntity == null)
+                        throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
-                // Only System Admin should have access to this api
-                if (!requesterRoleEntity.IsSystemAdmin)
-                    throw new ArgumentException($"Only system admin user have access to perform this operation");
+                    // Only System Admin should have access to this api
+                    if (!requesterRoleEntity.IsSystemAdmin)
+                        throw new ArgumentException($"Only system admin user have access to perform this operation");
+                }
 
                 await _routeRepo.DeleteAsync(routeId);
                 await transaction.SaveChangesAsync();
@@ -106,16 +119,6 @@ namespace Identity.Domain.Implementation
         /// </summary>
         public async Task<IEnumerable<RouteModel>> GetAllAppRoutes()
         {
-            string? roleIds = User?.Claims?.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value;
-            int[] requesterRoleIds;
-            if (!string.IsNullOrEmpty(roleIds))
-            {
-                string[] strArray = roleIds.Split(',');
-                requesterRoleIds = Array.ConvertAll(strArray, int.Parse);
-            }
-            else
-                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
@@ -239,7 +242,17 @@ namespace Identity.Domain.Implementation
                 if (routeList == null)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
-                return routeList;
+                // Filter duplicate array
+                Dictionary<int, RouteModel> routeDict = new Dictionary<int, RouteModel>();
+                foreach(RouteModel route in routeList)
+                {
+                    if (!routeDict.Keys.Contains(route.Id))
+                    {
+                        routeDict.Add(route.Id, route);
+                    }
+                }
+
+                return routeDict.Values.ToArray();
             }
         }
 

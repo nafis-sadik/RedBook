@@ -67,6 +67,7 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         /// <param name="orgId">Organization Id or unique identifier which is the primary key of organization table</param>
         [HttpDelete]
+        [Route("{orgId}")]
         public async Task<IActionResult> Delete(int orgId)
         {
             await _organizationService.DeleteOrganizationAsync(orgId);

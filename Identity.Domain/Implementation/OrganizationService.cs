@@ -16,8 +16,11 @@ namespace Identity.Domain.Implementation
 {
     public class OrganizationService : ServiceBase, IOrganizationService
     {
-        private IRepositoryBase<Organization> _orgRepo;
         private IRepositoryBase<Role> _roleRepo;
+        private IRepositoryBase<UserRole> _userRoleRepo;
+        private IRepositoryBase<Organization> _orgRepo;
+        private IRepositoryBase<RoleRouteMapping> _roleRouteMappingRepo;
+        private int[] requesterRoleIds;
 
         public OrganizationService(
             ILogger<ApplicationService> logger,
@@ -25,15 +28,26 @@ namespace Identity.Domain.Implementation
             IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
-        { }
+        {
+            string? roleIds = User?.Claims?.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value;
+            if (!string.IsNullOrEmpty(roleIds))
+            {
+                string[] strArray = roleIds.Split(',');
+                requesterRoleIds = Array.ConvertAll(strArray, int.Parse);
+            }
+            else
+                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+        }
 
         public async Task<OrganizationModel> AddOrganizationAsync(OrganizationModel organizationModel)
         {
             Organization? orgEntity = null;
 
             string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
-            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
+            if (string.IsNullOrEmpty(requesterRoleIdStr))
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+
+            //int[] requesterRoleIds = requesterRoleIdStr.Split(',')
 
             string? requesterUserId = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
             if (string.IsNullOrEmpty(requesterUserId))
@@ -41,25 +55,57 @@ namespace Identity.Domain.Implementation
 
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                _orgRepo = transaction.GetRepository<Organization>();
                 _roleRepo = transaction.GetRepository<Role>();
+                _orgRepo = transaction.GetRepository<Organization>();
+                _userRoleRepo = transaction.GetRepository<UserRole>();
 
-                // Get role to check permissions
-                Role? requesterRole = await _roleRepo.GetByIdAsync(requesterRoleId);
-                if (requesterRole == null)
-                    throw new ArgumentException($"Requester role with identifier {requesterRoleId} was not found");
-
-                // A retailer can add new organization to onboard new customer
-                // An admin user can add new organization to manage multiple businesses from redbook
-                if(requesterRole.IsAdmin || requesterRole.IsRetailer)
+                foreach (int requesterRoleId in requesterRoleIds)
                 {
-                    orgEntity = Mapper.Map<Organization>(organizationModel);
-                    orgEntity.OrganizationId = 0;
-                    orgEntity.CreateDate = DateTime.UtcNow;
-                    orgEntity.CreatedBy = requesterUserId;
-                    orgEntity = await _orgRepo.InsertAsync(orgEntity);
+                    // Get role to check permissions
+                    Role? requesterRole = await _roleRepo.GetByIdAsync(requesterRoleId);
+                    if (requesterRole == null)
+                        throw new ArgumentException($"Requester role with identifier {requesterRoleId} was not found");
+
+                    // A retailer can add new organization to onboard new customer
+                    // An admin user can add new organization to manage multiple businesses from redbook
+                    if (requesterRole.IsAdmin || requesterRole.IsRetailer)
+                    {
+                        orgEntity = Mapper.Map<Organization>(organizationModel);
+                        orgEntity.OrganizationId = 0;
+                        orgEntity.CreateDate = DateTime.UtcNow;
+                        orgEntity.CreatedBy = requesterUserId;
+                        orgEntity = await _orgRepo.InsertAsync(orgEntity);
+                    }
                 }
-                 
+
+                await transaction.SaveChangesAsync();
+
+                Role? adminRoleForNewOrg = null;
+                if (orgEntity != null)
+                {
+                    adminRoleForNewOrg = await _roleRepo.InsertAsync(new Role
+                    {
+                        IsAdmin = true,
+                        IsRetailer = false,
+                        RoleName = "Admin",
+                        IsSystemAdmin = false,
+                        OrganizationId = orgEntity.OrganizationId,
+                    });
+                }
+
+                await transaction.SaveChangesAsync();
+
+                UserRole? userRoleMapping = null;
+                string? creatingUserId = orgEntity?.CreatedBy;
+                if (adminRoleForNewOrg != null && !string.IsNullOrEmpty(creatingUserId))
+                {
+                    userRoleMapping = await _userRoleRepo.InsertAsync(new UserRole
+                    {
+                        RoleId = adminRoleForNewOrg.RoleId,
+                        UserId = creatingUserId,
+                    });
+                }
+
                 await transaction.SaveChangesAsync();
             }
 
@@ -73,10 +119,47 @@ namespace Identity.Domain.Implementation
 
         public async Task DeleteOrganizationAsync(int OrganizationId)
         {
-            Organization? orgEntity;
+            string? requesterUserStr = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
+
             using (var transaction = UnitOfWorkManager.Begin())
             {
+                _roleRepo = transaction.GetRepository<Role>();
                 _orgRepo = transaction.GetRepository<Organization>();
+                _userRoleRepo = transaction.GetRepository<UserRole>();
+                _roleRouteMappingRepo = transaction.GetRepository<RoleRouteMapping>();
+
+                // Admin priviledge check
+                int userRoleCounts = await _userRoleRepo
+                    .UnTrackableQuery()
+                    .Where(x => x.UserId == requesterUserStr && x.Role.IsAdmin && x.Role.OrganizationId == OrganizationId)
+                    .CountAsync();
+
+                if (userRoleCounts <= 0)
+                    throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                int[]? orgRolesIds = await _roleRepo.UnTrackableQuery().Where(x => x.OrganizationId == OrganizationId).Select(x => x.RoleId).ToArrayAsync();
+                foreach(int orgRoleId in orgRolesIds)
+                {
+                    // Delete User Role Mapping Records
+                    int[]? userRoleMappingIds = await _userRoleRepo.UnTrackableQuery().Where(x => x.RoleId == orgRoleId).Select(x => x.UserRoleId).ToArrayAsync();
+                    foreach(int mappingId in userRoleMappingIds)
+                    {
+                        await _userRoleRepo.DeleteAsync(mappingId);
+                    }
+                    await transaction.SaveChangesAsync();
+
+                    // Delete Role Route Mapping Records
+                    int[]? roleRouteMappingIds = await _roleRouteMappingRepo.UnTrackableQuery().Where(x => x.RoleId == orgRoleId).Select(x => x.MappingId).ToArrayAsync();
+                    foreach (int mappingId in roleRouteMappingIds)
+                    {
+                        await _roleRouteMappingRepo.DeleteAsync(mappingId);
+                    }
+                    await transaction.SaveChangesAsync();
+
+                    await _roleRepo.DeleteAsync(orgRoleId);
+                    await transaction.SaveChangesAsync();
+                }
+
                 await _orgRepo.DeleteAsync(OrganizationId);
                 await transaction.SaveChangesAsync();
             }
@@ -98,25 +181,21 @@ namespace Identity.Domain.Implementation
         {
             string? requesterUserStr = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
 
-            string? roleIds = User?.Claims?.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value;
-            int[] requesterRoleIds;
-            if (!string.IsNullOrEmpty(roleIds))
-            {
-                string[] strArray = roleIds.Split(',');
-                requesterRoleIds = Array.ConvertAll(strArray, int.Parse);
-            }
-            else
+            if (string.IsNullOrEmpty(requesterUserStr))
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
             List<OrganizationModel> organizationModels = new List<OrganizationModel>();
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                _orgRepo = transaction.GetRepository<Organization>();
                 _roleRepo = transaction.GetRepository<Role>();
+                _orgRepo = transaction.GetRepository<Organization>();
+                _userRoleRepo = transaction.GetRepository<UserRole>();
 
-                foreach (int roleId in requesterRoleIds)
+                int[]? roleIds = await _userRoleRepo.UnTrackableQuery().Where(x => x.UserId == requesterUserStr).Select(x => x.RoleId).ToArrayAsync();
+
+                foreach (int roleId in roleIds)
                 {
-                    var roleEntity = await _roleRepo.GetByIdAsync(roleId);
+                    Role? roleEntity = await _roleRepo.GetByIdAsync(roleId);
 
                     if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 

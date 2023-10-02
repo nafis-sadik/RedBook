@@ -37,14 +37,14 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         [HttpGet]
         [Route("GetAppRoutes")]
-        public async Task<IActionResult> GetAll(int appId) => Ok(await _routeServices.GetAllAppRoutes());
+        public async Task<IActionResult> GetAll() => Ok(await _routeServices.GetAllAppRoutes());
 
         /// <summary>
         /// Returns allowed menu routes of requesting user
         /// </summary>
         [HttpGet]
         [Route("GetMenuRoutes")]
-        public async Task<IActionResult> GetMenu(int appId) => Ok(await _routeServices.GetAppMenuRoutes());
+        public async Task<IActionResult> GetMenu() => Ok(await _routeServices.GetAppMenuRoutes());
 
         /// <summary>
         /// Returns detailed info of route identified by id provided
