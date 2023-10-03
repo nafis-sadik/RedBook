@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
-using RedBook.Core.Models;
 using System.Linq.Expressions;
 
 namespace RedBook.Core.Repositories
@@ -16,7 +15,7 @@ namespace RedBook.Core.Repositories
             _dbSet = _dbContext.Set<TEntity>();
         }
 
-        public virtual IQueryable<TEntity> TrackableQuery() => _dbSet.AsQueryable();
+        public virtual IQueryable<TEntity> TrackableQuery() => _dbSet.AsTracking().AsQueryable();
         public virtual IQueryable<TEntity> UnTrackableQuery() => _dbSet.AsNoTracking().AsQueryable();
 
         // Create
@@ -28,16 +27,20 @@ namespace RedBook.Core.Repositories
         }
 
         // Read
-        public async Task<TEntity?> GetByIdAsync(object id) => await _dbSet.FindAsync(id);
-        public async Task<IEnumerable<TEntity>> GetAllAsync(Expression<Func<TEntity, bool>> query) => await UnTrackableQuery().Where(query).ToListAsync();
-        
+        public async Task<TEntity?> Get(int id) => await _dbSet.FindAsync(id);
+        public async Task<TEntity?> Get(string id) => await _dbSet.FindAsync(id);
+        public async Task<TEntity?> Get(object id) => await _dbSet.FindAsync(id);
+        public async Task<IEnumerable<TEntity>> Get(Expression<Func<TEntity, bool>> query) => await UnTrackableQuery().Where(query).ToListAsync();
+
         // Update
         public virtual TEntity Update(TEntity entity) => _dbSet.Update(entity).Entity;
 
         // Delete
-        public async Task DeleteAsync(object id)
+        public void Delete(TEntity entity) => _dbSet.Remove(entity);
+
+        public async Task DeleteAsync(int id)
         {
-            var targetRow = await GetByIdAsync(id);
+            var targetRow = await Get(id);
             if (targetRow != null)
                 _dbSet.Remove(targetRow);
             else

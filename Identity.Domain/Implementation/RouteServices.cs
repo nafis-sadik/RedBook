@@ -43,20 +43,23 @@ namespace Identity.Domain.Implementation
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
         }
 
+        private async Task<bool> HasAdminPriviledge(IRepositoryBase<Role> roleRepo) => await roleRepo.UnTrackableQuery().Where(x => requesterRoleIds.Contains(x.RoleId) && x.IsAdmin).CountAsync() > 0;
+
         public async Task<RouteModel> AddRoute(RouteModel routeModel)
         {
             string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
             if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
                 throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
-            Route routeEntity;
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _routeRepo = transaction.GetRepository<Route>();
                 _roleRepo = transaction.GetRepository<Role>();
                 _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
 
-                Role? requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
+                if (!await HasAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                Role? requesterRoleEntity = await _roleRepo.Get(requesterRoleId);
                 if (requesterRoleEntity == null)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
@@ -64,9 +67,7 @@ namespace Identity.Domain.Implementation
                 if (!requesterRoleEntity.IsSystemAdmin)
                     throw new ArgumentException($"Only system admin user have access to perform this operation");
 
-                routeEntity = Mapper.Map<Route>(routeModel);
-
-                routeEntity = await _routeRepo.InsertAsync(routeEntity);
+                Route routeEntity = await _routeRepo.InsertAsync(Mapper.Map<Route>(routeModel));
 
                 await transaction.SaveChangesAsync();
 
@@ -82,9 +83,9 @@ namespace Identity.Domain.Implementation
                 }
 
                 await transaction.SaveChangesAsync();
-            }
 
-            return Mapper.Map<RouteModel>(routeEntity);
+                return Mapper.Map<RouteModel>(routeEntity);
+            }
         }
 
         public async Task DeleteRoute(int routeId)
@@ -98,9 +99,11 @@ namespace Identity.Domain.Implementation
                 _routeRepo = transaction.GetRepository<Route>();
                 _roleRepo = transaction.GetRepository<Role>();
 
+                if (!await HasAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
                 foreach (int requesterRoleId in requesterRoleIds)
                 {
-                    Role? requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
+                    Role? requesterRoleEntity = await _roleRepo.Get(requesterRoleId);
                     if (requesterRoleEntity == null)
                         throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
@@ -124,18 +127,7 @@ namespace Identity.Domain.Implementation
                 _roleRepo = transaction.GetRepository<Role>();
                 _routeRepo = transaction.GetRepository<Route>();
 
-                bool permissionFlag = false;
-                foreach(int requesterRoleId in requesterRoleIds)
-                {
-                    var requesterRole = await _roleRepo.GetByIdAsync(requesterRoleId);
-                    if(requesterRole != null && requesterRole.IsSystemAdmin)
-                    {
-                        permissionFlag = true;
-                        break;
-                    }
-                }
-
-                if (!permissionFlag) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await HasAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 RouteModel[] requesterMenu = await _routeRepo
                     .UnTrackableQuery()
@@ -179,7 +171,7 @@ namespace Identity.Domain.Implementation
                 List<Role> requesterRoles = new List<Role>();
                 foreach (int roleId in requesterRoleIds)
                 {
-                    var role = await _roleRepo.GetByIdAsync(roleId);
+                    var role = await _roleRepo.Get(roleId);
                     if (role == null) { continue; }
                     requesterRoles.Add(role);
                 }
@@ -267,7 +259,7 @@ namespace Identity.Domain.Implementation
                 _roleRepo = transaction.GetRepository<Role>();
                 _routeRepo = transaction.GetRepository<Route>();
 
-                Role? requesterRoleModel = await _roleRepo.GetByIdAsync(requesterRoleId);
+                Role? requesterRoleModel = await _roleRepo.Get(requesterRoleId);
                 if (requesterRoleModel == null || !requesterRoleModel.IsSystemAdmin)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
@@ -331,16 +323,32 @@ namespace Identity.Domain.Implementation
 
         public async Task<RouteModel?> GetRoute(int routeId)
         {
-            Route? routeEntity;
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _routeRepo = transaction.GetRepository<Route>();
-                routeEntity = await _routeRepo.GetByIdAsync(routeId);
+                Route? routeEntity = await _routeRepo.Get(routeId);
+
+                if (routeEntity != null)
+                    return Mapper.Map<RouteModel>(routeEntity);
+                else
+                    return null;
             }
-            if (routeEntity != null)
-                return Mapper.Map<RouteModel>(routeEntity);
-            else
-                return null;
+        }
+
+        public async Task<IEnumerable<RouteModel>> GetRoutesByRoleId(int roleId)
+        {
+            using (var transaction = UnitOfWorkManager.Begin())
+            {
+                _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
+
+                return await _roleMappingRepo.UnTrackableQuery()
+                    .Where(x => x.RouteId == roleId)
+                    .Select(x => new RouteModel
+                    {
+                        Id = x.Route.RouteId,
+                        ApplicationName = x.Route.RouteName,
+                    }).ToListAsync();
+            }
         }
 
         public async Task<RouteModel> UpdateRoute(RouteModel routeModel)
@@ -355,7 +363,7 @@ namespace Identity.Domain.Implementation
                 _routeRepo = transaction.GetRepository<Route>();
                 _roleRepo = transaction.GetRepository<Role>();
 
-                Role? requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
+                Role? requesterRoleEntity = await _roleRepo.Get(requesterRoleId);
                 if (requesterRoleEntity == null)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
@@ -363,7 +371,7 @@ namespace Identity.Domain.Implementation
                 if (!requesterRoleEntity.IsSystemAdmin)
                     throw new ArgumentException($"Only system admin user have access to perform this operation");
 
-                routeEntity = await _routeRepo.GetByIdAsync(routeModel.Id);
+                routeEntity = await _routeRepo.Get(routeModel.Id);
                 if (routeEntity == null)
                     throw new ArgumentException($"Not route with identifier {routeModel.Id} was found");
 

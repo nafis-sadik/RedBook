@@ -47,7 +47,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _appRepo = transaction.GetRepository<Application>();
-                applicationEntity = await _appRepo.GetByIdAsync(applicationId);
+                applicationEntity = await _appRepo.Get(applicationId);
             }
 
             if (applicationEntity == null)
@@ -62,7 +62,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _appRepo = transaction.GetRepository<Application>();
-                applicationEntity = await _appRepo.GetByIdAsync(applicationModel.Id);
+                applicationEntity = await _appRepo.Get(applicationModel.Id);
                 applicationEntity = Mapper.Map(applicationModel, applicationEntity);
                 if(applicationEntity == null) throw new ArgumentException($"Application {applicationModel.Id} not found");
                 applicationEntity = _appRepo.Update(applicationEntity);

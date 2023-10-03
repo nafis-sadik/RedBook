@@ -90,7 +90,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _userRepo = transaction.GetRepository<User>();
-                userEntity = await _userRepo.GetByIdAsync(userModel.UserId);
+                userEntity = await _userRepo.Get(userModel.UserId);
 
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userModel.UserId} was not found");
@@ -133,7 +133,7 @@ namespace Identity.Domain.Implementation
 
                 // Requesting own details
                 if(requestingUserId == userId)
-                    userEntity = await _userRepo.GetByIdAsync(userId);
+                    userEntity = await _userRepo.Get(userId);
                 // Admin requesting employee details
                 else
                 {
@@ -143,7 +143,7 @@ namespace Identity.Domain.Implementation
                     bool isAdmin = false;
                     int adminOrg = 0;
                     foreach(int roleId in userRoleIds){
-                        Role? requestingUserRoleEntity = await _roleRepo.GetByIdAsync(roleId);
+                        Role? requestingUserRoleEntity = await _roleRepo.Get(roleId);
 
                         // Role existance check
                         if (requestingUserRoleEntity == null)
@@ -161,7 +161,7 @@ namespace Identity.Domain.Implementation
                     if (isAdmin)
                         throw new ArgumentException(CommonConstants.HttpResponseMessages.AdminAccessRequired);
 
-                    userEntity = await _userRepo.GetByIdAsync(userId);
+                    userEntity = await _userRepo.Get(userId);
                     if (userEntity == null)
                         throw new ArgumentException(CommonConstants.HttpResponseMessages.UserNotFound);
 
@@ -194,7 +194,7 @@ namespace Identity.Domain.Implementation
                 if (requesterUserId != userId)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                User? userEntity = await _userRepo.GetByIdAsync(userId);
+                User? userEntity = await _userRepo.Get(userId);
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
@@ -224,17 +224,17 @@ namespace Identity.Domain.Implementation
                 _roleRepo = transaction.GetRepository<Role>();
                 var _orgRepo = transaction.GetRepository<Organization>();
 
-                User? userEntity = await _userRepo.GetByIdAsync(requesterRoleIdStr);
+                User? userEntity = await _userRepo.Get(requesterRoleIdStr);
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
                 // Role Id for System Admin should always be 1
                 // Only System Admin user can unarchive an user
-                var requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
+                var requesterRoleEntity = await _roleRepo.Get(requesterRoleId);
                 if (requesterRoleEntity == null || requesterRoleEntity.IsAdmin)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                userEntity = await _userRepo.GetByIdAsync(userId);
+                userEntity = await _userRepo.Get(userId);
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
@@ -263,7 +263,7 @@ namespace Identity.Domain.Implementation
                 int[] requesterRoleIds = Array.ConvertAll(requesterRoleIdStr.Split(','), int.Parse);
                 foreach (int id in requesterRoleIds)
                 {
-                    var requesterRole = await _roleRepo.GetByIdAsync(id);
+                    var requesterRole = await _roleRepo.Get(id);
                     if (requesterRole == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
                     if(requesterRole.IsSystemAdmin || requesterRole.IsRetailer)
                     {
@@ -336,13 +336,13 @@ namespace Identity.Domain.Implementation
                 _userRepo = transaction.GetRepository<User>();
                 _roleRepo = transaction.GetRepository<Role>();
 
-                User? userEntity = await _userRepo.GetByIdAsync(userId);
+                User? userEntity = await _userRepo.Get(userId);
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
                 // Role Id for System Admin should always be 1
                 // Only System Admin user can unarchive an user
-                var requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
+                var requesterRoleEntity = await _roleRepo.Get(requesterRoleId);
                 if (requesterRoleEntity == null || requesterRoleEntity.IsAdmin)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
@@ -368,13 +368,13 @@ namespace Identity.Domain.Implementation
                 _userRepo = transaction.GetRepository<User>();
                 _roleRepo = transaction.GetRepository<Role>();
 
-                User? userEntity = await _userRepo.GetByIdAsync(userId);
+                User? userEntity = await _userRepo.Get(userId);
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
                 // Role Id for System Admin should always be 1
                 // Only System Admin user can unarchive an user
-                var requesterRoleEntity = await _roleRepo.GetByIdAsync(requesterRoleId);
+                var requesterRoleEntity = await _roleRepo.Get(requesterRoleId);
                 if (requesterRoleEntity == null || requesterRoleEntity.IsAdmin)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 

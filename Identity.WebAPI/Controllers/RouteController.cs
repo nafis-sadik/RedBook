@@ -55,6 +55,14 @@ namespace Identity.WebAPI.Controllers
         public async Task<IActionResult> Get(int routeId) => Ok(await _routeServices.GetRoute(routeId));
 
         /// <summary>
+        /// Returns collection of Routes allowed to dole by role id
+        /// </summary>
+        /// <param name="roleId">User unique identifier<see cref="int"/>.</param>
+        [HttpGet]
+        [Route("GetRoutesByRoleId/{roleId}")]
+        public async Task<IActionResult> GetRoutesByRoleId(int roleId) => Ok(await _routeServices.GetRoutesByRoleId(roleId));
+
+        /// <summary>
         /// Add new route to specified application
         /// </summary>
         /// <param name="routeInfo">User unique identifier<see cref="RouteModel"/>.</param>

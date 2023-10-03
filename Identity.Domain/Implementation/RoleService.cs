@@ -1,7 +1,10 @@
 ﻿using AutoMapper.Configuration.Conventions;
 using Identity.Data.Entities;
+using Identity.Data.Migrations;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Constants;
@@ -19,146 +22,116 @@ namespace Identity.Domain.Implementation
     {
         private IRepositoryBase<User> _userRepo;
         private IRepositoryBase<Role> _roleRepo;
+        private IRepositoryBase<Organization> _orgRepo;
+        private IRepositoryBase<UserRole> _userRoleMappingRepo;
+
         public RoleService(
             ILogger<RoleService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
-        {  }
-
-        // Testing required
+        { }
+        
+        // Org admin only
         public async Task<RoleModel> AddRoleAsync(RoleModel role)
         {
-            // Only an admin user has the right to create a role for only his organizations
-            Role? roleEntity;
-            var orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
-            var userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
+            if (role.OrganizationId <= 0) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
             using(var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
-                var userRoleEntity = await _roleRepo.GetByIdAsync(userRoleId);
-                if (userRoleEntity == null)
-                    throw new ArgumentException($"Role with identifier {userRoleId} was not found");
+                _userRoleMappingRepo = transaction.GetRepository<UserRole>();
 
-                if (userRoleEntity.IsAdmin)
+                if (!await this.HasAdminPriviledge(_roleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                Role roleEntity = await _roleRepo.InsertAsync(new Role
                 {
-                    if(userRoleId == 1 && orgId == 1)
-                    {
-                        roleEntity = await _roleRepo.InsertAsync(new Role
-                        {
-                            RoleName = role.RoleName,
-                            IsAdmin = role.IsAdmin,
-                            OrganizationId = role.OrganizationId
-                        });
-                    }
-                    else
-                    {
-                        roleEntity = await _roleRepo.InsertAsync(new Role
-                        {
-                            RoleName = role.RoleName,
-                            IsAdmin = role.IsAdmin,
-                            OrganizationId = orgId
-                        });
-                    }
-                }
-                else
-                    throw new ArgumentException("Only admin users are authorized to execute this operation");
+                    RoleName = role.RoleName,
+                    IsAdmin = role.IsAdmin,
+                    OrganizationId = role.OrganizationId
+                });
 
                 await transaction.SaveChangesAsync();
-            }
 
-            return Mapper.Map<RoleModel>(roleEntity);
+                return Mapper.Map<RoleModel>(roleEntity);
+            }
         }
 
+        // Org admin only
         public async Task DeleteRoleAsync(int roleId)
         {
-            string? requesterRoleIdCollectionStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
-            if (string.IsNullOrEmpty(requesterRoleIdCollectionStr))
-                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-            int[] userRoleIds = Array.ConvertAll(requesterRoleIdCollectionStr.Split(','), int.Parse);
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                int adminOrg = 0;
-                bool isAdmin = false;
-                Role? requestingUserRoleEntity = null;
-                foreach (int userRolePk in userRoleIds)
-                {
-                    requestingUserRoleEntity = await _roleRepo.GetByIdAsync(userRolePk);
+                _roleRepo = transaction.GetRepository<Role>();
+                _userRoleMappingRepo = transaction.GetRepository<UserRole>();
 
-                    // Role existance check
-                    if (requestingUserRoleEntity == null)
-                        throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-                    if (requestingUserRoleEntity.IsAdmin)
-                    {
-                        isAdmin = true;
-                        adminOrg = requestingUserRoleEntity.Organization.OrganizationId;
-                        break;
-                    }
-                }
-
-                if (requestingUserRoleEntity == null) throw new ArgumentException("Role not found");
-
-                if (isAdmin && requestingUserRoleEntity.Organization.OrganizationId == adminOrg)
-                {
-                    await _roleRepo.DeleteAsync(requestingUserRoleEntity);
-                    await transaction.SaveChangesAsync();
-                }
+                Role? requestingUserRoleEntity = await _roleRepo.Get(roleId);
+                if (requestingUserRoleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
+                
+                if (!await this.HasAdminPriviledge(_roleRepo, requestingUserRoleEntity.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                
+                _roleRepo.Delete(requestingUserRoleEntity);
+                await transaction.SaveChangesAsync();
             }
         }
 
-        public async Task<RoleModel> GetRoleAsync(int roleId)
+        // Org admin only
+        public async Task<IEnumerable<RoleModel>> GetOrganizationRoles(int orgId)
         {
-            // Only an admin user has the right to delete a roles
-            Role? userRoleEntity;
-            int userRoleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value);
-            int orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
-            using(var transaction = UnitOfWorkManager.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
-                userRoleEntity = await _roleRepo.GetByIdAsync(userRoleId);
+
+                if (!await this.HasAdminPriviledge(_roleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                return await _roleRepo.UnTrackableQuery()
+                            .Where(x => x.OrganizationId == orgId)
+                            .Select(x => new RoleModel
+                            {
+                                Id = x.RoleId,
+                                OrganizationId = x.OrganizationId,
+                                RoleName = x.RoleName,
+                            })
+                            .ToListAsync();
             }
-
-            if (userRoleEntity == null) throw new ArgumentException($"Role with identifier {userRoleId} was not found");
-
-            if (userRoleEntity.IsAdmin)
-                throw new ArgumentException("Only admin users are authorized to execute this operation");
-
-            return Mapper.Map<RoleModel>(userRoleEntity);
         }
 
-        public async Task<PagedModel<RoleModel>> GetRolesAsync(PagedModel<RoleModel> pagedRoleModel)
+        // Sys admin level user only
+        public async Task<PagedModel<RoleModel>> GetRolesAsync()
         {
-            int orgId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals("OrganizationId", StringComparison.InvariantCultureIgnoreCase))?.Value);
-            int roleId = Convert.ToInt32(User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value);
-
             using (var unitOfWork = UnitOfWorkManager.Begin())
             {
                 _roleRepo = unitOfWork.GetRepository<Role>();
-                Role? requestingUserRole = await _roleRepo.GetByIdAsync(roleId);
-                if (requestingUserRole == null) throw new ArgumentException($"Role with identifier {roleId} not found");
-                List<RoleModel> roleModelCollection = new List<RoleModel>();
-                if (requestingUserRole.IsAdmin)
-                {
-                    pagedRoleModel.SourceData = _roleRepo.TrackableQuery()
-                        .Where(x => x.OrganizationId == orgId)
-                        .Select(x => new RoleModel
-                        {
-                            Id = x.RoleId,
-                            RoleName = x.RoleName,
-                            OrganizationId = orgId
-                        })
-                        .ToList();
-                }
-                else
-                    throw new ArgumentException($"Only Admin Users are allowed to perform this operation");
-
+                if (!await this.HasAdminPriviledge(_roleRepo))
             }
-
-            return pagedRoleModel;
         }
+
+        //public async Task<PagedModel<RoleModel>> GetRolesPagedAsync(PagedModel<RoleModel> pagedRoleModel)
+        //{
+        //    using (var unitOfWork = UnitOfWorkManager.Begin())
+        //    {
+        //        _roleRepo = unitOfWork.GetRepository<Role>();
+
+        //        List<RoleModel> roleModelCollection = new List<RoleModel>();
+        //        if (requestingUserRole.IsAdmin)
+        //        {
+        //            pagedRoleModel.SourceData = _roleRepo.TrackableQuery()
+        //                .Where(x => x.OrganizationId == orgId)
+        //                .Select(x => new RoleModel
+        //                {
+        //                    Id = x.RoleId,
+        //                    RoleName = x.RoleName,
+        //                    OrganizationId = orgId
+        //                })
+        //                .ToList();
+        //        }
+        //        else
+        //            throw new ArgumentException($"Only Admin Users are allowed to perform this operation");
+
+        //    }
+
+        //    return pagedRoleModel;
+        //}
 
         public async Task<RoleModel> UpdateRoleAsync(RoleModel role)
         {
@@ -170,7 +143,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
-                roleEntity = await _roleRepo.GetByIdAsync(role.Id);
+                roleEntity = await _roleRepo.Get(role.Id);
                 if (roleEntity == null) throw new ArgumentException($"Role with identifier {role.Id} was not found");
                 roleEntity.RoleName = role.RoleName;
                 roleEntity.IsAdmin = role.IsAdmin;

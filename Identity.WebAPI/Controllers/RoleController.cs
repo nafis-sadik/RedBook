@@ -1,5 +1,6 @@
 ﻿using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Identity.Domain.Implementation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;
@@ -33,6 +34,13 @@ namespace Identity.WebAPI.Controllers
 
         [HttpGet]
         public async Task<IActionResult> GetRoleAsync(int roleId) => Ok(await _roleServices.GetRoleAsync(roleId));
+
+        /// <summary>
+        /// Returns roles by Organization Id
+        /// </summary>
+        [HttpGet]
+        [Route("OrganizationRoles/{orgId}")]
+        public async Task<IActionResult> GetByOrg(int orgId) => Ok(await _roleServices.GetOrganizationRoles(orgId));
 
         [HttpGet]
         [Route("/PagedRoles")]

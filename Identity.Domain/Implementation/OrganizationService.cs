@@ -62,7 +62,7 @@ namespace Identity.Domain.Implementation
                 foreach (int requesterRoleId in requesterRoleIds)
                 {
                     // Get role to check permissions
-                    Role? requesterRole = await _roleRepo.GetByIdAsync(requesterRoleId);
+                    Role? requesterRole = await _roleRepo.Get(requesterRoleId);
                     if (requesterRole == null)
                         throw new ArgumentException($"Requester role with identifier {requesterRoleId} was not found");
 
@@ -171,7 +171,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _orgRepo = transaction.GetRepository<Organization>();
-                orgEntity = await _orgRepo.GetByIdAsync(OrganizationId);
+                orgEntity = await _orgRepo.Get(OrganizationId);
             }
             if (orgEntity == null) throw new ArgumentException($"Organization with identifier {OrganizationId} was not found");
             return Mapper.Map<OrganizationModel>(orgEntity);
@@ -195,7 +195,7 @@ namespace Identity.Domain.Implementation
 
                 foreach (int roleId in roleIds)
                 {
-                    Role? roleEntity = await _roleRepo.GetByIdAsync(roleId);
+                    Role? roleEntity = await _roleRepo.Get(roleId);
 
                     if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
@@ -239,7 +239,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _orgRepo = transaction.GetRepository<Organization>();
-                orgEntity = await _orgRepo.GetByIdAsync(organizationModel.OrganizationId);
+                orgEntity = await _orgRepo.Get(organizationModel.OrganizationId);
                 if (orgEntity == null) throw new ArgumentException($"Organization with identifier {organizationModel.OrganizationId} was not found");
                 orgEntity = Mapper.Map(organizationModel, orgEntity);
                 orgEntity = _orgRepo.Update(orgEntity);
