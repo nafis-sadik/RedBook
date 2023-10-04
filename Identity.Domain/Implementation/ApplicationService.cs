@@ -4,19 +4,19 @@ using Identity.Domain.Abstraction;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
+using RedBook.Core.Constants;
 using RedBook.Core.Domain;
 using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System.Security.Claims;
 
 namespace Identity.Domain.Implementation
 {
     public class ApplicationService : ServiceBase, IApplicationService
     {
-        private IRepositoryBase<Application> _appRepo;
         private IRepositoryBase<Role> _roleRepo;
+        private IRepositoryBase<Application> _appRepo;
         public ApplicationService(
             ILogger<ApplicationService> logger,
             IObjectMapper mapper,
@@ -27,48 +27,52 @@ namespace Identity.Domain.Implementation
 
         public async Task<ApplicationInfoModel> AddApplicationAsync(ApplicationInfoModel applicationModel)
         {
-            Application applicationEntity = Mapper.Map<Application>(applicationModel);
-            using(var transaction = UnitOfWorkManager.Begin())
+            using (var transaction = UnitOfWorkManager.Begin())
             {
                 _appRepo = transaction.GetRepository<Application>();
-                applicationEntity = await _appRepo.InsertAsync(new Application {
-                    ApplicationName = applicationModel.ApplicationName,
-                    OrganizationId = applicationModel.OrganizationId
-                });
-                await transaction.SaveChangesAsync();
-            }
+                _roleRepo = transaction.GetRepository<Role>();
 
-            return Mapper.Map<ApplicationInfoModel>(applicationEntity);
+                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                Application applicationEntity = await _appRepo.InsertAsync(Mapper.Map<Application>(applicationModel));
+                await transaction.SaveChangesAsync();
+
+                return Mapper.Map<ApplicationInfoModel>(applicationEntity);
+            }
         }
 
         public async Task<ApplicationInfoModel> GetApplicationAsync(int applicationId)
         {
-            Application? applicationEntity;
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _appRepo = transaction.GetRepository<Application>();
-                applicationEntity = await _appRepo.Get(applicationId);
-            }
+                Application? applicationEntity = await _appRepo.GetAsync(applicationId);
 
-            if (applicationEntity == null)
-                throw new ArgumentException($"Application {applicationId} not found");
-            
-            return Mapper.Map<ApplicationInfoModel>(applicationEntity);
+                if (applicationEntity == null)
+                    throw new ArgumentException($"Application {applicationId} not found");
+
+                return Mapper.Map<ApplicationInfoModel>(applicationEntity);
+            }
         }
 
         public async Task<ApplicationInfoModel> UpdateApplicationAsync(ApplicationInfoModel applicationModel)
         {
-            Application? applicationEntity;
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _appRepo = transaction.GetRepository<Application>();
-                applicationEntity = await _appRepo.Get(applicationModel.Id);
+                _roleRepo = transaction.GetRepository<Role>();
+
+                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                Application? applicationEntity = await _appRepo.GetAsync(applicationModel.Id);
+                if(applicationEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
+
                 applicationEntity = Mapper.Map(applicationModel, applicationEntity);
-                if(applicationEntity == null) throw new ArgumentException($"Application {applicationModel.Id} not found");
                 applicationEntity = _appRepo.Update(applicationEntity);
                 await transaction.SaveChangesAsync();
+
+                return Mapper.Map<ApplicationInfoModel>(applicationEntity);
             }
-            return Mapper.Map<ApplicationInfoModel>(applicationEntity);
         }
 
         public async Task DeleteApplicationAsync(int applicationId)
@@ -85,6 +89,10 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _appRepo = transaction.GetRepository<Application>();
+                _roleRepo = transaction.GetRepository<Role>();
+
+                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
                 applicationModel.SourceData = await _appRepo
                     .UnTrackableQuery()
                     .Where(x => x.ApplicationId > 0)
@@ -109,13 +117,18 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _appRepo = transaction.GetRepository<Application>();
+                _roleRepo = transaction.GetRepository<Role>();
+
+                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
                 applicationModelCollection = await _appRepo
                     .UnTrackableQuery()
                     .Where(x => x.ApplicationId > 0)
                     .Select(x => new ApplicationInfoModel
                     {
                         Id = x.ApplicationId,
-                        ApplicationName = x.ApplicationName
+                        ApplicationName = x.ApplicationName,
+                        OrganizationId = x.OrganizationId,
                     }).ToListAsync();
             }
 

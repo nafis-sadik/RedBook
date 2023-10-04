@@ -27,10 +27,10 @@ namespace RedBook.Core.Repositories
         }
 
         // Read
-        public async Task<TEntity?> Get(int id) => await _dbSet.FindAsync(id);
-        public async Task<TEntity?> Get(string id) => await _dbSet.FindAsync(id);
-        public async Task<TEntity?> Get(object id) => await _dbSet.FindAsync(id);
-        public async Task<IEnumerable<TEntity>> Get(Expression<Func<TEntity, bool>> query) => await UnTrackableQuery().Where(query).ToListAsync();
+        public async Task<TEntity?> GetAsync(int id) => await _dbSet.FindAsync(id);
+        public async Task<TEntity?> GetAsync(string id) => await _dbSet.FindAsync(id);
+        public async Task<TEntity?> GetAsync(object id) => await _dbSet.FindAsync(id);
+        public async Task<IEnumerable<TEntity>> GetAsync(Expression<Func<TEntity, bool>> query) => await UnTrackableQuery().Where(query).ToListAsync();
 
         // Update
         public virtual TEntity Update(TEntity entity) => _dbSet.Update(entity).Entity;
@@ -40,7 +40,7 @@ namespace RedBook.Core.Repositories
 
         public async Task DeleteAsync(int id)
         {
-            var targetRow = await Get(id);
+            var targetRow = await GetAsync(id);
             if (targetRow != null)
                 _dbSet.Remove(targetRow);
             else

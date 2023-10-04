@@ -13,10 +13,10 @@ namespace RedBook.Core.Repositories
         Task<TEntity> InsertAsync(TEntity entity);
 
         // Read
-        Task<TEntity?> Get(int id);
-        Task<TEntity?> Get(string id);
-        Task<TEntity?> Get(object id);
-        Task<IEnumerable<TEntity>> Get(Expression<Func<TEntity, bool>> where);
+        Task<TEntity?> GetAsync(int id);
+        Task<TEntity?> GetAsync(string id);
+        Task<TEntity?> GetAsync(object id);
+        Task<IEnumerable<TEntity>> GetAsync(Expression<Func<TEntity, bool>> where);
 
         // Update
         TEntity Update(TEntity entity);

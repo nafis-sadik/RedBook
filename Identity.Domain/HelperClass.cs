@@ -16,5 +16,10 @@ namespace Identity.Domain
         {
             return await roleRepo.UnTrackableQuery().Where(x => serviceBase.User.RoleIds.Contains(x.RoleId) && x.OrganizationId == orgId && x.IsAdmin).CountAsync() > 0;
         }
+
+        internal static async Task<bool> HasRetailerPriviledge(this ServiceBase serviceBase, IRepositoryBase<Role> roleRepo)
+        {
+            return await roleRepo.UnTrackableQuery().Where(x => serviceBase.User.RoleIds.Contains(x.RoleId) && x.IsRetailer).CountAsync() > 0;
+        }
     }
 }

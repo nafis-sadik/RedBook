@@ -32,8 +32,8 @@ namespace Identity.WebAPI.Controllers
             return Ok();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetRoleAsync(int roleId) => Ok(await _roleServices.GetRoleAsync(roleId));
+        //[HttpGet]
+        //public async Task<IActionResult> GetRoleAsync(int roleId) => Ok(await _roleServices.GetRoleAsync(roleId));
 
         /// <summary>
         /// Returns roles by Organization Id
@@ -42,8 +42,8 @@ namespace Identity.WebAPI.Controllers
         [Route("OrganizationRoles/{orgId}")]
         public async Task<IActionResult> GetByOrg(int orgId) => Ok(await _roleServices.GetOrganizationRoles(orgId));
 
-        [HttpGet]
-        [Route("/PagedRoles")]
-        public async Task<IActionResult> GetPagedAsync([FromQuery]PagedModel<RoleModel> pagedRoleModel) => Ok(await _roleServices.GetRolesAsync(pagedRoleModel));
+        //[HttpGet]
+        //[Route("/PagedRoles")]
+        //public async Task<IActionResult> GetPagedAsync([FromQuery]PagedModel<RoleModel> pagedRoleModel) => Ok(await _roleServices.GetRolesAsync(pagedRoleModel));
     }
 }
