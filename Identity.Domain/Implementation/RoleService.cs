@@ -1,4 +1,5 @@
 ﻿using Identity.Data.Entities;
+using Identity.Data.Migrations;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.EntityFrameworkCore;
@@ -15,9 +16,7 @@ namespace Identity.Domain.Implementation
 {
     public class RoleService : ServiceBase, IRoleService
     {
-        private IRepositoryBase<User> _userRepo;
         private IRepositoryBase<Role> _roleRepo;
-        private IRepositoryBase<Organization> _orgRepo;
         private IRepositoryBase<UserRole> _userRoleMappingRepo;
 
         public RoleService(

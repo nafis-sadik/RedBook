@@ -135,7 +135,7 @@ namespace Identity.Domain.Implementation
 
                 // Get all roles assigned to requester user
                 List<Role> requesterRoles = new List<Role>();
-                foreach (int roleId in requesterRoleIds)
+                foreach (int roleId in User.RoleIds)
                 {
                     var role = await _roleRepo.GetAsync(roleId);
                     if (role == null) { continue; }
