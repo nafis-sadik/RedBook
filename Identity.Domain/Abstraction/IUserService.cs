@@ -10,11 +10,11 @@ namespace Identity.Domain.Abstraction
         // User API
         Task<UserModel> UpdateAsync(UserModel userModel);
         Task<UserModel?> GetById(string userId);
-        Task<bool> ArchiveAccount(string userId);
         Task ResetPassword(string userId);
 
         // Admin Only API
         Task DeleteAccount(string userId);
+        Task<bool> ArchiveAccount(string userId);
         Task UnArchiveAccount(string userId);
         Task<UserModel> RegisterNewUser(UserModel userModel);
     }

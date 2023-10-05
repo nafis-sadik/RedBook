@@ -47,6 +47,15 @@ namespace RedBook.Core.Repositories
                 throw new ArgumentException($"Object with identifier {id} was not found");
         }
 
+        public async Task DeleteAsync(string id)
+        {
+            var targetRow = await GetAsync(id);
+            if (targetRow != null)
+                _dbSet.Remove(targetRow);
+            else
+                throw new ArgumentException($"Object with identifier {id} was not found");
+        }
+
         public async Task DeleteAsync(Expression<Func<TEntity, bool>> where)
         {
             var objects = await UnTrackableQuery().Where(where).ToArrayAsync();

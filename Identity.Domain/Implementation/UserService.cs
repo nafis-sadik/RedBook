@@ -126,7 +126,7 @@ namespace Identity.Domain.Implementation
             {
                 _userRepo = transaction.GetRepository<User>();
 
-                if (User.UserId != userId)
+                if (User.UserId == userId)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 User? userEntity = await _userRepo.GetAsync(userId);
@@ -165,7 +165,7 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        // Admin Only API
+        // SysAdmin Only API
         public async Task<UserModel> RegisterNewUser(UserModel userModel)
         {
             using (var transaction = UnitOfWorkManager.Begin())
@@ -183,22 +183,19 @@ namespace Identity.Domain.Implementation
 
                 await transaction.SaveChangesAsync();
 
-                if (await this.HasRetailerPriviledge(_roleRepo))
+                Role? orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId);
+                if (orgAdminRole == null)
                 {
-                    Role? AdminRole = await _roleRepo.GetAsync(userModel.OrganizationId);
-                    if (AdminRole == null)
+                    orgAdminRole = await _roleRepo.InsertAsync(new Role
                     {
-                        AdminRole = await _roleRepo.InsertAsync(new Role
-                        {
-                            IsAdmin = true,
-                            IsRetailer = false,
-                            RoleName = "Admin",
-                            IsSystemAdmin = false,
-                            OrganizationId = userModel.OrganizationId,
-                        });
+                        IsAdmin = true,
+                        IsRetailer = false,
+                        RoleName = "Admin",
+                        IsSystemAdmin = false,
+                        OrganizationId = userModel.OrganizationId,
+                    });
 
-                        await _roleRepo.SaveChangesAsync();
-                    }
+                    await _roleRepo.SaveChangesAsync();
                 }
 
 
@@ -211,11 +208,12 @@ namespace Identity.Domain.Implementation
 
                 // Allow Org admin Routes
                 var _routeRepo = transaction.GetRepository<Route>();
-                var _routeRouteRepo = transaction.GetRepository<RoleRouteMapping>();
+                var _roleRouteRepo = transaction.GetRepository<RoleRouteMapping>();
                 var allRoutesOfApp = _routeRepo.UnTrackableQuery().Where(x => x.ApplicationId == userModel.ApplicationId);
+
                 foreach (var route in allRoutesOfApp)
                 {
-                    await _routeRouteRepo.InsertAsync(new RoleRouteMapping
+                    await _roleRouteRepo.InsertAsync(new RoleRouteMapping
                     {
                         RoleId = orgAdminRole.RoleId,
                         RouteId = route.RouteId,
@@ -223,69 +221,39 @@ namespace Identity.Domain.Implementation
                 }
 
                 await transaction.SaveChangesAsync();
-            }
 
-            return Mapper.Map<UserModel>(newUser);
+                return Mapper.Map<UserModel>(newUser);
+            }
         }
 
         public async Task DeleteAccount(string userId)
         {
-            if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException("Invalid User Id");
-
-            string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
-            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
-                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-            string? requesterUserIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
-            if (string.IsNullOrEmpty(requesterUserIdStr) || !int.TryParse(requesterUserIdStr, out int requesterUserId))
-                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _userRepo = transaction.GetRepository<User>();
                 _roleRepo = transaction.GetRepository<Role>();
 
-                User? userEntity = await _userRepo.GetAsync(userId);
-                if (userEntity == null)
-                    throw new ArgumentException($"User with identifier {userId} was not found");
-
-                // Role Id for System Admin should always be 1
-                // Only System Admin user can unarchive an user
-                var requesterRoleEntity = await _roleRepo.GetAsync(requesterRoleId);
-                if (requesterRoleEntity == null || requesterRoleEntity.IsAdmin)
+                if (! await this.HasSystemAdminPriviledge(_roleRepo))
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                await _userRepo.DeleteAsync(userEntity);
+                await _userRepo.DeleteAsync(userId);
                 await transaction.SaveChangesAsync();
             }
         }
 
         public async Task UnArchiveAccount(string userId)
         {
-            if (string.IsNullOrEmpty(userId)) throw new ArgumentNullException("Invalid User Id");
-
-            string? requesterRoleIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role))?.Value;
-            if (string.IsNullOrEmpty(requesterRoleIdStr) || !int.TryParse(requesterRoleIdStr, out int requesterRoleId))
-                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-            string? requesterUserIdStr = User?.Claims.FirstOrDefault(x => x.Type.Equals("UserId"))?.Value;
-            if (string.IsNullOrEmpty(requesterUserIdStr) || !int.TryParse(requesterUserIdStr, out int requesterUserId))
-                throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _userRepo = transaction.GetRepository<User>();
                 _roleRepo = transaction.GetRepository<Role>();
 
+                if (!await this.HasSystemAdminPriviledge(_roleRepo))
+                    throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
                 User? userEntity = await _userRepo.GetAsync(userId);
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
-
-                // Role Id for System Admin should always be 1
-                // Only System Admin user can unarchive an user
-                var requesterRoleEntity = await _roleRepo.GetAsync(requesterRoleId);
-                if (requesterRoleEntity == null || requesterRoleEntity.IsAdmin)
-                    throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 userEntity.Status = CommonConstants.StatusTypes.Active.ToString();
                 _userRepo.Update(userEntity);
