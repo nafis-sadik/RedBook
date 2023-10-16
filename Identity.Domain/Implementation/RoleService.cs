@@ -82,7 +82,7 @@ namespace Identity.Domain.Implementation
                             .Where(x => x.OrganizationId == orgId)
                             .Select(x => new RoleModel
                             {
-                                Id = x.RoleId,
+                                RoleId = x.RoleId,
                                 OrganizationId = x.OrganizationId,
                                 RoleName = x.RoleName,
                             })
@@ -90,54 +90,18 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        // Sys admin level user only
-        //public async Task<PagedModel<RoleModel>> GetRolesAsync()
-        //{
-        //    using (var unitOfWork = UnitOfWorkManager.Begin())
-        //    {
-        //        _roleRepo = unitOfWork.GetRepository<Role>();
-        //        if (!await this.HasAdminPriviledge(_roleRepo))
-        //    }
-        //}
-
-        //public async Task<PagedModel<RoleModel>> GetRolesPagedAsync(PagedModel<RoleModel> pagedRoleModel)
-        //{
-        //    using (var unitOfWork = UnitOfWorkManager.Begin())
-        //    {
-        //        _roleRepo = unitOfWork.GetRepository<Role>();
-
-        //        List<RoleModel> roleModelCollection = new List<RoleModel>();
-        //        if (requestingUserRole.IsAdmin)
-        //        {
-        //            pagedRoleModel.SourceData = _roleRepo.TrackableQuery()
-        //                .Where(x => x.OrganizationId == orgId)
-        //                .Select(x => new RoleModel
-        //                {
-        //                    Id = x.RoleId,
-        //                    RoleName = x.RoleName,
-        //                    OrganizationId = orgId
-        //                })
-        //                .ToList();
-        //        }
-        //        else
-        //            throw new ArgumentException($"Only Admin Users are allowed to perform this operation");
-
-        //    }
-
-        //    return pagedRoleModel;
-        //}
-
-
         // Org admin only
         public async Task<RoleModel> UpdateRoleAsync(RoleModel role)
         {
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
-                var roleEntity = await _roleRepo.GetAsync(role.Id);
+
+                if (!await this.HasAdminPriviledge(_roleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                Role? roleEntity = await _roleRepo.GetAsync(role.RoleId);
                 if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
                 roleEntity.RoleName = role.RoleName;
-                roleEntity.IsAdmin = role.IsAdmin;
                 roleEntity.OrganizationId = role.OrganizationId;
                 roleEntity = _roleRepo.Update(roleEntity);
                 await transaction.SaveChangesAsync();

@@ -26,6 +26,7 @@ namespace Identity.WebAPI.Controllers
         public async Task<IActionResult> UpdateRoleAsync(RoleModel roleModel) => Ok(await _roleServices.UpdateRoleAsync(roleModel));
 
         [HttpDelete]
+        [Route("{roleId}")]
         public async Task<IActionResult> RemoveRoleAsync(int roleId)
         {
             await _roleServices.DeleteRoleAsync(roleId);

@@ -25,10 +25,10 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.UpdateDate, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<Role, RoleModel>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.RoleId));
+                .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.RoleId));
 
             CreateMap<RoleModel, Role>()
-                .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.Id));
+                .ForMember(dest => dest.RoleId, opt => opt.MapFrom(src => src.RoleId));
 
             CreateMap<User, UserModel>().ReverseMap();
 

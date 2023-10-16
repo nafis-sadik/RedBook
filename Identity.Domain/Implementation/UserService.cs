@@ -198,7 +198,6 @@ namespace Identity.Domain.Implementation
                     await _roleRepo.SaveChangesAsync();
                 }
 
-
                 UserRole userRole = await _userRoleRepo.InsertAsync(new UserRole {
                     RoleId = orgAdminRole.RoleId,
                     UserId = newUser.UserId,
