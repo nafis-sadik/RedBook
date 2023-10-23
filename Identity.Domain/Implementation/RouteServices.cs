@@ -221,8 +221,7 @@ namespace Identity.Domain.Implementation
                 _roleRepo = transaction.GetRepository<Role>();
                 _routeRepo = transaction.GetRepository<Route>();
 
-                Role? requesterRoleModel = await _roleRepo.GetAsync(User.UserId);
-                if (requesterRoleModel == null || !requesterRoleModel.IsSystemAdmin)
+                if (! await this.HasSystemAdminPriviledge(_roleRepo))
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 if (string.IsNullOrEmpty(pagedRoutes.SearchString)) {
@@ -277,7 +276,6 @@ namespace Identity.Domain.Implementation
                             || x.Application.ApplicationName.ToLower().Contains(pagedRoutes.SearchString.ToLower())))
                         .CountAsync();                
                 }
-
             }
 
             return pagedRoutes;
