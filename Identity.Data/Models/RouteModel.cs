@@ -2,7 +2,7 @@
 {
     public class RouteModel
     {
-        public int Id { get; set; }
+        public int RouteId { get; set; }
 
         public string RouteName { get; set; }
 

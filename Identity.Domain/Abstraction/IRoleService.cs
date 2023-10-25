@@ -10,5 +10,6 @@ namespace Identity.Domain.Abstraction
         Task<RoleModel> UpdateRoleAsync(RoleModel role);
         Task<IEnumerable<RoleModel>> GetOrganizationRoles(int orgId);
         Task DeleteRoleAsync(int roleId);
+        Task AllowRouteForRole(int roleId, int routeId);
     }
 }

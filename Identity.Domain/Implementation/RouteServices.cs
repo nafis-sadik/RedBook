@@ -12,7 +12,6 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System.Security.Claims;
 
 namespace Identity.Domain.Implementation
 {
@@ -102,17 +101,18 @@ namespace Identity.Domain.Implementation
                 _roleRepo = transaction.GetRepository<Role>();
                 _routeRepo = transaction.GetRepository<Route>();
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasSystemAdminPriviledge(_roleRepo) && !await this.HasAdminPriviledge(_roleRepo, User.RoleIds)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 RouteModel[] requesterMenu = await _routeRepo
                     .UnTrackableQuery()
                     .Where(x => x.RouteId > 0)
                     .Select(x => new RouteModel
                     {
-                        Id = x.RouteId,
+                        RouteId = x.RouteId,
                         RouteName = x.RouteName,
                         RouteValue = x.Route1,
                         Description = x.Description,
+                        ParentRouteId = x.ParentRouteId,
                     }).ToArrayAsync();
 
                 if (requesterMenu == null)
@@ -159,7 +159,7 @@ namespace Identity.Domain.Implementation
                         .Where(x => x.ApplicationId > 0)
                         .Select(x => new RouteModel
                         {
-                            Id = x.RouteId,
+                            RouteId = x.RouteId,
                             RouteValue = x.Route1,
                             RouteName = x.RouteName,
                             Description = x.Description,
@@ -175,7 +175,7 @@ namespace Identity.Domain.Implementation
                             .Where(x => x.ApplicationId == requestSourceApp.ApplicationId && (x.RouteTypesId == adminRoute.RouteTypeId || x.RouteTypesId == genericRoute.RouteTypeId))
                             .Select(x => new RouteModel
                             {
-                                Id = x.RouteId,
+                                RouteId = x.RouteId,
                                 RouteValue = x.Route1,
                                 RouteName = x.RouteName,
                                 Description = x.Description,
@@ -188,7 +188,7 @@ namespace Identity.Domain.Implementation
                         .Where(x => x.RoleId == requesterRole.RoleId && x.Route.ApplicationId == requestSourceApp.ApplicationId)
                         .Select(x => new RouteModel
                         {
-                            Id = x.RouteId,
+                            RouteId = x.RouteId,
                             RouteValue = x.Route.Route1,
                             RouteName = x.Route.RouteName,
                             Description = x.Route.Description,
@@ -204,9 +204,9 @@ namespace Identity.Domain.Implementation
                 Dictionary<int, RouteModel> routeDict = new Dictionary<int, RouteModel>();
                 foreach(RouteModel route in routeList)
                 {
-                    if (!routeDict.Keys.Contains(route.Id))
+                    if (!routeDict.Keys.Contains(route.RouteId))
                     {
-                        routeDict.Add(route.Id, route);
+                        routeDict.Add(route.RouteId, route);
                     }
                 }
 
@@ -232,7 +232,7 @@ namespace Identity.Domain.Implementation
                         .Take(pagedRoutes.PageSize)
                         .Select(x => new RouteModel
                         {
-                            Id = x.RouteId,
+                            RouteId = x.RouteId,
                             ApplicationId = x.ApplicationId,
                             Description = x.Description,
                             RouteName = x.RouteName,
@@ -258,7 +258,7 @@ namespace Identity.Domain.Implementation
                         .Take(pagedRoutes.PageSize)
                         .Select(x => new RouteModel
                         {
-                            Id = x.RouteId,
+                            RouteId = x.RouteId,
                             ApplicationId = x.ApplicationId,
                             Description = x.Description,
                             RouteName = x.RouteName,
@@ -301,13 +301,15 @@ namespace Identity.Domain.Implementation
             {
                 _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
 
-                return await _roleMappingRepo.UnTrackableQuery()
-                    .Where(x => x.RouteId == roleId)
+                var data = await _roleMappingRepo.UnTrackableQuery()
+                    .Where(x => x.RoleId == roleId)
                     .Select(x => new RouteModel
                     {
-                        Id = x.Route.RouteId,
-                        ApplicationName = x.Route.RouteName,
+                        RouteId = x.Route.RouteId,
+                        RouteName = x.Route.RouteName
                     }).ToListAsync();
+
+                return data;
             }
         }
 
@@ -320,7 +322,7 @@ namespace Identity.Domain.Implementation
 
                 if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                Route? routeEntity = await _routeRepo.GetAsync(routeModel.Id);
+                Route? routeEntity = await _routeRepo.GetAsync(routeModel.RouteId);
                 if (routeEntity == null)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
 

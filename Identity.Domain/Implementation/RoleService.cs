@@ -18,6 +18,7 @@ namespace Identity.Domain.Implementation
     {
         private IRepositoryBase<Role> _roleRepo;
         private IRepositoryBase<UserRole> _userRoleMappingRepo;
+        private IRepositoryBase<RoleRouteMapping> _roleRouteMappingRepo;
 
         public RoleService(
             ILogger<RoleService> logger,
@@ -87,6 +88,28 @@ namespace Identity.Domain.Implementation
                                 RoleName = x.RoleName,
                             })
                             .ToListAsync();
+            }
+        }
+
+        public async Task AllowRouteForRole(int roleId, int routeId)
+        {
+            using (var transaction = UnitOfWorkManager.Begin())
+            {
+                _roleRouteMappingRepo = transaction.GetRepository<RoleRouteMapping>();
+
+                RoleRouteMapping? existingPermission = await _roleRouteMappingRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RouteId == routeId && x.RoleId == roleId);
+                
+                if (existingPermission != null) {
+                    _roleRouteMappingRepo.Delete(existingPermission);
+                } else {
+                    await _roleRouteMappingRepo.InsertAsync(new RoleRouteMapping
+                    {
+                        RoleId = roleId,
+                        RouteId = routeId
+                    });
+                }
+
+                await transaction.SaveChangesAsync();
             }
         }
 

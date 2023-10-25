@@ -33,13 +33,13 @@ namespace Inventory.Domain
             CreateMap<User, UserModel>().ReverseMap();
 
             CreateMap<RouteModel, Route>()
-                .ForMember(dest => dest.RouteId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.RouteId, opt => opt.MapFrom(src => src.RouteId))
                 .ForMember(dest => dest.Route1, opt => opt.MapFrom(src => src.RouteValue))
                 .ForMember(dest => dest.ParentRouteId, opt => opt.MapFrom(src => src.ParentRouteId))
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description == null? "" : src.Description));
 
             CreateMap<Route, RouteModel>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.RouteId))
+                .ForMember(dest => dest.RouteId, opt => opt.MapFrom(src => src.RouteId))
                 .ForMember(dest => dest.ApplicationName, opt => opt.Ignore())
                 .ForMember(dest => dest.RouteValue, opt => opt.MapFrom(src => src.Route1))
                 .ForMember(dest => dest.ParentRouteId, opt => opt.MapFrom(src => src.ParentRouteId))

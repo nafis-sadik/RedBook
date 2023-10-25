@@ -43,8 +43,15 @@ namespace Identity.WebAPI.Controllers
         [Route("OrganizationRoles/{orgId}")]
         public async Task<IActionResult> GetByOrg(int orgId) => Ok(await _roleServices.GetOrganizationRoles(orgId));
 
-        //[HttpGet]
-        //[Route("/PagedRoles")]
-        //public async Task<IActionResult> GetPagedAsync([FromQuery]PagedModel<RoleModel> pagedRoleModel) => Ok(await _roleServices.GetRolesAsync(pagedRoleModel));
+        /// <summary>
+        /// Map role with route for permission
+        /// </summary>
+        [HttpGet]
+        [Route("/AllowRouteForRole/{roleId}/{routeId}")]
+        public async Task<IActionResult> MapRoleRoute(int roleId, int routeId)
+        {
+            await _roleServices.AllowRouteForRole(roleId, routeId);
+            return Ok();
+        }
     }
 }
