@@ -73,5 +73,18 @@ namespace Identity.WebAPI.Controllers
             await _organizationService.DeleteOrganizationAsync(orgId);
             return Ok();
         }
+
+        /// <summary>
+        /// Add a new or existing user to your business. If the user already has an account, he shall be identified by email address and automatically assigned the role.
+        /// In case, the user is new, his account shall be created and default password shall be set as his password
+        /// </summary>
+        /// <param name="userModel">User details object<see cref="UserModel"/>Data of user to be added to the business</param>
+        [HttpPost]
+        [Route("AddUserToBusiness")]
+        public async Task<IActionResult> AddUser(UserModel userModel)
+        {
+            await _organizationService.AddUserToBusiness(userModel);
+            return Ok();
+        }
     }
 }

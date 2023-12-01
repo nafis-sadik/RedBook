@@ -16,9 +16,9 @@ namespace Identity.Domain.Implementation
     public class OrganizationService : ServiceBase, IOrganizationService
     {
         private IRepositoryBase<Role> _roleRepo;
-        private IRepositoryBase<UserRole> _userRoleRepo;
+        private IRepositoryBase<User> _userRepo;
         private IRepositoryBase<Organization> _orgRepo;
-
+        private IRepositoryBase<UserRole> _userRoleRepo;
         private IRepositoryBase<RoleRouteMapping> _roleRouteMappingRepo;
 
         public OrganizationService(
@@ -76,6 +76,36 @@ namespace Identity.Domain.Implementation
                 }
 
                 return Mapper.Map<OrganizationModel>(orgEntity);
+            }
+        }
+
+        public async Task AddUserToBusiness(UserModel userModel)
+        {
+            using(var transaction = UnitOfWorkManager.Begin())
+            {
+                _userRepo = transaction.GetRepository<User>();
+                _userRoleRepo = transaction.GetRepository<UserRole>();
+
+                User? userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Email == userModel.Email);
+                if(userEntity == null)
+                {
+                    userEntity = await _userRepo.InsertAsync(new User {
+                        UserId = userModel.UserId,
+                        FirstName = userModel.FirstName,
+                        LastName = userModel.LastName,
+                        Email = userModel.Email,
+                        Password = CommonConstants.PasswordConfig.DefaultPassword
+                    });
+
+                    await transaction.SaveChangesAsync();
+                }
+
+                await _userRoleRepo.InsertAsync(new UserRole {
+                    RoleId = userModel.RoleId,
+                    UserId= userModel.UserId,
+                });
+
+                await transaction.SaveChangesAsync();
             }
         }
 
@@ -138,30 +168,14 @@ namespace Identity.Domain.Implementation
 
             using (var transaction = UnitOfWorkManager.Begin())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _orgRepo = transaction.GetRepository<Organization>();
                 _userRoleRepo = transaction.GetRepository<UserRole>();
 
-                foreach (int roleId in User.RoleIds)
-                {
-                    Role? roleEntity = await _roleRepo.GetAsync(roleId);
-
-                    if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-                    if(roleEntity.IsAdmin)
-                    {
-                        organizationModels.AddRange(await _orgRepo.UnTrackableQuery()
-                            .Where(x => x.OrganizationId == roleEntity.OrganizationId)
-                            .Select(x => new OrganizationModel
-                            {
-                                OrganizationId = x.OrganizationId,
-                                OrganizationName = x.OrganizationName
-                            }).ToArrayAsync());
-                    }
-                }
+                return await _userRoleRepo.UnTrackableQuery().Where(x => x.Role.IsAdmin && x.UserId == User.UserId)
+                    .Select(x => new OrganizationModel {
+                        OrganizationId = x.Role.Organization.OrganizationId,
+                        OrganizationName = x.Role.Organization.OrganizationName
+                    }).ToListAsync();
             }
-
-            return organizationModels;
         }
 
         public async Task<PagedModel<OrganizationModel>> GetPagedOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel)
@@ -169,6 +183,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _orgRepo = transaction.GetRepository<Organization>();
+
                 pagedOrganizationModel.SourceData = await _orgRepo.UnTrackableQuery()
                     .Where(x => x.OrganizationId > 0)
                     .Skip(pagedOrganizationModel.Skip)

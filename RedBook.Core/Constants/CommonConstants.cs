@@ -13,6 +13,7 @@ namespace RedBook.Core.Constants
             }
             public const double SaltExpire = 7;
             public const int SaltGeneratorLogRounds = 12;
+            public const string DefaultPassword = "12345678";
         }
 
         public static class StatusTypes

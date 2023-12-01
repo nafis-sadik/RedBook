@@ -27,28 +27,6 @@ namespace Identity.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Authenticates users
-        /// </summary>
-        /// <param name="user">User View Model Object</param>
-        [HttpPost]
-        [Route("LogIn")]
-        [SwaggerResponse(statusCode: 200, type: typeof(string), description: "Return JWT token")]
-        [SwaggerResponse(statusCode: 404, type: typeof(string), description: "User not found")]
-        [SwaggerResponse(statusCode: 409, type: typeof(string), description: "Wrong password")]
-        [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> LogIn(UserModel user)
-        {
-            string? logInResponse = await _userServices.LogInAsync(user);
-
-            if (logInResponse == null)
-                return NotFound(new { Response = CommonConstants.HttpResponseMessages.UserNotFound });
-            else if (logInResponse?.Length > 0)
-                return Ok(new { Response = logInResponse });
-            else
-                return Conflict(new { Response = CommonConstants.HttpResponseMessages.PasswordMismatched });
-        }
-
-        /// <summary>
         /// Register new users to organization
         /// </summary>
         /// <param name="user">Application Id or unique identifier which is the primary key of the application</param>
@@ -114,7 +92,7 @@ namespace Identity.WebAPI.Controllers
         /// <summary>
         /// Update own user information
         /// </summary>
-        /// <param name="user">User details object<see cref="UserModel"/>.</param>
+        /// <param name="user">User details object<see cref="UserModel"/>Updated User Data</param>
         [HttpPut]
         [Authorize]
         public async Task<IActionResult> Update(UserModel user)
