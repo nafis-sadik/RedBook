@@ -1,5 +1,6 @@
 ﻿using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Identity.Domain.Implementation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;
@@ -86,5 +87,15 @@ namespace Identity.WebAPI.Controllers
             await _organizationService.AddUserToBusiness(userModel);
             return Ok();
         }
+
+        /// <summary>
+        /// Get user list under organization (organization admin access only)
+        /// </summary>
+        /// <param name="businessId">Organization Id <see cref="int"/></param>
+        /// <param name="pagedModel">Organization Id <see cref="PagedModel<UserModel>"/></param>
+        [HttpPost]
+        [Authorize]
+        [Route("Users/{businessId}")]
+        public async Task<IActionResult> GetByBusiness(PagedModel<UserModel> pagedModel, int businessId) => Ok(await _organizationService.GetByOrganizationId(pagedModel, businessId));
     }
 }

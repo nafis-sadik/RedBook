@@ -217,5 +217,56 @@ namespace Identity.Domain.Implementation
                 return Mapper.Map<OrganizationModel>(orgEntity);
             }
         }
+
+        public async Task<PagedModel<UserModel>> GetByOrganizationId(PagedModel<UserModel> pagedModel, int orgId)
+        {
+            using (var transaction = UnitOfWorkManager.Begin())
+            {
+                _roleRepo = transaction.GetRepository<Role>();
+                _userRoleRepo = transaction.GetRepository<UserRole>();
+
+                if (!await this.HasAdminPriviledge(_roleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+
+                int[] userRoleMappingIds = await _roleRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId).Select(x => x.RoleId).ToArrayAsync();
+                if (string.IsNullOrEmpty(pagedModel.SearchString))
+                {
+                    pagedModel.SourceData = await _userRoleRepo.UnTrackableQuery()
+                        .Where(x => userRoleMappingIds.Contains(x.RoleId))
+                        .Skip(pagedModel.Skip)
+                        .Take(pagedModel.PageSize)
+                        .Select(u => new UserModel
+                        {
+                            FirstName = u.User.FirstName,
+                            LastName = u.User.LastName,
+                            UserName = u.User.UserName,
+                            RoleName = u.Role.RoleName,
+                        }).ToListAsync();
+                }
+                else
+                {
+
+                    pagedModel.SourceData = await _userRoleRepo.UnTrackableQuery()
+                        .Where(x =>
+                            userRoleMappingIds.Contains(x.RoleId) && (
+                                x.User.FirstName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                                || x.User.LastName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                                || x.User.UserName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                            )
+                        )
+                        .Skip(pagedModel.Skip)
+                        .Take(pagedModel.PageSize)
+                        .Select(u => new UserModel
+                        {
+                            FirstName = u.User.FirstName,
+                            LastName = u.User.LastName,
+                            UserName = u.User.UserName,
+                            RoleName = u.Role.RoleName,
+                        }).ToListAsync();
+                }
+
+                return pagedModel;
+            }
+        }
     }
 }
