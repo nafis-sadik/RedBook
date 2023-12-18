@@ -90,10 +90,12 @@ namespace Identity.Domain.Implementation
                 if(userEntity == null)
                 {
                     userEntity = await _userRepo.InsertAsync(new User {
-                        UserId = userModel.UserId,
+                        UserId = Guid.NewGuid().ToString(),
                         FirstName = userModel.FirstName,
                         LastName = userModel.LastName,
                         Email = userModel.Email,
+                        UserName = userModel.UserName,
+                        Status = CommonConstants.StatusTypes.Active.ToString(),
                         Password = CommonConstants.PasswordConfig.DefaultPassword
                     });
 
@@ -102,7 +104,7 @@ namespace Identity.Domain.Implementation
 
                 await _userRoleRepo.InsertAsync(new UserRole {
                     RoleId = userModel.RoleId,
-                    UserId= userModel.UserId,
+                    UserId= userEntity.UserId,
                 });
 
                 await transaction.SaveChangesAsync();
@@ -218,7 +220,7 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<PagedModel<UserModel>> GetByOrganizationId(PagedModel<UserModel> pagedModel, int orgId)
+        public async Task<PagedModel<UserModel>> GetUserByOrganizationId(PagedModel<UserModel> pagedModel, int orgId)
         {
             using (var transaction = UnitOfWorkManager.Begin())
             {
@@ -240,8 +242,12 @@ namespace Identity.Domain.Implementation
                             FirstName = u.User.FirstName,
                             LastName = u.User.LastName,
                             UserName = u.User.UserName,
+                            RoleId = u.RoleId,
+                            Email = u.User.Email,
                             RoleName = u.Role.RoleName,
                         }).ToListAsync();
+
+                    pagedModel.TotalItems = await _userRoleRepo.UnTrackableQuery().Where(x => userRoleMappingIds.Contains(x.RoleId)).CountAsync();
                 }
                 else
                 {
@@ -261,8 +267,20 @@ namespace Identity.Domain.Implementation
                             FirstName = u.User.FirstName,
                             LastName = u.User.LastName,
                             UserName = u.User.UserName,
+                            RoleId = u.RoleId,
+                            Email = u.User.Email,
                             RoleName = u.Role.RoleName,
                         }).ToListAsync();
+
+                    pagedModel.TotalItems = await _userRoleRepo.UnTrackableQuery()
+                        .Where(x =>
+                            userRoleMappingIds.Contains(x.RoleId) && (
+                                x.User.FirstName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                                || x.User.LastName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                                || x.User.UserName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                            )
+                        )
+                        .CountAsync();
                 }
 
                 return pagedModel;

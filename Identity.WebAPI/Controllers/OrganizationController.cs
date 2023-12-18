@@ -76,26 +76,27 @@ namespace Identity.WebAPI.Controllers
         }
 
         /// <summary>
+        /// Get user list under organization (organization admin access only)
+        /// </summary>
+        /// <param name="businessId">Organization Id <see cref="int"/></param>
+        /// <param name="pagedModel">Organization Id <see cref="PagedModel<UserModel>"/></param>
+        [HttpGet]
+        [Authorize]
+        [Route("Users")]
+        public async Task<IActionResult> GetUserByBusiness([FromQuery] PagedModel<UserModel> pagedModel, [FromQuery] int businessId) => Ok(await _organizationService.GetUserByOrganizationId(pagedModel, businessId));
+
+        /// <summary>
         /// Add a new or existing user to your business. If the user already has an account, he shall be identified by email address and automatically assigned the role.
         /// In case, the user is new, his account shall be created and default password shall be set as his password
         /// </summary>
         /// <param name="userModel">User details object<see cref="UserModel"/>Data of user to be added to the business</param>
         [HttpPost]
-        [Route("AddUserToBusiness")]
-        public async Task<IActionResult> AddUser(UserModel userModel)
+        [Authorize]
+        [Route("Users")]
+        public async Task<IActionResult> AddUserToBusiness(UserModel userModel)
         {
             await _organizationService.AddUserToBusiness(userModel);
             return Ok();
         }
-
-        /// <summary>
-        /// Get user list under organization (organization admin access only)
-        /// </summary>
-        /// <param name="businessId">Organization Id <see cref="int"/></param>
-        /// <param name="pagedModel">Organization Id <see cref="PagedModel<UserModel>"/></param>
-        [HttpPost]
-        [Authorize]
-        [Route("Users/{businessId}")]
-        public async Task<IActionResult> GetByBusiness(PagedModel<UserModel> pagedModel, int businessId) => Ok(await _organizationService.GetByOrganizationId(pagedModel, businessId));
     }
 }
