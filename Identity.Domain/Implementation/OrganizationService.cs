@@ -102,11 +102,11 @@ namespace Identity.Domain.Implementation
                     await transaction.SaveChangesAsync();
                 }
 
-                foreach(int roleId in userModel.RoleId)
+                foreach(RoleModel role in userModel.Roles)
                 {
                     await _userRoleRepo.InsertAsync(new UserRole
                     {
-                        RoleId = roleId,
+                        RoleId = role.RoleId,
                         UserId = userEntity.UserId,
                     });                
                 }
@@ -248,7 +248,6 @@ namespace Identity.Domain.Implementation
                             LastName = u.User.LastName,
                             UserName = u.User.UserName,
                             Email = u.User.Email,
-                            RoleName = u.Role.RoleName,
                         }).ToListAsync();
 
                     pagedModel.TotalItems = await _userRoleRepo.UnTrackableQuery().Where(x => userRoleMappingIds.Contains(x.RoleId)).CountAsync();
@@ -288,10 +287,13 @@ namespace Identity.Domain.Implementation
 
                 foreach(UserModel user in pagedModel.SourceData)
                 {
-                    var data = await _userRoleRepo.UnTrackableQuery()
+                    user.Roles = await _userRoleRepo.UnTrackableQuery()
                         .Where(r => r.UserId == user.UserId)
-                        .Select(r => new { r.RoleId, r.Role.RoleName })
-                        .ToArrayAsync();
+                        .Select(r => new RoleModel
+                        {
+                            RoleId = r.RoleId,
+                            RoleName = r.Role.RoleName
+                        }).ToArrayAsync();
                 }
 
                 pagedModel.SearchString = pagedModel.SearchString == null || pagedModel.SearchString == "null" ? "" : pagedModel.SearchString;

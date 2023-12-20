@@ -98,15 +98,16 @@ namespace Identity.Domain.Implementation
                     userEntity.LastName = userModel.LastName;
                     userEntity.UserName = userModel.UserName;
 
+                    int[] userModelRoleIds = userModel.Roles.Select(x => x.RoleId).ToArray();
                     int[] userRoleIds_db = await _userRoleRepo.UnTrackableQuery()
-                        .Where(x => x.UserId == userModel.UserId && !userModel.RoleId.Contains(x.RoleId))
+                        .Where(x => x.UserId == userModel.UserId && !userModelRoleIds.Contains(x.RoleId))
                         .Select(x => x.RoleId)
                         .ToArrayAsync();
 
                     List<int> toAdd = new List<int>();
                     List<int> toRemove = new List<int>();
 
-                    foreach(int roleId in userModel.RoleId)
+                    foreach(int roleId in userModelRoleIds)
                     {
                         if(!userRoleIds_db.Contains(roleId))
                             await _userRoleRepo.InsertAsync(new UserRole
@@ -118,7 +119,7 @@ namespace Identity.Domain.Implementation
 
                     foreach (int roleId in userRoleIds_db)
                     {
-                        if (!userModel.RoleId.Contains(roleId))
+                        if (!userModelRoleIds.Contains(roleId))
                             await _userRoleRepo.DeleteAsync(roleId);
                     }
                 }
