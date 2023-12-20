@@ -80,6 +80,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _userRepo = transaction.GetRepository<User>();
+                _userRoleRepo = transaction.GetRepository<UserRole>();
                 User? userEntity = await _userRepo.GetAsync(userModel.UserId);
 
                 if (userEntity == null)
@@ -96,11 +97,36 @@ namespace Identity.Domain.Implementation
                     userEntity.FirstName = userModel.FirstName;
                     userEntity.LastName = userModel.LastName;
                     userEntity.UserName = userModel.UserName;
+
+                    int[] userRoleIds_db = await _userRoleRepo.UnTrackableQuery()
+                        .Where(x => x.UserId == userModel.UserId && !userModel.RoleId.Contains(x.RoleId))
+                        .Select(x => x.RoleId)
+                        .ToArrayAsync();
+
+                    List<int> toAdd = new List<int>();
+                    List<int> toRemove = new List<int>();
+
+                    foreach(int roleId in userModel.RoleId)
+                    {
+                        if(!userRoleIds_db.Contains(roleId))
+                            await _userRoleRepo.InsertAsync(new UserRole
+                            {
+                                RoleId = roleId,
+                                UserId = userModel.UserId,
+                            });
+                    }
+
+                    foreach (int roleId in userRoleIds_db)
+                    {
+                        if (!userModel.RoleId.Contains(roleId))
+                            await _userRoleRepo.DeleteAsync(roleId);
+                    }
                 }
-                
+
                 userEntity = _userRepo.Update(userEntity);
 
                 await transaction.SaveChangesAsync();
+
                 return Mapper.Map<UserModel>(userEntity);
     
             }

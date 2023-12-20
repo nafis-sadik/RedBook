@@ -102,10 +102,14 @@ namespace Identity.Domain.Implementation
                     await transaction.SaveChangesAsync();
                 }
 
-                await _userRoleRepo.InsertAsync(new UserRole {
-                    RoleId = userModel.RoleId,
-                    UserId= userEntity.UserId,
-                });
+                foreach(int roleId in userModel.RoleId)
+                {
+                    await _userRoleRepo.InsertAsync(new UserRole
+                    {
+                        RoleId = roleId,
+                        UserId = userEntity.UserId,
+                    });                
+                }
 
                 await transaction.SaveChangesAsync();
             }
@@ -189,7 +193,7 @@ namespace Identity.Domain.Implementation
                 pagedOrganizationModel.SourceData = await _orgRepo.UnTrackableQuery()
                     .Where(x => x.OrganizationId > 0)
                     .Skip(pagedOrganizationModel.Skip)
-                    .Take(pagedOrganizationModel.PageSize)
+                    .Take(pagedOrganizationModel.PageLength)
                     .Select(x => new OrganizationModel {
                         OrganizationId = x.OrganizationId,
                         OrganizationName = x.OrganizationName
@@ -236,13 +240,13 @@ namespace Identity.Domain.Implementation
                     pagedModel.SourceData = await _userRoleRepo.UnTrackableQuery()
                         .Where(x => userRoleMappingIds.Contains(x.RoleId))
                         .Skip(pagedModel.Skip)
-                        .Take(pagedModel.PageSize)
+                        .Take(pagedModel.PageLength)
                         .Select(u => new UserModel
                         {
+                            UserId = u.User.UserId,
                             FirstName = u.User.FirstName,
                             LastName = u.User.LastName,
                             UserName = u.User.UserName,
-                            RoleId = u.RoleId,
                             Email = u.User.Email,
                             RoleName = u.Role.RoleName,
                         }).ToListAsync();
@@ -261,15 +265,14 @@ namespace Identity.Domain.Implementation
                             )
                         )
                         .Skip(pagedModel.Skip)
-                        .Take(pagedModel.PageSize)
+                        .Take(pagedModel.PageLength)
                         .Select(u => new UserModel
                         {
+                            UserId = u.User.UserId,
                             FirstName = u.User.FirstName,
                             LastName = u.User.LastName,
                             UserName = u.User.UserName,
-                            RoleId = u.RoleId,
                             Email = u.User.Email,
-                            RoleName = u.Role.RoleName,
                         }).ToListAsync();
 
                     pagedModel.TotalItems = await _userRoleRepo.UnTrackableQuery()
@@ -283,6 +286,15 @@ namespace Identity.Domain.Implementation
                         .CountAsync();
                 }
 
+                foreach(UserModel user in pagedModel.SourceData)
+                {
+                    var data = await _userRoleRepo.UnTrackableQuery()
+                        .Where(r => r.UserId == user.UserId)
+                        .Select(r => new { r.RoleId, r.Role.RoleName })
+                        .ToArrayAsync();
+                }
+
+                pagedModel.SearchString = pagedModel.SearchString == null || pagedModel.SearchString == "null" ? "" : pagedModel.SearchString;
                 return pagedModel;
             }
         }

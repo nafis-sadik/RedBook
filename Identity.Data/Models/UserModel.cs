@@ -8,7 +8,7 @@
         public string MiddleName { get; set; }
         public string LastName { get; set; }
         public string ProfilePicLoc { get; set; }
-        public int RoleId { get; set; }
+        public int[] RoleId { get; set; }
         public string RoleName { get; set; }
         public string Status { get; set; }
         public string Password { get; set; }

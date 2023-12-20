@@ -14,7 +14,7 @@
         }
 
         private int pageSize { get; set; }
-        public int PageSize
+        public int PageLength
         {
             get => pageSize;
             set => pageSize = value is <= 0 ? 10 : value;

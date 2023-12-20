@@ -229,7 +229,7 @@ namespace Identity.Domain.Implementation
                         .UnTrackableQuery()
                         .Where(x => x.RouteId > 0)
                         .Skip(pagedRoutes.Skip)
-                        .Take(pagedRoutes.PageSize)
+                        .Take(pagedRoutes.PageLength)
                         .Select(x => new RouteModel
                         {
                             RouteId = x.RouteId,
@@ -255,7 +255,7 @@ namespace Identity.Domain.Implementation
                             || x.Description.ToLower().Contains(pagedRoutes.SearchString.ToLower())
                             || x.Application.ApplicationName.ToLower().Contains(pagedRoutes.SearchString.ToLower())))
                         .Skip(pagedRoutes.Skip)
-                        .Take(pagedRoutes.PageSize)
+                        .Take(pagedRoutes.PageLength)
                         .Select(x => new RouteModel
                         {
                             RouteId = x.RouteId,

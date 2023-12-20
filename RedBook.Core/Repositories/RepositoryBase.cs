@@ -63,8 +63,6 @@ namespace RedBook.Core.Repositories
             {
                 _dbSet.Remove(obj);
             }
-
-            await SaveChangesAsync();
         }
 
         // Utilities

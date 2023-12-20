@@ -97,7 +97,7 @@ namespace Identity.Domain.Implementation
                     .UnTrackableQuery()
                     .Where(x => x.ApplicationId > 0)
                     .Skip(applicationModel.Skip)
-                    .Take(applicationModel.PageSize)
+                    .Take(applicationModel.PageLength)
                     .Select(x => new ApplicationInfoModel
                     {
                         Id = x.ApplicationId,
