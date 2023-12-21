@@ -248,13 +248,14 @@ namespace Identity.Domain.Implementation
                             LastName = u.User.LastName,
                             UserName = u.User.UserName,
                             Email = u.User.Email,
-                        }).ToListAsync();
+                        })
+                        .Distinct()
+                        .ToListAsync();
 
                     pagedModel.TotalItems = await _userRoleRepo.UnTrackableQuery().Where(x => userRoleMappingIds.Contains(x.RoleId)).CountAsync();
                 }
                 else
                 {
-
                     pagedModel.SourceData = await _userRoleRepo.UnTrackableQuery()
                         .Where(x =>
                             userRoleMappingIds.Contains(x.RoleId) && (
@@ -272,7 +273,9 @@ namespace Identity.Domain.Implementation
                             LastName = u.User.LastName,
                             UserName = u.User.UserName,
                             Email = u.User.Email,
-                        }).ToListAsync();
+                        })
+                        .Distinct()
+                        .ToListAsync();
 
                     pagedModel.TotalItems = await _userRoleRepo.UnTrackableQuery()
                         .Where(x =>

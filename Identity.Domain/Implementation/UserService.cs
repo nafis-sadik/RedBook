@@ -14,6 +14,7 @@ using RedBook.Core.UnitOfWork;
 using Identity.Domain.Abstraction;
 using RedBook.Core.Security;
 using Microsoft.AspNetCore.Http;
+using System.Linq;
 
 namespace Identity.Domain.Implementation
 {
@@ -58,7 +59,6 @@ namespace Identity.Domain.Implementation
                                 .Select(x => x.RoleId)
                                 .ToArrayAsync();
 
-
                 userRoles = string.Join(",", userRolesIds);
             }
 
@@ -99,17 +99,17 @@ namespace Identity.Domain.Implementation
                     userEntity.UserName = userModel.UserName;
 
                     int[] userModelRoleIds = userModel.Roles.Select(x => x.RoleId).ToArray();
-                    int[] userRoleIds_db = await _userRoleRepo.UnTrackableQuery()
-                        .Where(x => x.UserId == userModel.UserId && !userModelRoleIds.Contains(x.RoleId))
-                        .Select(x => x.RoleId)
+                    UserRole[] roleMappingRecords = await _userRoleRepo.UnTrackableQuery()
+                        .Where(x => x.UserId == userModel.UserId && userModel.OrganizationId == x.Role.OrganizationId)
+                        .Select(x => new UserRole {
+                            RoleId = x.RoleId,
+                            UserRoleId = x.UserRoleId,
+                        })
                         .ToArrayAsync();
-
-                    List<int> toAdd = new List<int>();
-                    List<int> toRemove = new List<int>();
 
                     foreach(int roleId in userModelRoleIds)
                     {
-                        if(!userRoleIds_db.Contains(roleId))
+                        if(roleMappingRecords.First(x => x.RoleId == roleId) == null)
                             await _userRoleRepo.InsertAsync(new UserRole
                             {
                                 RoleId = roleId,
@@ -117,10 +117,10 @@ namespace Identity.Domain.Implementation
                             });
                     }
 
-                    foreach (int roleId in userRoleIds_db)
+                    foreach (UserRole role in roleMappingRecords)
                     {
-                        if (!userModelRoleIds.Contains(roleId))
-                            await _userRoleRepo.DeleteAsync(roleId);
+                        if (!userModelRoleIds.Contains(role.RoleId))
+                            _userRoleRepo.Delete(role);
                     }
                 }
 
@@ -128,8 +128,7 @@ namespace Identity.Domain.Implementation
 
                 await transaction.SaveChangesAsync();
 
-                return Mapper.Map<UserModel>(userEntity);
-    
+                return Mapper.Map<UserModel>(userEntity);    
             }
         }
 
@@ -201,16 +200,21 @@ namespace Identity.Domain.Implementation
                 _roleRepo = transaction.GetRepository<Role>();
                 _userRoleRepo = transaction.GetRepository<UserRole>();
 
-                User newUser = Mapper.Map<User>(userModel);
-                newUser.UserId = Guid.NewGuid().ToString();
-                newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
-                newUser.Status = CommonConstants.StatusTypes.Active.ToString();
+                if (string.IsNullOrEmpty(userModel.Email))
+                    throw new ArgumentException("Email not provided");
 
-                newUser = await _userRepo.InsertAsync(newUser);
+                User? newUser = await _userRepo.TrackableQuery().FirstOrDefaultAsync(x => userModel.Email.Equals(x.Email));
+                if(newUser == null)
+                {
+                    newUser = Mapper.Map<User>(userModel);
+                    newUser.UserId = Guid.NewGuid().ToString();
+                    newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
+                    newUser.Status = CommonConstants.StatusTypes.Active.ToString();
+                    newUser = await _userRepo.InsertAsync(newUser);
+                    await transaction.SaveChangesAsync();
+                }
 
-                await transaction.SaveChangesAsync();
-
-                Role? orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId);
+                Role? orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId && x.IsAdmin);
                 if (orgAdminRole == null)
                 {
                     orgAdminRole = await _roleRepo.InsertAsync(new Role
@@ -294,7 +298,7 @@ namespace Identity.Domain.Implementation
             byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
 
             SecurityToken token;
-            if (!rememberMe)
+            if (rememberMe)
             {
                 token = new JwtSecurityToken
                 (
