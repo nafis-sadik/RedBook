@@ -1,5 +1,6 @@
 ﻿using Identity.Data;
 using Identity.Data.Entities;
+using Identity.Data.Migrations;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,7 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
+using System.Linq;
 
 namespace Identity.Domain.Implementation
 {
@@ -20,6 +22,7 @@ namespace Identity.Domain.Implementation
         private IRepositoryBase<Role> _roleRepo;
         private IRepositoryBase<Route> _routeRepo;
         private IRepositoryBase<Application> _appRepo;
+        private IRepositoryBase<UserRole> _userRoleMappingRepo;
         private IRepositoryBase<RoleRouteMapping> _roleMappingRepo;
         private IRepositoryBase<RouteType> _routeTypeRepo;
         private int[] requesterRoleIds;
@@ -100,8 +103,9 @@ namespace Identity.Domain.Implementation
             {
                 _roleRepo = transaction.GetRepository<Role>();
                 _routeRepo = transaction.GetRepository<Route>();
+                _userRoleMappingRepo = transaction.GetRepository<UserRole>();
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo) && !await this.HasAdminPriviledge(_roleRepo, User.RoleIds)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!_userRoleMappingRepo.TrackableQuery().Where(x => x.UserId == User.UserId && x.Role.IsAdmin).Any()) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 RouteModel[] requesterMenu = await _routeRepo
                     .UnTrackableQuery()
@@ -144,7 +148,7 @@ namespace Identity.Domain.Implementation
                 if (requesterRoles == null || requesterRoles.Count <= 0) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
                 // Based on origin we shall 
-                string? origin = HttpContextAccessor.Request.Headers["Origin"].ToString();
+                string? origin = HttpContextAccessor?.Request.Headers["Origin"].ToString();
 
                 // Find request source applicaiton
                 Application? requestSourceApp = await _appRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ApplicationUrl == origin);

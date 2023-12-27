@@ -98,5 +98,15 @@ namespace Identity.WebAPI.Controllers
             await _organizationService.AddUserToBusiness(userModel);
             return Ok();
         }
+
+        /// <summary>
+        /// Remove user from Organization.
+        /// </summary>
+        /// <param name="userId">User details object<see cref="string"/>Data of user to be added to the business</param>
+        /// <param name="orgId">User details object<see cref="int"/>Data of user to be added to the business</param>
+        [HttpDelete]
+        [Authorize]
+        [Route("RemoveUser/{userId}/{orgId}")]
+        public async Task RemoveUserFromBusiness(string userId, int orgId) => await _organizationService.RemoveUserFromOrganization(userId, orgId);
     }
 }

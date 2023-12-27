@@ -28,7 +28,7 @@ namespace RedBook.Core.Models
         {
             get
             {
-                string? roleIds = _contextReference.Claims.FirstOrDefault(x => x.Type.Equals(ClaimTypes.Role, StringComparison.InvariantCultureIgnoreCase))?.Value;
+                string? roleIds = _contextReference.Claims.FirstOrDefault(x => x.Type.Equals("UserRoleIds", StringComparison.InvariantCultureIgnoreCase))?.Value;
                 if (!string.IsNullOrEmpty(roleIds))
                 {
                     string[] strArray = roleIds.Split(',');

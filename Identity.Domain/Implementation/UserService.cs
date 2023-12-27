@@ -37,7 +37,8 @@ namespace Identity.Domain.Implementation
         public async Task<string?> LogInAsync(UserModel userModel)
         {
             User? userEntity;
-            string userRoles = "";
+            int[] userRolesIds;
+            string[] userRoleNames;
             using (var unitOfWork = UnitOfWorkManager.Begin())
             {
                 _userRepo = unitOfWork.GetRepository<User>();
@@ -54,20 +55,23 @@ namespace Identity.Domain.Implementation
 
                 if(userEntity == null) throw new ArgumentException("User not found");
 
-                int[] userRolesIds = await _userRoleRepo.UnTrackableQuery()
+                IList<RoleModel> userRoles = await _userRoleRepo.UnTrackableQuery()
                                 .Where(x => x.UserId == userEntity.UserId)
-                                .Select(x => x.RoleId)
-                                .ToArrayAsync();
+                                .Select(x => new RoleModel { RoleId = x.RoleId , RoleName = x.Role.RoleName})
+                                .ToListAsync();
 
-                userRoles = string.Join(",", userRolesIds);
+                userRolesIds = userRoles.Select(x => x.RoleId).Distinct().ToArray();
+                userRoleNames = userRoles.Select(x => x.RoleName).Distinct().ToArray();
             }
 
-            if (userEntity != null && BCrypt.Net.BCrypt.EnhancedVerify(userModel.Password, userEntity.Password))
+            if (BCrypt.Net.BCrypt.EnhancedVerify(userModel.Password, userEntity.Password))
             {
                 byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
                 return GenerateJwtToken(new List<Claim> {
                     new Claim("UserId", userEntity.UserId),
-                    new Claim(ClaimTypes.Role, userRoles)
+                    new Claim("UserName", userEntity.UserName),
+                    new Claim("UserRoles", string.Join(",", userRoleNames)),
+                    new Claim("UserRoleIds", string.Join(",", userRolesIds))
                 }, userModel.RememberMe);
             }
             else

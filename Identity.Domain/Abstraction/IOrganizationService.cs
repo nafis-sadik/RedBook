@@ -13,5 +13,6 @@ namespace Identity.Domain.Abstraction
         Task DeleteOrganizationAsync(int OrganizationId);
         Task AddUserToBusiness(UserModel userModel);
         Task<PagedModel<UserModel>> GetUserByOrganizationId(PagedModel<UserModel> pagedModel, int orgId);
+        Task RemoveUserFromOrganization(string userId, int orgId);
     }
 }

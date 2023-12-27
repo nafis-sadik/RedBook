@@ -291,7 +291,7 @@ namespace Identity.Domain.Implementation
                 foreach(UserModel user in pagedModel.SourceData)
                 {
                     user.Roles = await _userRoleRepo.UnTrackableQuery()
-                        .Where(r => r.UserId == user.UserId)
+                        .Where(r => r.UserId == user.UserId && r.Role.OrganizationId == orgId)
                         .Select(r => new RoleModel
                         {
                             RoleId = r.RoleId,
@@ -301,6 +301,18 @@ namespace Identity.Domain.Implementation
 
                 pagedModel.SearchString = pagedModel.SearchString == null || pagedModel.SearchString == "null" ? "" : pagedModel.SearchString;
                 return pagedModel;
+            }
+        }
+
+        public async Task RemoveUserFromOrganization(string userId, int orgId)
+        {
+            using (var transaction = UnitOfWorkManager.Begin())
+            {
+                _userRoleRepo = transaction.GetRepository<UserRole>();
+
+                await _userRoleRepo.DeleteAsync(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin);
+
+                await transaction.SaveChangesAsync();
             }
         }
     }
