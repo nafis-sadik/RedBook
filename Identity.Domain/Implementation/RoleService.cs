@@ -85,6 +85,7 @@ namespace Identity.Domain.Implementation
                             {
                                 RoleId = x.RoleId,
                                 OrganizationId = x.OrganizationId,
+                                IsAdmin = x.IsAdmin,
                                 RoleName = x.RoleName,
                             })
                             .ToListAsync();
@@ -124,8 +125,7 @@ namespace Identity.Domain.Implementation
 
                 Role? roleEntity = await _roleRepo.GetAsync(role.RoleId);
                 if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
-                roleEntity.RoleName = role.RoleName;
-                roleEntity.OrganizationId = role.OrganizationId;
+                Mapper.Map(role, roleEntity);
                 roleEntity = _roleRepo.Update(roleEntity);
                 await transaction.SaveChangesAsync();
 
