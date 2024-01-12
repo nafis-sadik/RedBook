@@ -1,5 +1,4 @@
 ﻿using Identity.Data.Entities;
-using Identity.Data.Migrations;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.EntityFrameworkCore;
@@ -17,7 +16,7 @@ namespace Identity.Domain.Implementation
     public class RoleService : ServiceBase, IRoleService
     {
         private IRepositoryBase<Role> _roleRepo;
-        private IRepositoryBase<UserRole> _userRoleMappingRepo;
+        private IRepositoryBase<UserRole> _userRoleRepo;
         private IRepositoryBase<RoleRouteMapping> _roleRouteMappingRepo;
 
         public RoleService(
@@ -35,7 +34,6 @@ namespace Identity.Domain.Implementation
             using(var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
-                _userRoleMappingRepo = transaction.GetRepository<UserRole>();
 
                 if (!await this.HasAdminPriviledge(_roleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
@@ -58,7 +56,7 @@ namespace Identity.Domain.Implementation
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
-                _userRoleMappingRepo = transaction.GetRepository<UserRole>();
+                _userRoleRepo = transaction.GetRepository<UserRole>();
 
                 Role? requestingUserRoleEntity = await _roleRepo.GetAsync(roleId);
                 if (requestingUserRoleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);

@@ -64,8 +64,9 @@ namespace Identity.Domain.Implementation
                 else
                     throw new ArgumentException("Failed to add new organization, internal error occured");
 
-                // If the user is not retail user, the org is being created from settings page by an admin user as only admin users have access to that page
-                if (await this.HasRetailerPriviledge(_roleRepo)) {
+                // If the user is not retail user, the org is being created from settings page by an admin user.
+                // Thus, the user registering this organization shall be considered the admin users of the new organization
+                if (!await this.HasRetailerPriviledge(_roleRepo)) {
                     await _userRoleRepo.InsertAsync(new UserRole
                     {
                         RoleId = adminRoleForNewOrg.RoleId,

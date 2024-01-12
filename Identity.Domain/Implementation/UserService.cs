@@ -14,7 +14,6 @@ using RedBook.Core.UnitOfWork;
 using Identity.Domain.Abstraction;
 using RedBook.Core.Security;
 using Microsoft.AspNetCore.Http;
-using System.Linq;
 
 namespace Identity.Domain.Implementation
 {
