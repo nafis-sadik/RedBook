@@ -1,6 +1,5 @@
 ﻿using Identity.Data;
 using Identity.Data.Entities;
-using Identity.Data.Migrations;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.AspNetCore.Http;
@@ -13,7 +12,6 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System.Linq;
 
 namespace Identity.Domain.Implementation
 {
@@ -97,7 +95,7 @@ namespace Identity.Domain.Implementation
         /// <summary>
         /// Return only the menu items allowed for requesting user that belongs to the request origin application
         /// </summary>
-        public async Task<IEnumerable<RouteModel>> GetAllAppRoutes()
+        public async Task<IEnumerable<RouteModel>> GetAllAppRoutes(int appId)
         {
             using (var transaction = UnitOfWorkManager.Begin())
             {
@@ -105,12 +103,26 @@ namespace Identity.Domain.Implementation
                 _routeRepo = transaction.GetRepository<Route>();
                 _userRoleMappingRepo = transaction.GetRepository<UserRole>();
 
-                if (!_userRoleMappingRepo.TrackableQuery().Where(x => x.UserId == User.UserId && x.Role.IsAdmin).Any()) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                var query = _routeRepo.UnTrackableQuery();
 
-                RouteModel[] requesterMenu = await _routeRepo
-                    .UnTrackableQuery()
-                    .Where(x => x.RouteId > 0)
-                    .Select(x => new RouteModel
+                if (await this.HasSystemAdminPriviledge(_roleRepo)) {
+                    query = query.Where(x => x.ApplicationId == appId);
+                } else {
+                    if (_userRoleMappingRepo.TrackableQuery().Where(x => x.UserId == User.UserId && x.Role.IsAdmin).Any())
+                    {
+                        query = query.Where(x => x.ApplicationId == appId && x.RouteId != RouteTypeConsts.SysAdminRoute.RouteTypeId && x.RouteId != RouteTypeConsts.RetailerRoute.RouteTypeId);
+                    }
+                    else if (await this.HasRetailerPriviledge(_roleRepo))
+                    {
+                        query = query.Where(x => x.ApplicationId == appId && x.RouteId == RouteTypeConsts.RetailerRoute.RouteTypeId);
+                    }
+                    else
+                    {
+                        throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                    }
+                }
+
+                return await query.Select(x => new RouteModel
                     {
                         RouteId = x.RouteId,
                         RouteName = x.RouteName,
@@ -118,11 +130,6 @@ namespace Identity.Domain.Implementation
                         Description = x.Description,
                         ParentRouteId = x.ParentRouteId,
                     }).ToArrayAsync();
-
-                if (requesterMenu == null)
-                    throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-                return requesterMenu;
             }
         }
 
@@ -306,7 +313,7 @@ namespace Identity.Domain.Implementation
                 _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
 
                 var data = await _roleMappingRepo.UnTrackableQuery()
-                    .Where(x => x.RoleId == roleId)
+                    .Where(x => x.RoleId == roleId && (x.RouteId == RouteTypeConsts.GenericRoute.RouteTypeId || x.RouteId == RouteTypeConsts.AdminRoute.RouteTypeId))
                     .Select(x => new RouteModel
                     {
                         RouteId = x.Route.RouteId,
