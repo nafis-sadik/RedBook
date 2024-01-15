@@ -313,7 +313,7 @@ namespace Identity.Domain.Implementation
                 _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
 
                 var data = await _roleMappingRepo.UnTrackableQuery()
-                    .Where(x => x.RoleId == roleId && (x.RouteId == RouteTypeConsts.GenericRoute.RouteTypeId || x.RouteId == RouteTypeConsts.AdminRoute.RouteTypeId))
+                    .Where(x => x.RoleId == roleId && (x.Route.RouteTypesId == RouteTypeConsts.GenericRoute.RouteTypeId || x.Route.RouteTypesId == RouteTypeConsts.AdminRoute.RouteTypeId))
                     .Select(x => new RouteModel
                     {
                         RouteId = x.Route.RouteId,
