@@ -18,7 +18,7 @@ namespace RedBook.Core
             services.AddDbContext<DbContext, TDbContext>(opts =>
             {
                 opts.UseSqlServer(
-                    configuration["ConnectionStrings:Live"],
+                    configuration["ConnectionStrings:Development"],
                     sqlOpts => sqlOpts.MigrationsHistoryTable("__EFMigrationsHistory").UseRelationalNulls()
                 );
             });

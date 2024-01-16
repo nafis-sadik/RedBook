@@ -5,8 +5,14 @@ using RedBook.Core.Constants;
 
 namespace Identity.WebAPI.Configurations
 {
+    /// <summary>
+    /// This class creates database if it doesn't exist and initializes database with seed data
+    /// </summary>
     public static class DatabaseIntializer
     {
+        /// <summary>
+        /// Creates database if it doesn't exist and initializes database with seed data
+        /// </summary>
         public static async void InitDatabase(this IApplicationBuilder app, IWebHostEnvironment env)
         {
             using (var scope = app.ApplicationServices.CreateScope())
@@ -183,7 +189,7 @@ namespace Identity.WebAPI.Configurations
 
                             await context.Routes.AddRangeAsync(new[] {
                             new Data.Entities.Route {
-                                RouteName = "Purchase - Invoice",
+                                RouteName = "Invoice - Purchase",
                                 Route1 = "/dashboard/purchase",
                                 Description = "shopping-bag",
                                 ApplicationId = redbookFrontend.ApplicationId,
@@ -191,7 +197,7 @@ namespace Identity.WebAPI.Configurations
                                 RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
                             },
                             new Data.Entities.Route {
-                                RouteName = "Purchase - Sales",
+                                RouteName = "Invoice - Sales",
                                 Route1 = "/dashboard/sales",
                                 Description = "shopping-cart",
                                 ApplicationId = redbookFrontend.ApplicationId,

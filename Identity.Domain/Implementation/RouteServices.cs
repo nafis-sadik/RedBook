@@ -1,4 +1,5 @@
-﻿using Identity.Data;
+﻿using Google.Protobuf.WellKnownTypes;
+using Identity.Data;
 using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
@@ -12,6 +13,7 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
+using System.Collections.Generic;
 
 namespace Identity.Domain.Implementation
 {
@@ -22,8 +24,7 @@ namespace Identity.Domain.Implementation
         private IRepositoryBase<Application> _appRepo;
         private IRepositoryBase<UserRole> _userRoleMappingRepo;
         private IRepositoryBase<RoleRouteMapping> _roleMappingRepo;
-        private IRepositoryBase<RouteType> _routeTypeRepo;
-        private int[] requesterRoleIds;
+        private IRepositoryBase<RouteType> _routeTypeRepo; 
 
         public RouteServices(
             ILogger<RouteServices> logger,
@@ -76,17 +77,6 @@ namespace Identity.Domain.Implementation
 
                 if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                foreach (int requesterRoleId in requesterRoleIds)
-                {
-                    Role? requesterRoleEntity = await _roleRepo.GetAsync(requesterRoleId);
-                    if (requesterRoleEntity == null)
-                        throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-                    // Only System Admin should have access to this api
-                    if (!requesterRoleEntity.IsSystemAdmin)
-                        throw new ArgumentException($"Only system admin user have access to perform this operation");
-                }
-
                 await _routeRepo.DeleteAsync(routeId);
                 await transaction.SaveChangesAsync();
             }
@@ -133,26 +123,22 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<IEnumerable<RouteModel>> GetAppMenuRoutes()
+        public async Task<IEnumerable<RouteModel>> GetAppMenuRoutes(int appId)
         {
-            List<RouteModel> routeList = new List<RouteModel>();
             using (var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
                 _routeRepo = transaction.GetRepository<Route>();
                 _appRepo = transaction.GetRepository<Application>();
-                _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
-                _routeTypeRepo = transaction.GetRepository<RouteType>();
 
                 // Get all roles assigned to requester user
                 List<Role> requesterRoles = new List<Role>();
                 foreach (int roleId in User.RoleIds)
                 {
-                    var role = await _roleRepo.GetAsync(roleId);
+                    Role? role = await _roleRepo.GetAsync(roleId);
                     if (role == null) { continue; }
                     requesterRoles.Add(role);
                 }
-                if (requesterRoles == null || requesterRoles.Count <= 0) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
 
                 // Based on origin we shall 
                 string? origin = HttpContextAccessor?.Request.Headers["Origin"].ToString();
@@ -160,68 +146,31 @@ namespace Identity.Domain.Implementation
                 // Find request source applicaiton
                 Application? requestSourceApp = await _appRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ApplicationUrl == origin);
                 if (requestSourceApp == null) throw new ArgumentException("Request from invalid application");
+                if (requestSourceApp.ApplicationId != appId) throw new ArgumentException("Request from invalid application");
 
+                IQueryable<Route> query = _routeRepo.UnTrackableQuery();
                 foreach (Role requesterRole in requesterRoles)
                 {
                     // If the user is a sys admin user, return all available routes
                     if (requesterRole.IsSystemAdmin){
-                        routeList = await _routeRepo
-                        .UnTrackableQuery()
-                        .Where(x => x.ApplicationId > 0)
-                        .Select(x => new RouteModel
-                        {
-                            RouteId = x.RouteId,
-                            RouteValue = x.Route1,
-                            RouteName = x.RouteName,
-                            Description = x.Description,
-                            ParentRouteId = x.ParentRouteId
-                        }).ToListAsync();
-
+                        query = query.Where(x => x.ApplicationId == appId);
                         break;
                     } else if (requesterRole.IsAdmin) {
-                        var adminRoute = await _routeTypeRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RouteTypeName == RouteTypeConsts.AdminRoute.RouteTypeName);
-                        var genericRoute = await _routeTypeRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RouteTypeName == RouteTypeConsts.GenericRoute.RouteTypeName);
-
-                        routeList.AddRange(await _routeRepo.UnTrackableQuery()
-                            .Where(x => x.ApplicationId == requestSourceApp.ApplicationId && (x.RouteTypesId == adminRoute.RouteTypeId || x.RouteTypesId == genericRoute.RouteTypeId))
-                            .Select(x => new RouteModel
-                            {
-                                RouteId = x.RouteId,
-                                RouteValue = x.Route1,
-                                RouteName = x.RouteName,
-                                Description = x.Description,
-                                ParentRouteId = x.ParentRouteId
-                            }).ToListAsync());
-
+                        query = query.Where(x => x.ApplicationId == requestSourceApp.ApplicationId
+                            && (x.RouteTypesId == RouteTypeConsts.AdminRoute.RouteTypeId || x.RouteTypesId == RouteTypeConsts.GenericRoute.RouteTypeId)).Distinct();
                     } else {
-                        routeList.AddRange(await _roleMappingRepo
-                        .UnTrackableQuery()
-                        .Where(x => x.RoleId == requesterRole.RoleId && x.Route.ApplicationId == requestSourceApp.ApplicationId)
-                        .Select(x => new RouteModel
-                        {
-                            RouteId = x.RouteId,
-                            RouteValue = x.Route.Route1,
-                            RouteName = x.Route.RouteName,
-                            Description = x.Route.Description,
-                            ParentRouteId = x.Route.ParentRouteId
-                        }).ToListAsync());
+                        query = query.Where(x => x.ApplicationId == requestSourceApp.ApplicationId && x.RouteTypesId == RouteTypeConsts.GenericRoute.RouteTypeId).Distinct();
                     }
                 }
 
-                if (routeList == null)
-                    throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-
-                // Filter duplicate array
-                Dictionary<int, RouteModel> routeDict = new Dictionary<int, RouteModel>();
-                foreach(RouteModel route in routeList)
+                return await query.Select(x => new RouteModel
                 {
-                    if (!routeDict.Keys.Contains(route.RouteId))
-                    {
-                        routeDict.Add(route.RouteId, route);
-                    }
-                }
-
-                return routeDict.Values.ToArray();
+                    RouteId = x.RouteId,
+                    RouteValue = x.Route1,
+                    RouteName = x.RouteName,
+                    Description = x.Description,
+                    ParentRouteId = x.ParentRouteId
+                }).ToListAsync();
             }
         }
 
