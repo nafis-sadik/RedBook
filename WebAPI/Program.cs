@@ -1,6 +1,14 @@
 using Inventory.Data;
 using Inventory.WebAPI.Configurations;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using RedBook.Core.Constants;
+using System.Reflection;
+using System.Text;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Inventory.WebAPI
 {
@@ -23,7 +31,23 @@ namespace Inventory.WebAPI
             // IoC Container & DbContext
             builder.Services.RosolveDependencies(builder.Configuration);
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers(options =>
+            {
+                options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+                //options.Filters.Add<HttpResponseExceptionFilter>();
+            }).ConfigureApiBehaviorOptions(options =>
+            {
+                options.InvalidModelStateResponseFactory = context =>
+                    new BadRequestObjectResult(context.ModelState)
+                    {
+                        ContentTypes =
+                        {
+                                // using static System.Net.Mime.MediaTypeNames;
+                                Application.Json,
+                                Application.Xml
+                        }
+                    };
+            }).AddXmlSerializerFormatters(); ;
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -32,27 +56,79 @@ namespace Inventory.WebAPI
 
             // Swagger Configurations
             builder.Services.AddSwaggerGen(x => {
+                x.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "Blume Digital Corp. - Inventory API",
+                    Version = "v1",
+                    Description = "A JWT based user management system to authenticate and manage users, their roles, rights and other user related features for all applications developed and maintained by Blume Digital Corp.",
+                    TermsOfService = new Uri("https://example.com/terms"),
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Example Contact",
+                        Url = new Uri("https://example.com/contact")
+                    },
+                    License = new OpenApiLicense
+                    {
+                        Name = "Example License",
+                        Url = new Uri("https://example.com/license")
+                    }
+                });
+
+                x.CustomOperationIds(apiDesc =>
+                {
+                    var controllerAction = apiDesc.ActionDescriptor as ControllerActionDescriptor;
+                    return controllerAction!.ControllerName + "-" + controllerAction.ActionName;
+                });
+
+                foreach (var file in Directory.GetFiles(AppContext.BaseDirectory, "*.xml"))
+                {
+                    x.IncludeXmlComments(file);
+                }
+
                 x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Please enter token",
+                    Description = "Format: Bearer {access_token}",
                     Name = "Authorization",
                     Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",
-                    Scheme = "bearer"
+                    Scheme = "Bearer"
                 });
 
                 x.AddSecurityRequirement(new OpenApiSecurityRequirement {
                     {
                         new OpenApiSecurityScheme{
                             Reference=new OpenApiReference{
-                                Type=ReferenceType.SecurityScheme,
-                                Id="Bearer"
+                                Id="Bearer", //The name of the previously defined security scheme.
+                                Type=ReferenceType.SecurityScheme
                             }
                         },
-                        new string[] { }
+                        Array.Empty<string>()
                     }
                 });
+
+                // Configure Swagger to use the XML file that's generated with the preceding instructions.
+                // For Linux or non-Windows operating systems, file names and paths can be case-sensitive.
+                // For example, a TodoApi.XML file is valid on Windows but not CentOS.
+                x.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
+            });
+
+            // JWT Bearer token based authentication
+            builder.Services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
             });
 
             var app = builder.Build();

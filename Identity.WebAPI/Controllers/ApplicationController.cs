@@ -1,7 +1,6 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
-using Identity.Domain.Implementation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;

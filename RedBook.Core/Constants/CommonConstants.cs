@@ -1,6 +1,4 @@
-﻿using static RedBook.Core.Constants.CommonConstants;
-
-namespace RedBook.Core.Constants
+﻿namespace RedBook.Core.Constants
 {
     public static class CommonConstants
     {
