@@ -71,3 +71,4 @@ namespace Inventory.WebAPI.Controllers
             return Ok();
         }
     }
+}
