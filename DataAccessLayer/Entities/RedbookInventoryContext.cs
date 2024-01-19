@@ -43,11 +43,9 @@ public partial class RedbookInventoryContext : DbContext
 
     public virtual DbSet<SalesPaymentRecord> SalesPaymentRecords { get; set; }
 
-    public virtual DbSet<UserCache> UserCaches { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=RedbookInventory;User ID=sa;TrustServerCertificate=True;Encrypt=False;Trusted_Connection=True;");
+//    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+//        => optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=RedbookInventory;User ID=sa;TrustServerCertificate=True;Encrypt=False;Trusted_Connection=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -102,14 +100,14 @@ public partial class RedbookInventoryContext : DbContext
             entity.Property(e => e.CreateDate).HasPrecision(0);
             entity.Property(e => e.UpdateDate).HasPrecision(0);
 
-            entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.CategoryCreatedByNavigations)
-                .HasForeignKey(d => d.CreatedBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Categories_UserCache");
+            //entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.CategoryCreatedByNavigations)
+            //    .HasForeignKey(d => d.CreatedBy)
+            //    .OnDelete(DeleteBehavior.ClientSetNull)
+            //    .HasConstraintName("FK_Categories_UserCache");
 
-            entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.CategoryUpdatedByNavigations)
-                .HasForeignKey(d => d.UpdatedBy)
-                .HasConstraintName("FK_Categories_UserCache1");
+            //entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.CategoryUpdatedByNavigations)
+            //    .HasForeignKey(d => d.UpdatedBy)
+            //    .HasConstraintName("FK_Categories_UserCache1");
         });
 
         modelBuilder.Entity<CommonAttribute>(entity =>
@@ -179,10 +177,10 @@ public partial class RedbookInventoryContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Products_Categories");
 
-            entity.HasOne(d => d.CreateByNavigation).WithMany(p => p.ProductCreateByNavigations)
-                .HasForeignKey(d => d.CreateBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Products_UserCache1");
+            //entity.HasOne(d => d.CreateByNavigation).WithMany(p => p.ProductCreateByNavigations)
+            //    .HasForeignKey(d => d.CreateBy)
+            //    .OnDelete(DeleteBehavior.ClientSetNull)
+            //    .HasConstraintName("FK_Products_UserCache1");
 
             entity.HasOne(d => d.Organization).WithMany(p => p.Products)
                 .HasForeignKey(d => d.OrganizationId)
@@ -194,9 +192,9 @@ public partial class RedbookInventoryContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Products_CommonAttribute");
 
-            entity.HasOne(d => d.UpdateByNavigation).WithMany(p => p.ProductUpdateByNavigations)
-                .HasForeignKey(d => d.UpdateBy)
-                .HasConstraintName("FK_Products_UserCache");
+            //entity.HasOne(d => d.UpdateByNavigation).WithMany(p => p.ProductUpdateByNavigations)
+            //    .HasForeignKey(d => d.UpdateBy)
+            //    .HasConstraintName("FK_Products_UserCache");
         });
 
         modelBuilder.Entity<Purchase>(entity =>
@@ -282,10 +280,10 @@ public partial class RedbookInventoryContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SalesDetails_Sales");
 
-            entity.HasOne(d => d.SoldByNavigation).WithMany(p => p.SalesDetails)
-                .HasForeignKey(d => d.SoldBy)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_SalesDetails_UserCache");
+            //entity.HasOne(d => d.SoldByNavigation).WithMany(p => p.SalesDetails)
+            //    .HasForeignKey(d => d.SoldBy)
+            //    .OnDelete(DeleteBehavior.ClientSetNull)
+            //    .HasConstraintName("FK_SalesDetails_UserCache");
         });
 
         modelBuilder.Entity<SalesPaymentRecord>(entity =>
@@ -301,14 +299,14 @@ public partial class RedbookInventoryContext : DbContext
                 .HasConstraintName("FK_SalesPaymentRecords_Sales");
         });
 
-        modelBuilder.Entity<UserCache>(entity =>
-        {
-            entity.HasKey(e => e.UserId);
+        //modelBuilder.Entity<UserCache>(entity =>
+        //{
+        //    entity.HasKey(e => e.UserId);
 
-            entity.ToTable("UserCache");
+        //    entity.ToTable("UserCache");
 
-            entity.Property(e => e.UserId).ValueGeneratedNever();
-        });
+        //    entity.Property(e => e.UserId).ValueGeneratedNever();
+        //});
 
         OnModelCreatingPartial(modelBuilder);
     }

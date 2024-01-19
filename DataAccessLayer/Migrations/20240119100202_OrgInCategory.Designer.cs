@@ -4,6 +4,7 @@ using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Data.Migrations
 {
     [DbContext(typeof(RedbookInventoryContext))]
-    partial class RedbookInventoryContextModelSnapshot : ModelSnapshot
+    [Migration("20240119100202_OrgInCategory")]
+    partial class OrgInCategory
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -106,9 +109,8 @@ namespace Inventory.Data.Migrations
                         .HasPrecision(0)
                         .HasColumnType("datetime2(0)");
 
-                    b.Property<string>("CreatedBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
 
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
@@ -120,10 +122,14 @@ namespace Inventory.Data.Migrations
                         .HasPrecision(0)
                         .HasColumnType("datetime2(0)");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("UpdatedBy")
+                        .HasColumnType("int");
 
                     b.HasKey("CategoryId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("UpdatedBy");
 
                     b.ToTable("Categories");
                 });
@@ -224,9 +230,8 @@ namespace Inventory.Data.Migrations
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.Property<string>("CreateBy")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CreateBy")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreateDate")
                         .HasPrecision(0)
@@ -246,8 +251,8 @@ namespace Inventory.Data.Migrations
                     b.Property<int>("QuantityAttributeId")
                         .HasColumnType("int");
 
-                    b.Property<string>("UpdateBy")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("UpdateBy")
+                        .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdateDate")
                         .HasPrecision(0)
@@ -257,9 +262,13 @@ namespace Inventory.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("CreateBy");
+
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("QuantityAttributeId");
+
+                    b.HasIndex("UpdateBy");
 
                     b.ToTable("Products");
                 });
@@ -422,6 +431,8 @@ namespace Inventory.Data.Migrations
 
                     b.HasIndex("SalesId");
 
+                    b.HasIndex("SoldBy");
+
                     b.ToTable("SalesDetails");
                 });
 
@@ -450,6 +461,16 @@ namespace Inventory.Data.Migrations
                     b.ToTable("SalesPaymentRecords");
                 });
 
+            modelBuilder.Entity("Inventory.Data.Entities.UserCache", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserCache", (string)null);
+                });
+
             modelBuilder.Entity("Inventory.Data.Entities.BankAccount", b =>
                 {
                     b.HasOne("Inventory.Data.Entities.BankBranch", "Branch")
@@ -470,6 +491,24 @@ namespace Inventory.Data.Migrations
                         .HasConstraintName("FK_BankBranches_Banks");
 
                     b.Navigation("Bank");
+                });
+
+            modelBuilder.Entity("Inventory.Data.Entities.Category", b =>
+                {
+                    b.HasOne("Inventory.Data.Entities.UserCache", "CreatedByNavigation")
+                        .WithMany("CategoryCreatedByNavigations")
+                        .HasForeignKey("CreatedBy")
+                        .IsRequired()
+                        .HasConstraintName("FK_Categories_UserCache");
+
+                    b.HasOne("Inventory.Data.Entities.UserCache", "UpdatedByNavigation")
+                        .WithMany("CategoryUpdatedByNavigations")
+                        .HasForeignKey("UpdatedBy")
+                        .HasConstraintName("FK_Categories_UserCache1");
+
+                    b.Navigation("CreatedByNavigation");
+
+                    b.Navigation("UpdatedByNavigation");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.Inventory", b =>
@@ -499,6 +538,12 @@ namespace Inventory.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Products_Categories");
 
+                    b.HasOne("Inventory.Data.Entities.UserCache", "CreateByNavigation")
+                        .WithMany("ProductCreateByNavigations")
+                        .HasForeignKey("CreateBy")
+                        .IsRequired()
+                        .HasConstraintName("FK_Products_UserCache1");
+
                     b.HasOne("Inventory.Data.Entities.OrganizationCache", "Organization")
                         .WithMany("Products")
                         .HasForeignKey("OrganizationId")
@@ -511,11 +556,20 @@ namespace Inventory.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Products_CommonAttribute");
 
+                    b.HasOne("Inventory.Data.Entities.UserCache", "UpdateByNavigation")
+                        .WithMany("ProductUpdateByNavigations")
+                        .HasForeignKey("UpdateBy")
+                        .HasConstraintName("FK_Products_UserCache");
+
                     b.Navigation("Category");
+
+                    b.Navigation("CreateByNavigation");
 
                     b.Navigation("Organization");
 
                     b.Navigation("QuantityAttribute");
+
+                    b.Navigation("UpdateByNavigation");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.Purchase", b =>
@@ -573,9 +627,17 @@ namespace Inventory.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_SalesDetails_Sales");
 
+                    b.HasOne("Inventory.Data.Entities.UserCache", "SoldByNavigation")
+                        .WithMany("SalesDetails")
+                        .HasForeignKey("SoldBy")
+                        .IsRequired()
+                        .HasConstraintName("FK_SalesDetails_UserCache");
+
                     b.Navigation("Product");
 
                     b.Navigation("Sales");
+
+                    b.Navigation("SoldByNavigation");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.SalesPaymentRecord", b =>
@@ -642,6 +704,19 @@ namespace Inventory.Data.Migrations
                     b.Navigation("SalesDetails");
 
                     b.Navigation("SalesPaymentRecords");
+                });
+
+            modelBuilder.Entity("Inventory.Data.Entities.UserCache", b =>
+                {
+                    b.Navigation("CategoryCreatedByNavigations");
+
+                    b.Navigation("CategoryUpdatedByNavigations");
+
+                    b.Navigation("ProductCreateByNavigations");
+
+                    b.Navigation("ProductUpdateByNavigations");
+
+                    b.Navigation("SalesDetails");
                 });
 #pragma warning restore 612, 618
         }

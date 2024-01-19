@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace Identity.WebAPI.Configurations
+﻿namespace Identity.WebAPI.Configurations
 {
     /// <summary>
     /// Extension methods for setting up CORS Configurations.
@@ -13,11 +11,11 @@ namespace Identity.WebAPI.Configurations
         public static string CorsPolicy = "CustomCors";
 
         /// <summary>
-        /// Registers CORS allowed domains from appsettings.json under "CORS:AllowedOrigins"
+        /// Registers CORS allowed domains from appsettings.json under "CORS:AllowedHosts"
         /// </summary>
         /// <param name="services">The <see cref="IServiceCollection"/>.</param>
         /// <param name="configuration">The <see cref="IConfiguration"/>.</param>
-        public static void AddCorsIdentity(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddCorsIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddCors(opts =>
             opts.AddPolicy(CorsPolicy,
@@ -26,7 +24,7 @@ namespace Identity.WebAPI.Configurations
                      var corsConfiguration = configuration.GetSection("CORS:AllowedHosts");
 
                      var corsOrigins = corsConfiguration.Get<string[]>();
-                     if (corsOrigins != null)
+                     if (corsOrigins != null && corsOrigins.Any())
                      {
                          policy
                              .WithOrigins(corsOrigins)
@@ -36,6 +34,8 @@ namespace Identity.WebAPI.Configurations
                              .AllowCredentials();
                      }
                  }));
+
+            return services;
         }
     }
 }

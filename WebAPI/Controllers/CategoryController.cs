@@ -9,7 +9,7 @@ namespace Inventory.WebAPI.Controllers
     /// <summary>
     /// Product Category Module
     /// </summary>
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class CategoryController : ControllerBase

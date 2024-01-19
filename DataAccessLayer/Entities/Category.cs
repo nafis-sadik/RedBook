@@ -10,15 +10,17 @@ public partial class Category
 
     public DateTime CreateDate { get; set; }
 
-    public int CreatedBy { get; set; }
+    public string CreatedBy { get; set; }
 
     public DateTime? UpdateDate { get; set; }
 
-    public int? UpdatedBy { get; set; }
+    public string? UpdatedBy { get; set; }
 
-    public virtual UserCache CreatedByNavigation { get; set; }
+    public int OrganizationId { get; set; }
+
+    //public virtual UserCache CreatedByNavigation { get; set; }
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 
-    public virtual UserCache UpdatedByNavigation { get; set; }
+    //public virtual UserCache UpdatedByNavigation { get; set; }
 }

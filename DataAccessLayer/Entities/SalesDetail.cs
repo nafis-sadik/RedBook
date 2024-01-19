@@ -23,5 +23,5 @@ public partial class SalesDetail
 
     public virtual Sale Sales { get; set; }
 
-    public virtual UserCache SoldByNavigation { get; set; }
+    //public virtual UserCache SoldByNavigation { get; set; }
 }

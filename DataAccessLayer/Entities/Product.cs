@@ -15,11 +15,11 @@ public partial class Product
 
     public DateTime CreateDate { get; set; }
 
-    public int CreateBy { get; set; }
+    public string CreateBy { get; set; }
 
     public DateTime? UpdateDate { get; set; }
 
-    public int? UpdateBy { get; set; }
+    public string? UpdateBy { get; set; }
 
     public int OrganizationId { get; set; }
 
@@ -27,7 +27,7 @@ public partial class Product
 
     public virtual Category Category { get; set; }
 
-    public virtual UserCache CreateByNavigation { get; set; }
+    //public virtual UserCache CreateByNavigation { get; set; }
 
     public virtual OrganizationCache Organization { get; set; }
 
@@ -37,5 +37,5 @@ public partial class Product
 
     public virtual ICollection<SalesDetail> SalesDetails { get; set; } = new List<SalesDetail>();
 
-    public virtual UserCache UpdateByNavigation { get; set; }
+    //public virtual UserCache UpdateByNavigation { get; set; }
 }

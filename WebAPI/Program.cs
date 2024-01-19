@@ -25,9 +25,6 @@ namespace Inventory.WebAPI
             // Cross-Origin Requests (CORS)
             builder.Services.AddCors(builder.Configuration);
 
-            // Database Connection Configuration
-            builder.Services.AddDatabaseConfigurations(builder.Configuration);
-
             // IoC Container & DbContext
             builder.Services.RosolveDependencies(builder.Configuration);
 
@@ -136,7 +133,7 @@ namespace Inventory.WebAPI
             // Database Initialization
             app.InitDatabase(builder.Environment);
 
-            app.UseCors();
+            app.UseCors(CorsConfig.Policy);
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

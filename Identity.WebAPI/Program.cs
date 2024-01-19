@@ -127,7 +127,7 @@ namespace Identity.WebAPI
             // Database Initialization
             app.InitDatabase(builder.Environment);
 
-            app.UseCors(CorsConfig.CorsPolicy);;
+            app.UseCors(CorsConfig.CorsPolicy);
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

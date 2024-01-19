@@ -9,6 +9,7 @@ namespace Inventory.Domain
         public MappingConfig()
         {
             CreateMap<Purchase, PurchaseModel>().ReverseMap();
+            CreateMap<Category, CategoryModel>().ReverseMap();
             CreateMap<Data.Entities.Inventory, InventoryModel>().ReverseMap();
         }
     }
