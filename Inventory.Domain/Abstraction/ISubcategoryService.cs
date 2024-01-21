@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Inventory.Data.Models;
 
 namespace Inventory.Domain.Abstraction
 {
     public interface ISubcategoryService
     {
+        public Task<CategoryModel> AddSubcategoryAsync(CategoryModel categoryModel);
+        public Task<IEnumerable<CategoryModel>> GetSubcategoriesUnderCategory(int categoryId);
+        public Task DeleteSubcategoryAsync(int categoryId);
+        public Task<CategoryModel> UpdateSubcategoryAsync(CategoryModel categoryModel);
     }
 }

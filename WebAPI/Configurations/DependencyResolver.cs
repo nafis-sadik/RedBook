@@ -16,6 +16,7 @@ namespace Inventory.WebAPI.Configurations
             // Services
             services.AddScoped<IClaimsPrincipalAccessor, HttpContextClaimsPrincipalAccessor>();
             services.AddScoped<ICategoryService, CategoryService>();
+            services.AddScoped<ISubcategoryService, SubcategoryService>();
         }
     }
 }

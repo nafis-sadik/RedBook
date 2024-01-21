@@ -37,7 +37,7 @@ namespace Inventory.WebAPI.Controllers
         public async Task<IActionResult> GetAsync(int orgId) => Ok(await _categoryService.GetByOrganizationAsync(orgId));
 
         /// <summary>
-        /// Add new product catagory/subcategory under organization
+        /// Add new product catagory under organization
         /// </summary>
         /// <param name="category"><see cref="CategoryModel"/></param>
         [HttpPost]
@@ -47,7 +47,7 @@ namespace Inventory.WebAPI.Controllers
         public async Task<IActionResult> AddAsync(CategoryModel category) => Ok(await _categoryService.AddCategoryAsync(category));
 
         /// <summary>
-        /// Update an existing product catagory/subcategory under organization
+        /// Update an existing product catagory under organization
         /// </summary>
         /// <param name="category"><see cref="CategoryModel"/></param>
         [HttpPatch]
@@ -57,7 +57,7 @@ namespace Inventory.WebAPI.Controllers
         public async Task<IActionResult> UpdateAsync(CategoryModel category) => Ok(await _categoryService.UpdateCategoryAsync(category));
 
         /// <summary>
-        /// Remove an existing category/subcategory by category id
+        /// Remove an existing category by category id
         /// </summary>
         /// <param name="categoryId"><see cref="int"/></param>
         [HttpDelete]
