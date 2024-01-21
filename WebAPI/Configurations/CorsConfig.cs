@@ -26,8 +26,13 @@
                         var corsOrigins = corsConfiguration.Get<string[]>();
                         if (corsOrigins != null && corsOrigins.Any())
                         {
+                            foreach(var c in corsOrigins)
+                            {
+                                Console.WriteLine(c);
+                            }
                             policy
-                                .WithOrigins(corsOrigins)
+                                //.WithOrigins(corsOrigins)
+                                .AllowAnyOrigin()
                                 //.WithExposedHeaders("x-total-count")
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();

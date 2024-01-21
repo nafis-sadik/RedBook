@@ -2,6 +2,9 @@
 
 namespace Inventory.WebAPI.Configurations
 {
+    /// <summary>
+    /// Global Exception Handeller Middleware
+    /// </summary>
     public class ExceptionMiddleware
     {
         private readonly RequestDelegate _next;

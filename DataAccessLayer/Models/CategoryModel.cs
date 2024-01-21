@@ -8,12 +8,14 @@
 
         public int? ParentCategory { get; set; }
 
+        public int BusinessId { get; set; }
+
         public DateTime CreateDate { get; set; }
 
-        public int CreatedBy { get; set; }
+        public string CreatedBy { get; set; }
 
         public DateTime? UpdateDate { get; set; }
 
-        public int? UpdatedBy { get; set; }
+        public string? UpdatedBy { get; set; }
     }
 }

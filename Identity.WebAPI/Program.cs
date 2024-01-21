@@ -136,11 +136,11 @@ namespace Identity.WebAPI
                 app.UseSwaggerUI();
             }
 
+            app.UseHttpsRedirection();
+
             app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseAuthorization();
-
-            app.UseHttpsRedirection();
 
             app.MapControllers();
 

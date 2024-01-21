@@ -1,4 +1,3 @@
-using Inventory.Data;
 using Inventory.WebAPI.Configurations;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
@@ -16,11 +15,11 @@ namespace Inventory.WebAPI
     {
         public static void Main(string[] args)
         {
-            var builder = WebApplication.CreateBuilder(args);
+            WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container. 
             // Caching
-            builder.Services.AddCaching(builder.Configuration);
+            //builder.Services.AddCaching(builder.Configuration);
 
             // Cross-Origin Requests (CORS)
             builder.Services.AddCors(builder.Configuration);
@@ -33,18 +32,36 @@ namespace Inventory.WebAPI
                 options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
                 //options.Filters.Add<HttpResponseExceptionFilter>();
             }).ConfigureApiBehaviorOptions(options =>
-            {
-                options.InvalidModelStateResponseFactory = context =>
-                    new BadRequestObjectResult(context.ModelState)
-                    {
-                        ContentTypes =
+                {
+                    options.InvalidModelStateResponseFactory = context =>
+                        new BadRequestObjectResult(context.ModelState)
                         {
+                            ContentTypes =
+                            {
                                 // using static System.Net.Mime.MediaTypeNames;
                                 Application.Json,
                                 Application.Xml
-                        }
-                    };
-            }).AddXmlSerializerFormatters(); ;
+                            }
+                        };
+                }).AddXmlSerializerFormatters();
+
+            // JWT Bearer token based authentication
+            builder.Services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = true;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt)),
+                    ValidateIssuer = false,
+                    ValidateAudience = false
+                };
+            });
 
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -110,25 +127,7 @@ namespace Inventory.WebAPI
                 x.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));
             });
 
-            // JWT Bearer token based authentication
-            builder.Services.AddAuthentication(x =>
-            {
-                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(x =>
-            {
-                x.RequireHttpsMetadata = false;
-                x.SaveToken = true;
-                x.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt)),
-                    ValidateIssuer = false,
-                    ValidateAudience = false
-                };
-            });
-
-            var app = builder.Build();
+            WebApplication app = builder.Build();
 
             // Database Initialization
             app.InitDatabase(builder.Environment);
@@ -143,6 +142,8 @@ namespace Inventory.WebAPI
             }
 
             app.UseHttpsRedirection();
+
+            app.UseMiddleware<ExceptionMiddleware>();
 
             app.UseAuthorization();
 

@@ -9,7 +9,7 @@ namespace Inventory.WebAPI.Controllers
     /// <summary>
     /// Product Category Module
     /// </summary>
-    //[Authorize]
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class CategoryController : ControllerBase
@@ -50,7 +50,7 @@ namespace Inventory.WebAPI.Controllers
         /// Update an existing product catagory/subcategory under organization
         /// </summary>
         /// <param name="category"><see cref="CategoryModel"/></param>
-        [HttpPut]
+        [HttpPatch]
         [SwaggerResponse(statusCode: 200, type: typeof(CategoryModel), description: "Retrieves Category List Under Organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]

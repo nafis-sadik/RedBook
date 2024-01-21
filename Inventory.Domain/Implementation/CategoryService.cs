@@ -27,13 +27,19 @@ namespace Inventory.Domain.Implementation
             {
                 _categoryRepo = unitOfWork.GetRepository<Category>();
 
-                Category category = await _categoryRepo.InsertAsync(new Category {
+                Category category = await _categoryRepo.InsertAsync(new Category
+                {
                     CatagoryName = categoryModel.CatagoryName,
                     CreateDate = DateTime.Now,
-                    CreatedBy = User.UserId
+                    CreatedBy = User.UserId,
+                    OrganizationId = categoryModel.BusinessId
                 });
 
-                return Mapper.Map<CategoryModel>(category);
+                await unitOfWork.SaveChangesAsync();
+
+                CategoryModel data = Mapper.Map<CategoryModel>(category);
+
+                return data;
             }
         }
 
@@ -52,12 +58,16 @@ namespace Inventory.Domain.Implementation
             using (var unitOfWork = UnitOfWorkManager.Begin())
             {
                 _categoryRepo = unitOfWork.GetRepository<Category>();
-                var data = await _categoryRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId)
+
+                List<CategoryModel> data = await _categoryRepo.UnTrackableQuery()
+                    .Where(x => x.OrganizationId == orgId)
                     .Select(x => new CategoryModel
                     {
                         CategoryId = x.CategoryId,
-                        CatagoryName = x.CatagoryName
+                        CatagoryName = x.CatagoryName,
+                        BusinessId = x.OrganizationId,
                     }).ToListAsync();
+
                 return data;
             }
         }
