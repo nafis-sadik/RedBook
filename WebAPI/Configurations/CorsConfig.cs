@@ -30,7 +30,7 @@
                                 .WithOrigins(corsOrigins)
                                 .WithExposedHeaders("x-total-count")
                                 .AllowAnyHeader()
-                                .AllowAnyMethod();
+                                .AllowAnyMethod()
                                 .AllowCredentials();
                         }
                     }));

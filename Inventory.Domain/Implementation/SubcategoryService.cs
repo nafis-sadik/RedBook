@@ -38,7 +38,7 @@ namespace Inventory.Domain.Implementation
                     CreateDate = DateTime.Now,
                     CreatedBy = User.UserId,
                     OrganizationId = categoryModel.BusinessId,
-                    ParentCategory = categoryModel.ParentCategory,
+                    ParentCategory = categoryModel.ParentCategoryId,
                 });
 
                 await unitOfWork.SaveChangesAsync();
@@ -73,7 +73,7 @@ namespace Inventory.Domain.Implementation
                     {
                         CategoryId = x.CategoryId,
                         CatagoryName = x.CatagoryName,
-                        ParentCategory = x.ParentCategory,
+                        ParentCategoryId = x.ParentCategory,
                     })
                     .ToListAsync();
 
@@ -91,7 +91,7 @@ namespace Inventory.Domain.Implementation
                 if (category == null) throw new ArgumentException("Resource not found");
 
                 category.CatagoryName = categoryModel.CatagoryName;
-                category.ParentCategory = categoryModel.ParentCategory;
+                category.ParentCategory = categoryModel.ParentCategoryId;
                 category.UpdateDate = DateTime.UtcNow;
                 category.UpdatedBy = User.UserId;
 

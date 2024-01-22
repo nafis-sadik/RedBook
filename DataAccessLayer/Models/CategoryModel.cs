@@ -6,7 +6,7 @@
 
         public string CatagoryName { get; set; }
 
-        public int? ParentCategory { get; set; }
+        public int? ParentCategoryId { get; set; }
 
         public int BusinessId { get; set; }
 
