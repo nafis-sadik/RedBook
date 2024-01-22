@@ -14,6 +14,7 @@ namespace Inventory.Domain
             CreateMap<CategoryModel, Category>()
                 .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.BusinessId))
                 .ForMember(dest => dest.Products, opt => opt.Ignore());
+            CreateMap<ProductModel, Product>().ReverseMap();
             CreateMap<Data.Entities.Inventory, InventoryModel>().ReverseMap();
         }
     }
