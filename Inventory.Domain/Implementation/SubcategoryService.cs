@@ -20,7 +20,7 @@ namespace Inventory.Domain.Implementation
     {
         private IRepositoryBase<Category> _categoryRepo;
         public SubcategoryService(
-            ILogger<CategoryService> logger,
+            ILogger<SubcategoryService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor

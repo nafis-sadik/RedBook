@@ -84,7 +84,7 @@ namespace Inventory.Domain.Implementation
 
                 category.CatagoryName = categoryModel.CatagoryName;
                 category.UpdateDate = DateTime.UtcNow;
-                category.CreatedBy = User.UserId;
+                category.UpdatedBy = User.UserId;
 
                 _categoryRepo.Update(category);
                 await unitOfWork.SaveChangesAsync();

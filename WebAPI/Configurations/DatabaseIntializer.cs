@@ -1,5 +1,4 @@
-﻿using Inventory.Data;
-using Inventory.Data.Entities;
+﻿using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Inventory.WebAPI.Configurations

@@ -17,7 +17,7 @@ namespace Inventory.Domain.Implementation
         private IRepositoryBase<Product> _productRepo;
 
         public ProductService(
-            ILogger<ServiceBase> logger,
+            ILogger<ProductService> logger,
             IObjectMapper mapper,
             IClaimsPrincipalAccessor claimsPrincipalAccessor,
             IUnitOfWorkManager unitOfWork

@@ -265,8 +265,8 @@ namespace Identity.WebAPI.Configurations
                                 RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId
                             },
                             new Data.Entities.Route {
-                                RouteName = "Product Categories",
-                                Route1 = "/dashboard/category",
+                                RouteName = "Product Settings",
+                                Route1 = "/dashboard/product-settings",
                                 Description = "cube",
                                 ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = settingsRoute.Entity.RouteId,

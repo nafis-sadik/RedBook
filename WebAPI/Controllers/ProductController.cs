@@ -1,8 +1,6 @@
 ﻿using Inventory.Data.Models;
 using Inventory.Domain.Abstraction;
-using Inventory.Domain.Implementation;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;
 using Swashbuckle.AspNetCore.Annotations;
