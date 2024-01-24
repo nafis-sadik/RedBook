@@ -58,7 +58,7 @@ namespace Identity.WebAPI.Configurations
                             await context.Organizations.AddAsync(new Organization
                             {
                                 OrganizationName = "Blume Digital Corp.",
-                                CreateDate = DateTime.Now,
+                                CreateDate = DateTime.UtcNow,
                             });
                             await context.SaveChangesAsync();
                         }
@@ -267,7 +267,7 @@ namespace Identity.WebAPI.Configurations
                             new Data.Entities.Route {
                                 RouteName = "Product Settings",
                                 Route1 = "/dashboard/product-settings",
-                                Description = "cube",
+                                Description = "options-2",
                                 ApplicationId = redbookFrontend.ApplicationId,
                                 ParentRouteId = settingsRoute.Entity.RouteId,
                                 RouteTypesId = RouteTypeConsts.GenericRoute.RouteTypeId

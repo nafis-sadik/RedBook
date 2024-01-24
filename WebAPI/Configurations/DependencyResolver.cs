@@ -18,6 +18,7 @@ namespace Inventory.WebAPI.Configurations
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
+            services.AddScoped<ICommonAttributeService, CommonAttributeService>();
         }
     }
 }
