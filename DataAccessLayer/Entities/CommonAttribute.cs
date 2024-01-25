@@ -17,7 +17,7 @@ public partial class CommonAttribute
 
     public DateTime? UpdateDate { get; set; }
 
-    public string UpdateBy { get; set; }
+    public string? UpdateBy { get; set; }
 
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }

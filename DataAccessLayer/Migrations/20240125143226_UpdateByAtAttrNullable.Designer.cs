@@ -4,6 +4,7 @@ using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Data.Migrations
 {
     [DbContext(typeof(RedbookInventoryContext))]
-    partial class RedbookInventoryContextModelSnapshot : ModelSnapshot
+    [Migration("20240125143226_UpdateByAtAttrNullable")]
+    partial class UpdateByAtAttrNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -131,10 +134,7 @@ namespace Inventory.Data.Migrations
             modelBuilder.Entity("Inventory.Data.Entities.CommonAttribute", b =>
                 {
                     b.Property<int>("AttributeId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AttributeId"));
 
                     b.Property<string>("AttributeName")
                         .IsRequired()

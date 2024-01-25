@@ -43,9 +43,9 @@ public partial class RedbookInventoryContext : DbContext
 
     public virtual DbSet<SalesPaymentRecord> SalesPaymentRecords { get; set; }
 
-//    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-//        => optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=RedbookInventory;User ID=sa;TrustServerCertificate=True;Encrypt=False;Trusted_Connection=True;");
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=RedbookInventory;User ID=sa;TrustServerCertificate=True;Encrypt=False;Trusted_Connection=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -116,7 +116,6 @@ public partial class RedbookInventoryContext : DbContext
 
             entity.ToTable("CommonAttribute");
 
-            entity.Property(e => e.AttributeId).ValueGeneratedNever();
             entity.Property(e => e.AttributeName)
                 .IsRequired()
                 .HasMaxLength(50)
@@ -131,7 +130,6 @@ public partial class RedbookInventoryContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.UpdateBy)
-                .IsRequired()
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.UpdateDate).HasPrecision(0);
