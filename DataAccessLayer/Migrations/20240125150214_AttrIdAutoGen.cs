@@ -15,6 +15,10 @@ namespace Inventory.Data.Migrations
                 name: "FK_Products_CommonAttribute",
                 table: "Products");
 
+            migrationBuilder.DropUniqueConstraint(
+                name: "PK__CommonAt__3214EC0712D1E7C6",
+                table: "CommonAttribute");
+
             migrationBuilder.DropColumn(
                 name: "AttributeId",
                 table: "CommonAttribute");
@@ -26,6 +30,11 @@ namespace Inventory.Data.Migrations
                 nullable: false
             ).Annotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+            migrationBuilder.AddUniqueConstraint(
+                name: "PK__CommonAt__3214EC0712D1E7C6",
+                table: "CommonAttribute",
+                column: "AttributeId");
+
             migrationBuilder.AddForeignKey(
                 name: "FK_Products_CommonAttribute",
                 table: "Products",
@@ -33,12 +42,19 @@ namespace Inventory.Data.Migrations
                 principalTable: "CommonAttribute",
                 principalColumn: "AttributeId",
                 onDelete: ReferentialAction.Cascade);
-
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Products_CommonAttribute",
+                table: "Products");
+
+            migrationBuilder.DropUniqueConstraint(
+                name: "PK__CommonAt__3214EC0712D1E7C6",
+                table: "CommonAttribute");
+
             migrationBuilder.DropColumn(
                 name: "AttributeId",
                 table: "YourTable");
@@ -48,6 +64,19 @@ namespace Inventory.Data.Migrations
                 table: "CommonAttribute",
                 type: "int",
                 nullable: false).Annotation("SqlServer:Identity", "1, 1");
+
+            migrationBuilder.AddUniqueConstraint(
+                name: "PK__CommonAt__3214EC0712D1E7C6",
+                table: "CommonAttribute",
+                column: "AttributeId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Products_CommonAttribute",
+                table: "Products",
+                column: "QuantityAttributeId",
+                principalTable: "CommonAttribute",
+                principalColumn: "AttributeId",
+                onDelete: ReferentialAction.Cascade);
         }
     }
 }

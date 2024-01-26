@@ -9,10 +9,16 @@ namespace RedBook.Core.Repositories
         IQueryable<TEntity> TrackableQuery();
         IQueryable<TEntity> UnTrackableQuery();
 
-        // Create
+        // Create Async
         Task<TEntity> InsertAsync(TEntity entity);
 
         // Read
+        TEntity? Get(int id);
+        TEntity? Get(string id);
+        TEntity? Get(object id);
+        IEnumerable<TEntity> Get(Expression<Func<TEntity, bool>> where);
+
+        // Read Async
         Task<TEntity?> GetAsync(int id);
         Task<TEntity?> GetAsync(string id);
         Task<TEntity?> GetAsync(object id);

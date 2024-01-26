@@ -36,6 +36,7 @@ namespace Inventory.Domain.Implementation
 
                 CommonAttribute commonAttr = await _commonAttrRepo.InsertAsync(new CommonAttribute
                 {
+                    AttributeId = commonAttrModel.AttributeId,
                     AttributeName = commonAttrModel.AttributeName,
                     AttributeType = commonAttrModel.AttributeType,
                     CreateDate = DateTime.UtcNow,

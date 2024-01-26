@@ -31,15 +31,11 @@ namespace Inventory.Domain.Implementation
             using (var unitOfWork = UnitOfWorkManager.Begin())
             {
                 _categoryRepo = unitOfWork.GetRepository<Category>();
+                Category category = Mapper.Map<Category>(categoryModel);
+                category.CreateDate = DateTime.Now;
+                category.CreatedBy = User.UserId;
 
-                Category category = await _categoryRepo.InsertAsync(new Category
-                {
-                    CatagoryName = categoryModel.CatagoryName,
-                    CreateDate = DateTime.Now,
-                    CreatedBy = User.UserId,
-                    OrganizationId = categoryModel.BusinessId,
-                    ParentCategory = categoryModel.ParentCategoryId,
-                });
+                category = await _categoryRepo.InsertAsync(category);
 
                 await unitOfWork.SaveChangesAsync();
 
@@ -54,9 +50,13 @@ namespace Inventory.Domain.Implementation
             using (var unitOfWork = UnitOfWorkManager.Begin())
             {
                 _categoryRepo = unitOfWork.GetRepository<Category>();
-                await _categoryRepo.DeleteAsync(x => x.ParentCategory == categoryId);
-                await unitOfWork.SaveChangesAsync();
+
+                // Remove corresponding children first
+                await _categoryRepo.DeleteAsync(x => x.ParentCategoryId == categoryId);
+
+                // Then remove the target item
                 await _categoryRepo.DeleteAsync(categoryId);
+
                 await unitOfWork.SaveChangesAsync();
             }
         }
@@ -67,13 +67,14 @@ namespace Inventory.Domain.Implementation
             {
                 _categoryRepo = unitOfWork.GetRepository<Category>();
 
-                var data = await _categoryRepo.UnTrackableQuery()
-                    .Where(x => x.ParentCategory == categoryId)
+                var data = await _categoryRepo
+                    .UnTrackableQuery()
+                    .Where(x => x.ParentCategoryId == categoryId)
                     .Select(x => new CategoryModel
                     {
                         CategoryId = x.CategoryId,
                         CatagoryName = x.CatagoryName,
-                        ParentCategoryId = x.ParentCategory,
+                        ParentCategoryId = x.ParentCategoryId,
                     })
                     .ToListAsync();
 
@@ -91,7 +92,7 @@ namespace Inventory.Domain.Implementation
                 if (category == null) throw new ArgumentException("Resource not found");
 
                 category.CatagoryName = categoryModel.CatagoryName;
-                category.ParentCategory = categoryModel.ParentCategoryId;
+                category.ParentCategoryId = categoryModel.ParentCategoryId;
                 category.UpdateDate = DateTime.UtcNow;
                 category.UpdatedBy = User.UserId;
 

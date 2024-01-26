@@ -14,7 +14,7 @@ public partial class Inventory
 
     public int OrganizationId { get; set; }
 
-    public virtual OrganizationCache Organization { get; set; }
+    //public virtual OrganizationCache Organization { get; set; }
 
     public virtual Purchase Purchase { get; set; }
 }

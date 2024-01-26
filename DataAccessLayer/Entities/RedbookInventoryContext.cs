@@ -27,8 +27,6 @@ public partial class RedbookInventoryContext : DbContext
 
     public virtual DbSet<Inventory> Inventories { get; set; }
 
-    public virtual DbSet<OrganizationCache> OrganizationCaches { get; set; }
-
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<Purchase> Purchases { get; set; }
@@ -97,8 +95,14 @@ public partial class RedbookInventoryContext : DbContext
                 .IsRequired()
                 .HasMaxLength(100)
                 .IsUnicode(false);
+
             entity.Property(e => e.CreateDate).HasPrecision(0);
             entity.Property(e => e.UpdateDate).HasPrecision(0);
+
+            entity.HasOne(c => c.ParentCategory) // Define the relationship
+                .WithMany(c => c.SubCategories)
+                .HasForeignKey(c => c.ParentCategoryId)
+                .IsRequired(false); // Set ParentCategoryId as foreign key
 
             //entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.CategoryCreatedByNavigations)
             //    .HasForeignKey(d => d.CreatedBy)
@@ -141,10 +145,10 @@ public partial class RedbookInventoryContext : DbContext
 
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 0)");
 
-            entity.HasOne(d => d.Organization).WithMany(p => p.Inventories)
-                .HasForeignKey(d => d.OrganizationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Inventory_OrganizationCache");
+            //entity.HasOne(d => d.Organization).WithMany(p => p.Inventories)
+            //    .HasForeignKey(d => d.OrganizationId)
+            //    .OnDelete(DeleteBehavior.ClientSetNull)
+            //    .HasConstraintName("FK_Inventory_OrganizationCache");
 
             entity.HasOne(d => d.Purchase).WithMany(p => p.Inventories)
                 .HasForeignKey(d => d.PurchaseId)
@@ -152,14 +156,14 @@ public partial class RedbookInventoryContext : DbContext
                 .HasConstraintName("FK_Inventory_Purchase");
         });
 
-        modelBuilder.Entity<OrganizationCache>(entity =>
-        {
-            entity.HasKey(e => e.OrganizationId);
+        //modelBuilder.Entity<OrganizationCache>(entity =>
+        //{
+        //    entity.HasKey(e => e.OrganizationId);
 
-            entity.ToTable("OrganizationCache");
+        //    entity.ToTable("OrganizationCache");
 
-            entity.Property(e => e.OrganizationId).ValueGeneratedNever();
-        });
+        //    entity.Property(e => e.OrganizationId).ValueGeneratedNever();
+        //});
 
         modelBuilder.Entity<Product>(entity =>
         {
@@ -180,10 +184,10 @@ public partial class RedbookInventoryContext : DbContext
             //    .OnDelete(DeleteBehavior.ClientSetNull)
             //    .HasConstraintName("FK_Products_UserCache1");
 
-            entity.HasOne(d => d.Organization).WithMany(p => p.Products)
-                .HasForeignKey(d => d.OrganizationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Products_OrganizationCache");
+            //entity.HasOne(d => d.Organization).WithMany(p => p.Products)
+            //    .HasForeignKey(d => d.OrganizationId)
+            //    .OnDelete(DeleteBehavior.ClientSetNull)
+            //    .HasConstraintName("FK_Products_OrganizationCache");
 
             entity.HasOne(d => d.QuantityAttribute).WithMany(p => p.Products)
                 .HasForeignKey(d => d.QuantityAttributeId)

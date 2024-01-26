@@ -22,5 +22,7 @@
 
         public int Quantity { get; set; }
 
+        public int QuantityTypeId { get; set; }
+
     }
 }

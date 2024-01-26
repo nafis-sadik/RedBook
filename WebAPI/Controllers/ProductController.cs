@@ -16,6 +16,10 @@ namespace Inventory.WebAPI.Controllers
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
+
+        /// <summary>
+        /// Product Module Constructor
+        /// </summary>
         public ProductController(IProductService productService)
         {
             _productService = productService;

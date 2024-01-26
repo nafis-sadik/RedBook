@@ -6,7 +6,7 @@ public partial class Category
 
     public string CatagoryName { get; set; }
 
-    public int? ParentCategory { get; set; }
+    public int? ParentCategoryId { get; set; }
 
     public DateTime CreateDate { get; set; }
 
@@ -19,7 +19,8 @@ public partial class Category
     public int OrganizationId { get; set; }
 
     //public virtual UserCache CreatedByNavigation { get; set; }
-
+    public virtual Category ParentCategory { get; set; }
+    public virtual ICollection<Category> SubCategories { get; set; } = new List<Category>();
     public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 
     //public virtual UserCache UpdatedByNavigation { get; set; }

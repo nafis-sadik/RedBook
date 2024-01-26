@@ -26,6 +26,12 @@ namespace RedBook.Core.Repositories
             else throw new InvalidOperationException($"Failed to insert {entity}");
         }
 
+        // Read Async
+        public TEntity? Get(int id) => _dbSet.Find(id);
+        public TEntity? Get(string id) => _dbSet.Find(id);
+        public TEntity? Get(object id) => _dbSet.Find(id);
+        public IEnumerable<TEntity> Get(Expression<Func<TEntity, bool>> query) => UnTrackableQuery().Where(query).ToList();
+
         // Read
         public async Task<TEntity?> GetAsync(int id) => await _dbSet.FindAsync(id);
         public async Task<TEntity?> GetAsync(string id) => await _dbSet.FindAsync(id);

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Inventory.Data.Entities;
+﻿namespace Inventory.Data.Entities;
 
 public partial class Product
 {
@@ -29,7 +26,7 @@ public partial class Product
 
     //public virtual UserCache CreateByNavigation { get; set; }
 
-    public virtual OrganizationCache Organization { get; set; }
+    //public virtual OrganizationCache Organization { get; set; }
 
     public virtual ICollection<PurchaseDetail> PurchaseDetails { get; set; } = new List<PurchaseDetail>();
 

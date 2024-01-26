@@ -29,14 +29,10 @@ namespace Inventory.Domain.Implementation
             {
                 _productRepo = unitOfWork.GetRepository<Product>();
 
-                Product product = await _productRepo.InsertAsync(new Product
-                {
-                    ProductName = productModel.ProductName,
-                    CategoryId = productModel.SubcategoryId <= 0 ? productModel.CategoryId : productModel.SubcategoryId,
-                    CreateDate = DateTime.UtcNow,
-                    CreateBy = User.UserId,
-                    OrganizationId = productModel.OrganizationId
-                });
+                Product product = Mapper.Map<Product>(productModel);
+                product.CreateBy = User.UserId;
+                product.CreateDate = DateTime.UtcNow;
+                product = await _productRepo.InsertAsync(product);
 
                 await unitOfWork.SaveChangesAsync();
 
@@ -85,8 +81,8 @@ namespace Inventory.Domain.Implementation
                         ProductName = x.ProductName,
                         SubcategoryId = x.CategoryId,
                         SubcategoryName = x.Category.CatagoryName,
-                        CategoryId = x.CategoryId,
-                        CategoryName = x.Category.CatagoryName,
+                        CategoryId = (int)x.Category.ParentCategoryId,
+                        CategoryName = x.Category.ParentCategory.CatagoryName.ToString(),
                         OrganizationId = x.OrganizationId
                     })
                     .ToArrayAsync();

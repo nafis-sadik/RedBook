@@ -4,6 +4,7 @@ using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Data.Migrations
 {
     [DbContext(typeof(RedbookInventoryContext))]
-    partial class RedbookInventoryContextModelSnapshot : ModelSnapshot
+    [Migration("20240126141221_RemovedOrganizationCacheTable")]
+    partial class RemovedOrganizationCacheTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -113,7 +116,7 @@ namespace Inventory.Data.Migrations
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ParentCategoryId")
+                    b.Property<int?>("ParentCategory")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdateDate")
@@ -124,8 +127,6 @@ namespace Inventory.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("CategoryId");
-
-                    b.HasIndex("ParentCategoryId");
 
                     b.ToTable("Categories");
                 });
@@ -462,15 +463,6 @@ namespace Inventory.Data.Migrations
                     b.Navigation("Bank");
                 });
 
-            modelBuilder.Entity("Inventory.Data.Entities.Category", b =>
-                {
-                    b.HasOne("Inventory.Data.Entities.Category", "ParentCategory")
-                        .WithMany("SubCategories")
-                        .HasForeignKey("ParentCategoryId");
-
-                    b.Navigation("ParentCategory");
-                });
-
             modelBuilder.Entity("Inventory.Data.Entities.Inventory", b =>
                 {
                     b.HasOne("Inventory.Data.Entities.Purchase", "Purchase")
@@ -590,8 +582,6 @@ namespace Inventory.Data.Migrations
             modelBuilder.Entity("Inventory.Data.Entities.Category", b =>
                 {
                     b.Navigation("Products");
-
-                    b.Navigation("SubCategories");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.CommonAttribute", b =>
