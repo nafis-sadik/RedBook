@@ -83,7 +83,8 @@ namespace Inventory.Domain.Implementation
                         SubcategoryName = x.Category.CatagoryName,
                         CategoryId = (int)x.Category.ParentCategoryId,
                         CategoryName = x.Category.ParentCategory.CatagoryName.ToString(),
-                        OrganizationId = x.OrganizationId
+                        OrganizationId = x.OrganizationId,
+                        QuantityTypeId = x.QuantityAttributeId
                     })
                     .ToArrayAsync();
 
