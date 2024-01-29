@@ -1,5 +1,8 @@
-﻿using RedBook.Core.Constants;
+﻿using Microsoft.IdentityModel.Tokens;
+using RedBook.Core.Constants;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 
 namespace RedBook.Core.Models
 {

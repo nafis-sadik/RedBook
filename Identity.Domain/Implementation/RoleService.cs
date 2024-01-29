@@ -1,14 +1,14 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
+using RedBook.Core.Security;
+using RedBook.Core.UnitOfWork;
+using RedBook.Core.Repositories;
 using Identity.Domain.Abstraction;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Constants;
 using RedBook.Core.Domain;
-using RedBook.Core.Repositories;
-using RedBook.Core.Security;
-using RedBook.Core.UnitOfWork;
 using System.Data;
 
 namespace Identity.Domain.Implementation
@@ -31,6 +31,7 @@ namespace Identity.Domain.Implementation
         public async Task<RoleModel> AddRoleAsync(RoleModel role)
         {
             if (role.OrganizationId <= 0) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
+
             using(var transaction = UnitOfWorkManager.Begin())
             {
                 _roleRepo = transaction.GetRepository<Role>();
@@ -128,6 +129,41 @@ namespace Identity.Domain.Implementation
                 await transaction.SaveChangesAsync();
 
                 return Mapper.Map<RoleModel>(roleEntity);
+            }
+        }
+
+        public async Task<int[]?> GetOrganizationsAllowedToUserByRoute(string userId, int routeId)
+        {
+            using(var unitOfWord = UnitOfWorkManager.Begin())
+            {
+                var _userRepo = unitOfWord.GetRepository<User>();
+                _userRoleRepo = unitOfWord.GetRepository<UserRole>();
+                _roleRouteMappingRepo = unitOfWord.GetRepository<RoleRouteMapping>();
+
+                User? usr = await _userRepo.GetAsync(userId);
+                if (usr == null) throw new ArgumentException("Resource not found");
+
+                // Need to check if is admin
+                int[]? roleOrfids = await _roleRouteMappingRepo
+                    .UnTrackableQuery()
+                    .Where(x => x.RouteId == routeId)
+                    .Select(x => x.Role.OrganizationId)
+                    .ToArrayAsync();
+
+                int[]? userOrgIds = await _userRoleRepo
+                    .UnTrackableQuery()
+                    .Where(x => x.UserId == userId && x.RoleId == routeId)
+                    .Select(x => x.Role.OrganizationId)
+                    .ToArrayAsync();
+
+                List<int> responseIds = new List<int>();
+                foreach(var userOrgId in userOrgIds)
+                {
+                    if(roleOrfids.Contains(userOrgId))
+                        responseIds.Add(userOrgId);
+                }
+
+                return responseIds.ToArray();
             }
         }
     }

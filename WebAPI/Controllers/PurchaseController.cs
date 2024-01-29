@@ -1,7 +1,9 @@
-﻿using Inventory.Domain.Abstraction;
+﻿using Inventory.Data.Models;
+using Inventory.Domain.Abstraction;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using RedBook.Core.Models;
 
 namespace Inventory.WebAPI.Controllers
 {
@@ -22,5 +24,8 @@ namespace Inventory.WebAPI.Controllers
         {
             _productPurchaseInvoice = productPurchaseInvoice;
         }
+
+        [HttpGet]
+        public async Task<IActionResult> PurchaseProduct([FromQuery] PagedModel<PurchaseModel> pagedModel) => Ok(await _productPurchaseInvoice.GetPagedInvoiceAsync(pagedModel));
     }
 }

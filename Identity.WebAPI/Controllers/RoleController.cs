@@ -5,13 +5,19 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.WebAPI.Controllers
 {
-    [Route("api/[controller]")]
-    [ApiController]
+    /// <summary>
+    /// Role Module
+    /// </summary>
     [Authorize]
+    [ApiController]
+    [Route("api/[controller]")]
     public class RoleController : ControllerBase
     {
         private readonly IRoleService _roleServices;
 
+        /// <summary>
+        /// Role Module Constructor
+        /// </summary>
         public RoleController(IRoleService roleService)
         {
             _roleServices = roleService;
@@ -23,6 +29,9 @@ namespace Identity.WebAPI.Controllers
         [HttpPut]
         public async Task<IActionResult> UpdateRoleAsync(RoleModel roleModel) => Ok(await _roleServices.UpdateRoleAsync(roleModel));
 
+        /// <summary>
+        /// Remove roles by Role Id
+        /// </summary>
         [HttpDelete]
         [Route("{roleId}")]
         public async Task<IActionResult> RemoveRoleAsync(int roleId)
@@ -30,9 +39,6 @@ namespace Identity.WebAPI.Controllers
             await _roleServices.DeleteRoleAsync(roleId);
             return Ok();
         }
-
-        //[HttpGet]
-        //public async Task<IActionResult> GetRoleAsync(int roleId) => Ok(await _roleServices.GetRoleAsync(roleId));
 
         /// <summary>
         /// Returns roles by Organization Id
@@ -51,5 +57,12 @@ namespace Identity.WebAPI.Controllers
             await _roleServices.AllowRouteForRole(roleId, routeId);
             return Ok();
         }
+
+        /// <summary>
+        /// Map role with route for permission
+        /// </summary>
+        [HttpGet]
+        [Route("/GetAllowedOrganizationsToUserByRoute/{userId}/{routeId}")]
+        public async Task<IActionResult> GetOrganizationsAllowedToUserByRoute(string userId, int routeId) => Ok(await _roleServices.GetOrganizationsAllowedToUserByRoute(userId, routeId));
     }
 }
