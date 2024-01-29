@@ -88,6 +88,8 @@ namespace Inventory.Domain.Implementation
                     })
                     .ToArrayAsync();
 
+                pagedModel.TotalItems = await query.CountAsync();
+
                 return pagedModel;
             }
         }
