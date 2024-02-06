@@ -187,7 +187,7 @@ namespace Identity.Domain.Implementation
                 if (userId != User.UserId)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                userEntity.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
+                userEntity.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword);
                 _userRepo.Update(userEntity);
 
                 await transaction.SaveChangesAsync();
@@ -211,7 +211,7 @@ namespace Identity.Domain.Implementation
                 {
                     newUser = Mapper.Map<User>(userModel);
                     newUser.UserId = Guid.NewGuid().ToString();
-                    newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword("12345678");
+                    newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword);
                     newUser.Status = CommonConstants.StatusTypes.Active.ToString();
                     newUser = await _userRepo.InsertAsync(newUser);
                     await transaction.SaveChangesAsync();

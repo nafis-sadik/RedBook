@@ -10,6 +10,7 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
+using System.Linq;
 
 namespace Identity.Domain.Implementation
 {
@@ -80,7 +81,7 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task AddUserToBusiness(UserModel userModel)
+        public async Task<UserModel> AddUserToBusiness(UserModel userModel)
         {
             using(var transaction = UnitOfWorkManager.Begin())
             {
@@ -97,7 +98,7 @@ namespace Identity.Domain.Implementation
                         Email = userModel.Email,
                         UserName = userModel.UserName,
                         Status = CommonConstants.StatusTypes.Active.ToString(),
-                        Password = CommonConstants.PasswordConfig.DefaultPassword
+                        Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword)
                     });
 
                     await transaction.SaveChangesAsync();
@@ -113,6 +114,8 @@ namespace Identity.Domain.Implementation
                 }
 
                 await transaction.SaveChangesAsync();
+
+                return Mapper.Map<UserModel>(userEntity);
             }
         }
 
@@ -236,70 +239,45 @@ namespace Identity.Domain.Implementation
 
 
                 int[] userRoleMappingIds = await _roleRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId).Select(x => x.RoleId).ToArrayAsync();
-                if (string.IsNullOrEmpty(pagedModel.SearchString))
-                {
-                    pagedModel.SourceData = await _userRoleRepo.UnTrackableQuery()
-                        .Where(x => userRoleMappingIds.Contains(x.RoleId))
-                        .Skip(pagedModel.Skip)
-                        .Take(pagedModel.PageLength)
-                        .Select(u => new UserModel
-                        {
-                            UserId = u.User.UserId,
-                            FirstName = u.User.FirstName,
-                            LastName = u.User.LastName,
-                            UserName = u.User.UserName,
-                            Email = u.User.Email,
-                        })
-                        .Distinct()
-                        .ToListAsync();
 
-                    pagedModel.TotalItems = await _userRoleRepo.UnTrackableQuery().Where(x => userRoleMappingIds.Contains(x.RoleId)).CountAsync();
-                }
-                else
+                var query = _userRoleRepo.UnTrackableQuery()
+                    .Where(x => userRoleMappingIds.Contains(x.RoleId));
+
+                if (!string.IsNullOrEmpty(pagedModel.SearchString))
                 {
-                    pagedModel.SourceData = await _userRoleRepo.UnTrackableQuery()
-                        .Where(x =>
+                    query = query.Where(x =>
                             userRoleMappingIds.Contains(x.RoleId) && (
                                 x.User.FirstName.ToLower().Contains(pagedModel.SearchString.ToLower())
                                 || x.User.LastName.ToLower().Contains(pagedModel.SearchString.ToLower())
                                 || x.User.UserName.ToLower().Contains(pagedModel.SearchString.ToLower())
-                            )
-                        )
-                        .Skip(pagedModel.Skip)
-                        .Take(pagedModel.PageLength)
-                        .Select(u => new UserModel
-                        {
-                            UserId = u.User.UserId,
-                            FirstName = u.User.FirstName,
-                            LastName = u.User.LastName,
-                            UserName = u.User.UserName,
-                            Email = u.User.Email,
-                        })
-                        .Distinct()
-                        .ToListAsync();
-
-                    pagedModel.TotalItems = await _userRoleRepo.UnTrackableQuery()
-                        .Where(x =>
-                            userRoleMappingIds.Contains(x.RoleId) && (
-                                x.User.FirstName.ToLower().Contains(pagedModel.SearchString.ToLower())
-                                || x.User.LastName.ToLower().Contains(pagedModel.SearchString.ToLower())
-                                || x.User.UserName.ToLower().Contains(pagedModel.SearchString.ToLower())
-                            )
-                        )
-                        .CountAsync();
+                                || x.Role.RoleName.ToLower().Contains(pagedModel.SearchString.ToLower()))
+                        );
                 }
 
-                foreach(UserModel user in pagedModel.SourceData)
-                {
-                    user.Roles = await _userRoleRepo.UnTrackableQuery()
-                        .Where(r => r.UserId == user.UserId && r.Role.OrganizationId == orgId)
-                        .Select(r => new RoleModel
-                        {
-                            RoleId = r.RoleId,
-                            RoleName = r.Role.RoleName
-                        }).ToArrayAsync();
-                }
+                pagedModel.SourceData = await query
+                    .Skip(pagedModel.Skip)
+                    .Take(pagedModel.PageLength)
+                    .Distinct()
+                    .Select(u => new UserModel
+                    {
+                        UserId = u.User.UserId,
+                        FirstName = u.User.FirstName,
+                        LastName = u.User.LastName,
+                        UserName = u.User.UserName,
+                        Email = u.User.Email,
+                        Roles = _userRoleRepo
+                                    .UnTrackableQuery()
+                                    .Where(x => x.UserId == u.UserId && x.Role.OrganizationId == orgId)
+                                    .Select(x => new RoleModel
+                                    {
+                                        RoleId = x.RoleId,
+                                        RoleName = x.Role.RoleName
+                                    })
+                                    .ToArray()
+                    })
+                    .ToListAsync();
 
+                pagedModel.TotalItems = await query.CountAsync();
                 pagedModel.SearchString = pagedModel.SearchString == null || pagedModel.SearchString == "null" ? "" : pagedModel.SearchString;
                 return pagedModel;
             }

@@ -92,17 +92,13 @@ namespace Identity.WebAPI.Controllers
         [HttpPost]
         [Authorize]
         [Route("User")]
-        public async Task<IActionResult> AddUserToBusiness(UserModel userModel)
-        {
-            await _organizationService.AddUserToBusiness(userModel);
-            return Ok();
-        }
+        public async Task<IActionResult> AddUserToBusiness(UserModel userModel) => Ok(await _organizationService.AddUserToBusiness(userModel));
 
         /// <summary>
-        /// Remove user from Organization.
+        /// Remove specific user from specific organization (Organization Admin Access Only)
         /// </summary>
-        /// <param name="userId">User details object<see cref="string"/>Data of user to be added to the business</param>
-        /// <param name="orgId">User details object<see cref="int"/>Data of user to be added to the business</param>
+        /// <param name="userId">User Id <see cref="string"/></param>
+        /// <param name="orgId">Organization Id <see cref="int"/></param>
         [HttpDelete]
         [Authorize]
         [Route("User/{userId}/{orgId}")]
