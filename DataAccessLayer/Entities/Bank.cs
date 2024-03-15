@@ -1,4 +1,7 @@
-﻿namespace Inventory.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Inventory.Data.Entities;
 
 public partial class Bank
 {

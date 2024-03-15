@@ -1,9 +1,11 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Identity.Domain.Implementation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Constants;
+using RedBook.Core.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Identity.WebAPI.Controllers
@@ -38,11 +40,11 @@ namespace Identity.WebAPI.Controllers
         /// <summary>
         /// Archive own account only. User may join a different organization under redbook, thus organization admins should not hold the right to archive an user.
         /// </summary>
-        /// <param name="userId">User unique identifier<see cref="string"/>.</param>
+        /// <param name="userId">User unique identifier<see cref="int"/>.</param>
         [HttpDelete]
         [Authorize]
         [Route("Archive/{userId}")]
-        public async Task<IActionResult> ArchiveAccount(string userId)
+        public async Task<IActionResult> ArchiveAccount(int userId)
         {
             if (await _userServices.ArchiveAccount(userId))
                 return new OkObjectResult(new { Response = CommonConstants.HttpResponseMessages.Success });
@@ -57,7 +59,7 @@ namespace Identity.WebAPI.Controllers
         [HttpPut]
         [Authorize]
         [Route("Unarchive/{id}")]
-        public async Task<IActionResult> UnArchiveAccount(string userId)
+        public async Task<IActionResult> UnArchiveAccount(int userId)
         {
             await _userServices.UnArchiveAccount(userId);
             return Ok();
@@ -70,7 +72,7 @@ namespace Identity.WebAPI.Controllers
         [HttpDelete]
         [Authorize]
         [Route("{id}")]
-        public async Task<IActionResult> Delete(string userId)
+        public async Task<IActionResult> Delete(int userId)
         {
             await _userServices.DeleteAccount(userId);
             return Ok();
@@ -83,7 +85,7 @@ namespace Identity.WebAPI.Controllers
         [HttpPut]
         [Authorize]
         [Route("ResetPassword/{id}")]
-        public async Task<IActionResult> ResetPassword(string userId)
+        public async Task<IActionResult> ResetPassword(int userId)
         {
             await _userServices.ResetPassword(userId);
             return Ok();
@@ -103,5 +105,35 @@ namespace Identity.WebAPI.Controllers
             else
                 return new ConflictObjectResult(new { Response = CommonConstants.HttpResponseMessages.Exception });
         }
+
+        /// <summary>
+        /// Add a new or existing user to your business. If the user already has an account, he shall be identified by email address and automatically assigned the role.
+        /// In case, the user is new, his account shall be created and default password shall be set as his password
+        /// </summary>
+        /// <param name="userModel">User details object<see cref="UserModel"/>Data of user to be added to the business</param>
+        [HttpPost]
+        [Authorize]
+        [Route("User")]
+        public async Task<IActionResult> AddUserToBusiness(UserModel userModel) => Ok(await _userServices.AddUserToBusiness(userModel));
+
+        /// <summary>
+        /// Remove specific user from specific organization (Organization Admin Access Only)
+        /// </summary>
+        /// <param name="userId">User Id <see cref="int"/></param>
+        /// <param name="orgId">Organization Id <see cref="int"/></param>
+        [HttpDelete]
+        [Authorize]
+        [Route("User/{userId}/{orgId}")]
+        public async Task RemoveUserFromBusiness(int userId, int orgId) => await _userServices.RemoveUserFromOrganization(userId, orgId);
+
+        /// <summary>
+        /// Get user list under organization (organization admin access only)
+        /// </summary>
+        /// <param name="businessId">Organization Id <see cref="int"/></param>
+        /// <param name="pagedModel">Organization Id <see cref="PagedModel<UserModel>"/></param>
+        [HttpGet]
+        [Authorize]
+        [Route("User")]
+        public async Task<IActionResult> GetUserByBusiness([FromQuery] PagedModel<UserModel> pagedModel, [FromQuery] int businessId) => Ok(await _userServices.GetUserByOrganizationId(pagedModel, businessId));
     }
 }

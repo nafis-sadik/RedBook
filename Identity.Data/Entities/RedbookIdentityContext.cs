@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Data.Entities;
 
@@ -23,11 +25,15 @@ public partial class RedbookIdentityContext : DbContext
 
     public virtual DbSet<Route> Routes { get; set; }
 
+    public virtual DbSet<RouteType> RouteTypes { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
-    public virtual DbSet<UserRole> UserRoles { get; set; }
+    public virtual DbSet<UserRoleMapping> UserRoleMappings { get; set; }
 
-    public virtual DbSet<RouteType> RouteTypes { get; set; }
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+        => optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=RedbookIdentity;User ID=sa;TrustServerCertificate=True;Encrypt=False;Trusted_Connection=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,31 +41,40 @@ public partial class RedbookIdentityContext : DbContext
         {
             entity.HasKey(e => e.ApplicationId).HasName("PK__Applicat__3214EC07D6504A6D");
 
-            entity.HasIndex(e => e.OrganizationId, "IX_Applications_OrganizationId");
-
             entity.Property(e => e.ApplicationName)
                 .IsRequired()
                 .HasMaxLength(50)
                 .IsUnicode(false);
-
-            entity.HasOne(d => d.Organization).WithMany(p => p.Applications)
-                .HasForeignKey(d => d.OrganizationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Applications_Organizations");
+            entity.Property(e => e.ApplicationUrl)
+                .IsRequired()
+                .HasDefaultValueSql("(N'')");
         });
 
         modelBuilder.Entity<Organization>(entity =>
         {
+            entity.Property(e => e.Address).HasMaxLength(100);
+            entity.Property(e => e.CreatedBy).IsRequired();
+            entity.Property(e => e.LogoUrl).HasMaxLength(100);
             entity.Property(e => e.OrganizationName)
                 .IsRequired()
                 .HasMaxLength(50)
                 .IsUnicode(false);
+            entity.Property(e => e.UpdateDate).HasDefaultValueSql("('0001-01-01T00:00:00.0000000')");
         });
 
         modelBuilder.Entity<Role>(entity =>
         {
             entity.HasIndex(e => e.OrganizationId, "IX_Roles_OrganizationId");
 
+            entity.Property(e => e.IsAdmin)
+                .IsRequired()
+                .HasDefaultValueSql("(CONVERT([bit],(0)))");
+            entity.Property(e => e.IsRetailer)
+                .IsRequired()
+                .HasDefaultValueSql("(CONVERT([bit],(0)))");
+            entity.Property(e => e.IsSystemAdmin)
+                .IsRequired()
+                .HasDefaultValueSql("(CONVERT([bit],(0)))");
             entity.Property(e => e.RoleName)
                 .IsRequired()
                 .HasMaxLength(50)
@@ -96,8 +111,10 @@ public partial class RedbookIdentityContext : DbContext
         {
             entity.HasIndex(e => e.ApplicationId, "IX_Routes_ApplicationId");
 
+            entity.HasIndex(e => e.ParentRouteId, "IX_Routes_ParentRouteId");
+
             entity.Property(e => e.Description)
-                .IsRequired()
+                .HasMaxLength(100)
                 .IsUnicode(false);
             entity.Property(e => e.Route1)
                 .IsRequired()
@@ -112,32 +129,58 @@ public partial class RedbookIdentityContext : DbContext
                 .HasForeignKey(d => d.ApplicationId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Routes_Applications");
+
+            entity.HasOne(d => d.ParentRoute).WithMany(p => p.InverseParentRoute).HasForeignKey(d => d.ParentRouteId);
+
+            entity.HasOne(d => d.RouteType).WithMany(p => p.Routes)
+                .HasForeignKey(d => d.RouteTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Routes_RouteTypes");
+        });
+
+        modelBuilder.Entity<RouteType>(entity =>
+        {
+            entity.Property(e => e.RouteTypeName).IsRequired();
         });
 
         modelBuilder.Entity<User>(entity =>
         {
-            entity.Property(e => e.UserId)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.FirstName)
+            entity.Property(e => e.Email)
                 .IsRequired()
+                .HasDefaultValueSql("(N'')");
+            entity.Property(e => e.FirstName)
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.LastName)
-                .IsRequired()
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.Password)
                 .IsRequired()
                 .IsUnicode(false);
-            entity.Property(e => e.Status)
-                .IsRequired()
-                .HasMaxLength(1)
-                .IsUnicode(false);
+            entity.Property(e => e.PhoneNumber).HasMaxLength(50);
             entity.Property(e => e.UserName)
                 .IsRequired()
                 .HasMaxLength(100)
                 .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<UserRoleMapping>(entity =>
+        {
+            entity.HasKey(e => e.UserRoleId).HasName("PK_UserRoles");
+
+            entity.ToTable("UserRoleMapping");
+
+            entity.HasIndex(e => e.RoleId, "IX_UserRoles_RoleId");
+
+            entity.HasIndex(e => e.UserId, "IX_UserRoles_UserId");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.UserRoleMappings)
+                .HasForeignKey(d => d.RoleId)
+                .HasConstraintName("FK_UserRoles_Roles_RoleId");
+
+            entity.HasOne(d => d.User).WithMany(p => p.UserRoleMappings)
+                .HasForeignKey(d => d.UserId)
+                .HasConstraintName("FK_UserRoles_Users_UserId");
         });
 
         OnModelCreatingPartial(modelBuilder);

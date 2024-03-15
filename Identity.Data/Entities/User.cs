@@ -1,8 +1,11 @@
-﻿namespace Identity.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Identity.Data.Entities;
 
 public partial class User
 {
-    public string UserId { get; set; }
+    public int UserId { get; set; }
 
     public string UserName { get; set; }
 
@@ -12,11 +15,15 @@ public partial class User
 
     public string Password { get; set; }
 
-    public string Status { get; set; }
+    public bool Status { get; set; }
+
+    public int AccountBalance { get; set; }
 
     public string Email { get; set; }
 
-    public int? AccountBalance { get; set; }
+    public string PhoneNumber { get; set; }
 
-    public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+    public string Address { get; set; }
+
+    public virtual ICollection<UserRoleMapping> UserRoleMappings { get; set; } = new List<UserRoleMapping>();
 }

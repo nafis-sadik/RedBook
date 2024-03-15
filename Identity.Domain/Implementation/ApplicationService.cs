@@ -7,7 +7,6 @@ using RedBook.Core.AutoMapper;
 using RedBook.Core.Constants;
 using RedBook.Core.Domain;
 using RedBook.Core.Models;
-using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
 
@@ -15,8 +14,7 @@ namespace Identity.Domain.Implementation
 {
     public class ApplicationService : ServiceBase, IApplicationService
     {
-        private IRepositoryBase<Role> _roleRepo;
-        private IRepositoryBase<Application> _appRepo;
+        private IRepositoryFactory _repositoryFactory;
         public ApplicationService(
             ILogger<ApplicationService> logger,
             IObjectMapper mapper,
@@ -27,15 +25,16 @@ namespace Identity.Domain.Implementation
 
         public async Task<ApplicationInfoModel> AddApplicationAsync(ApplicationInfoModel applicationModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _appRepo = transaction.GetRepository<Application>();
-                _roleRepo = transaction.GetRepository<Role>();
+                // Permission Check
+                var _userRoleMappingRepo = _repositoryFactory.GetRepository<UserRoleMapping>();
+                if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-
+                // Insertion Operation
+                var _appRepo = _repositoryFactory.GetRepository<Application>();
                 Application applicationEntity = await _appRepo.InsertAsync(Mapper.Map<Application>(applicationModel));
-                await transaction.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
 
                 return Mapper.Map<ApplicationInfoModel>(applicationEntity);
             }
@@ -43,13 +42,17 @@ namespace Identity.Domain.Implementation
 
         public async Task<ApplicationInfoModel> GetApplicationAsync(int applicationId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _appRepo = transaction.GetRepository<Application>();
+                // Permission Check
+                var _userRoleMappingRepo = _repositoryFactory.GetRepository<UserRoleMapping>();
+                if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                // Read Operation
+                var _appRepo = _repositoryFactory.GetRepository<Application>();
                 Application? applicationEntity = await _appRepo.GetAsync(applicationId);
 
-                if (applicationEntity == null)
-                    throw new ArgumentException($"Application {applicationId} not found");
+                if (applicationEntity == null) throw new ArgumentException($"Application {applicationId} not found");
 
                 return Mapper.Map<ApplicationInfoModel>(applicationEntity);
             }
@@ -57,19 +60,20 @@ namespace Identity.Domain.Implementation
 
         public async Task<ApplicationInfoModel> UpdateApplicationAsync(ApplicationInfoModel applicationModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _appRepo = transaction.GetRepository<Application>();
-                _roleRepo = transaction.GetRepository<Role>();
+                // Permission Check
+                var _userRoleMappingRepo = _repositoryFactory.GetRepository<UserRoleMapping>();
+                if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-
+                // Update Operation
+                var _appRepo = _repositoryFactory.GetRepository<Application>();
                 Application? applicationEntity = await _appRepo.GetAsync(applicationModel.Id);
                 if(applicationEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
 
                 applicationEntity = Mapper.Map(applicationModel, applicationEntity);
                 applicationEntity = _appRepo.Update(applicationEntity);
-                await transaction.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
 
                 return Mapper.Map<ApplicationInfoModel>(applicationEntity);
             }
@@ -77,21 +81,24 @@ namespace Identity.Domain.Implementation
 
         public async Task DeleteApplicationAsync(int applicationId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
+                var _appRepo = _repositoryFactory.GetRepository<Application>();
+
                 await _appRepo.DeleteAsync(applicationId);
-                await transaction.SaveChangesAsync();
+
+                await _repositoryFactory.SaveChangesAsync();
             }
         }
 
         public async Task<PagedModel<ApplicationInfoModel>> GetApplicationsAsync(PagedModel<ApplicationInfoModel> applicationModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _appRepo = transaction.GetRepository<Application>();
-                _roleRepo = transaction.GetRepository<Role>();
+                var _appRepo = _repositoryFactory.GetRepository<Application>();
+                var _userRoleRepo = _repositoryFactory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasSystemAdminPriviledge(_userRoleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 applicationModel.SourceData = await _appRepo
                     .UnTrackableQuery()
@@ -101,8 +108,7 @@ namespace Identity.Domain.Implementation
                     .Select(x => new ApplicationInfoModel
                     {
                         Id = x.ApplicationId,
-                        ApplicationName = x.ApplicationName,
-                        OrganizationId = x.OrganizationId,
+                        ApplicationName = x.ApplicationName
                     })
                     .ToListAsync();
             }
@@ -114,12 +120,12 @@ namespace Identity.Domain.Implementation
         {
             List<ApplicationInfoModel> applicationModelCollection = new List<ApplicationInfoModel>();
 
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _appRepo = transaction.GetRepository<Application>();
-                _roleRepo = transaction.GetRepository<Role>();
+                var _appRepo = _repositoryFactory.GetRepository<Application>();
+                var _userRoleRepo = _repositoryFactory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasSystemAdminPriviledge(_userRoleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 applicationModelCollection = await _appRepo
                     .UnTrackableQuery()
@@ -128,7 +134,6 @@ namespace Identity.Domain.Implementation
                     {
                         Id = x.ApplicationId,
                         ApplicationName = x.ApplicationName,
-                        OrganizationId = x.OrganizationId,
                     }).ToListAsync();
             }
 

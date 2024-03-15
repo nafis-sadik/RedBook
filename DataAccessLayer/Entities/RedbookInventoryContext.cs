@@ -25,19 +25,17 @@ public partial class RedbookInventoryContext : DbContext
 
     public virtual DbSet<CommonAttribute> CommonAttributes { get; set; }
 
-    public virtual DbSet<Inventory> Inventories { get; set; }
-
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<Purchase> Purchases { get; set; }
 
-    public virtual DbSet<PurchaseDetail> PurchaseDetails { get; set; }
+    public virtual DbSet<PurchaseInvoice> PurchaseInvoices { get; set; }
 
-    public virtual DbSet<PurchasePayment> PurchasePayments { get; set; }
+    public virtual DbSet<PurchasePaymentRecord> PurchasePaymentRecords { get; set; }
 
     public virtual DbSet<Sale> Sales { get; set; }
 
-    public virtual DbSet<SalesDetail> SalesDetails { get; set; }
+    public virtual DbSet<SalesInvoice> SalesInvoices { get; set; }
 
     public virtual DbSet<SalesPaymentRecord> SalesPaymentRecords { get; set; }
 
@@ -62,6 +60,8 @@ public partial class RedbookInventoryContext : DbContext
         {
             entity.HasKey(e => e.AccountId);
 
+            entity.HasIndex(e => e.BranchId, "IX_BankAccounts_BranchId");
+
             entity.Property(e => e.AccountName)
                 .IsRequired()
                 .HasMaxLength(50)
@@ -79,6 +79,8 @@ public partial class RedbookInventoryContext : DbContext
 
             entity.ToTable("BankBranch");
 
+            entity.HasIndex(e => e.BankId, "IX_BankBranch_BankId");
+
             entity.Property(e => e.BranchName)
                 .IsRequired()
                 .IsUnicode(false);
@@ -91,34 +93,25 @@ public partial class RedbookInventoryContext : DbContext
 
         modelBuilder.Entity<Category>(entity =>
         {
+            entity.HasIndex(e => e.ParentCategoryId, "IX_Categories_ParentCategoryId");
+
             entity.Property(e => e.CatagoryName)
                 .IsRequired()
                 .HasMaxLength(100)
                 .IsUnicode(false);
-
             entity.Property(e => e.CreateDate).HasPrecision(0);
             entity.Property(e => e.UpdateDate).HasPrecision(0);
 
-            entity.HasOne(c => c.ParentCategory) // Define the relationship
-                .WithMany(c => c.SubCategories)
-                .HasForeignKey(c => c.ParentCategoryId)
-                .IsRequired(false); // Set ParentCategoryId as foreign key
-
-            //entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.CategoryCreatedByNavigations)
-            //    .HasForeignKey(d => d.CreatedBy)
-            //    .OnDelete(DeleteBehavior.ClientSetNull)
-            //    .HasConstraintName("FK_Categories_UserCache");
-
-            //entity.HasOne(d => d.UpdatedByNavigation).WithMany(p => p.CategoryUpdatedByNavigations)
-            //    .HasForeignKey(d => d.UpdatedBy)
-            //    .HasConstraintName("FK_Categories_UserCache1");
+            entity.HasOne(d => d.ParentCategory).WithMany(p => p.InverseParentCategory).HasForeignKey(d => d.ParentCategoryId);
         });
 
         modelBuilder.Entity<CommonAttribute>(entity =>
         {
-            entity.HasKey(e => e.AttributeId).HasName("PK__CommonAt__3214EC0712D1E7C6");
+            entity.HasKey(e => e.AttributeId);
 
             entity.ToTable("CommonAttribute");
+
+            entity.HasIndex(e => e.AttributeId, "PK__CommonAt__3214EC0712D1E7C6").IsUnique();
 
             entity.Property(e => e.AttributeName)
                 .IsRequired()
@@ -129,44 +122,15 @@ public partial class RedbookInventoryContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
             entity.Property(e => e.CreateDate).HasPrecision(0);
-            entity.Property(e => e.CreatedBy)
-                .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.UpdateBy)
-                .HasMaxLength(50)
-                .IsUnicode(false);
             entity.Property(e => e.UpdateDate).HasPrecision(0);
         });
 
-        modelBuilder.Entity<Inventory>(entity =>
-        {
-            entity.ToTable("Inventory");
-
-            entity.Property(e => e.Quantity).HasColumnType("decimal(18, 0)");
-
-            //entity.HasOne(d => d.Organization).WithMany(p => p.Inventories)
-            //    .HasForeignKey(d => d.OrganizationId)
-            //    .OnDelete(DeleteBehavior.ClientSetNull)
-            //    .HasConstraintName("FK_Inventory_OrganizationCache");
-
-            entity.HasOne(d => d.Purchase).WithMany(p => p.Inventories)
-                .HasForeignKey(d => d.PurchaseId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Inventory_Purchase");
-        });
-
-        //modelBuilder.Entity<OrganizationCache>(entity =>
-        //{
-        //    entity.HasKey(e => e.OrganizationId);
-
-        //    entity.ToTable("OrganizationCache");
-
-        //    entity.Property(e => e.OrganizationId).ValueGeneratedNever();
-        //});
-
         modelBuilder.Entity<Product>(entity =>
         {
+            entity.HasIndex(e => e.CategoryId, "IX_Products_CategoryId");
+
+            entity.HasIndex(e => e.QuantityAttributeId, "IX_Products_QuantityAttributeId");
+
             entity.Property(e => e.CreateDate).HasPrecision(0);
             entity.Property(e => e.ProductName)
                 .IsRequired()
@@ -179,79 +143,99 @@ public partial class RedbookInventoryContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Products_Categories");
 
-            //entity.HasOne(d => d.CreateByNavigation).WithMany(p => p.ProductCreateByNavigations)
-            //    .HasForeignKey(d => d.CreateBy)
-            //    .OnDelete(DeleteBehavior.ClientSetNull)
-            //    .HasConstraintName("FK_Products_UserCache1");
-
-            //entity.HasOne(d => d.Organization).WithMany(p => p.Products)
-            //    .HasForeignKey(d => d.OrganizationId)
-            //    .OnDelete(DeleteBehavior.ClientSetNull)
-            //    .HasConstraintName("FK_Products_OrganizationCache");
-
             entity.HasOne(d => d.QuantityAttribute).WithMany(p => p.Products)
                 .HasForeignKey(d => d.QuantityAttributeId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Products_CommonAttribute");
-
-            //entity.HasOne(d => d.UpdateByNavigation).WithMany(p => p.ProductUpdateByNavigations)
-            //    .HasForeignKey(d => d.UpdateBy)
-            //    .HasConstraintName("FK_Products_UserCache");
         });
 
         modelBuilder.Entity<Purchase>(entity =>
         {
+            entity.HasKey(e => e.PurchaseId).HasName("PK_PurchaseDetails");
+
             entity.ToTable("Purchase");
 
-            entity.Property(e => e.ChalanNumber)
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.CheckNumber)
-                .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.PurchaseDate).HasPrecision(0);
-            entity.Property(e => e.TotalPurchasePrice).HasColumnType("decimal(18, 0)");
-
-            entity.HasOne(d => d.Account).WithMany(p => p.Purchases)
-                .HasForeignKey(d => d.AccountId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_Purchase_BankAccounts");
-        });
-
-        modelBuilder.Entity<PurchaseDetail>(entity =>
-        {
-            entity.HasKey(e => e.PurchaseDetailsId);
+            entity.HasIndex(e => e.ProductId, "IX_PurchaseDetails_ProductId");
 
             entity.Property(e => e.Quantity).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 0)");
 
-            entity.HasOne(d => d.Product).WithMany(p => p.PurchaseDetails)
+            entity.HasOne(d => d.Invoice).WithMany(p => p.Purchases)
+                .HasForeignKey(d => d.InvoiceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Purchase_PurchaseInvoice");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.Purchases)
                 .HasForeignKey(d => d.ProductId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PurchaseDetails_Products");
-
-            entity.HasOne(d => d.Purchase).WithMany(p => p.PurchaseDetails)
-                .HasForeignKey(d => d.PurchaseId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_PurchaseDetails_Purchase");
         });
 
-        modelBuilder.Entity<PurchasePayment>(entity =>
+        modelBuilder.Entity<PurchaseInvoice>(entity =>
         {
+            entity.HasKey(e => e.InvoiceId).HasName("PK_Purchase");
+
+            entity.ToTable("PurchaseInvoice");
+
+            entity.Property(e => e.ChalanNumber)
+                .IsRequired()
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CheckNumber)
+                .IsRequired()
+                .HasMaxLength(50);
+            entity.Property(e => e.CreateDate).HasPrecision(0);
+            entity.Property(e => e.PurchaseDate).HasPrecision(0);
+            entity.Property(e => e.TotalPurchasePrice).HasColumnType("decimal(18, 0)");
+        });
+
+        modelBuilder.Entity<PurchasePaymentRecord>(entity =>
+        {
+            entity.HasKey(e => e.PurchasePaymentId).HasName("PK_PurchasePayments");
+
+            entity.HasIndex(e => e.InvoiceId, "IX_PurchasePayments_PurchaseId");
+
             entity.Property(e => e.PurchasePaymentId).ValueGeneratedNever();
             entity.Property(e => e.PaymentAmount).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.PaymentDate).HasPrecision(0);
 
-            entity.HasOne(d => d.Purchase).WithMany(p => p.PurchasePayments)
-                .HasForeignKey(d => d.PurchaseId)
+            entity.HasOne(d => d.Invoice).WithMany(p => p.PurchasePaymentRecords)
+                .HasForeignKey(d => d.InvoiceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PurchasePayments_Purchase");
         });
 
         modelBuilder.Entity<Sale>(entity =>
         {
-            entity.HasKey(e => e.SalesId);
+            entity.HasKey(e => e.SalesId).HasName("PK_SalesDetails");
+
+            entity.HasIndex(e => e.ProductId, "IX_SalesDetails_ProductId");
+
+            entity.HasIndex(e => e.InvoiceId, "IX_SalesDetails_SalesId");
+
+            entity.Property(e => e.ChalanNo)
+                .IsRequired()
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.CreateDate).HasPrecision(0);
+            entity.Property(e => e.Quantity).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 0)");
+
+            entity.HasOne(d => d.Invoice).WithMany(p => p.Sales)
+                .HasForeignKey(d => d.InvoiceId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SalesDetails_Sales");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.Sales)
+                .HasForeignKey(d => d.ProductId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SalesDetails_Products");
+        });
+
+        modelBuilder.Entity<SalesInvoice>(entity =>
+        {
+            entity.HasKey(e => e.InvoiceId).HasName("PK_Sales");
+
+            entity.ToTable("SalesInvoice");
 
             entity.Property(e => e.SalesDate).HasPrecision(0);
             entity.Property(e => e.SoldBy)
@@ -261,54 +245,20 @@ public partial class RedbookInventoryContext : DbContext
             entity.Property(e => e.TotalAmount).HasColumnType("decimal(18, 0)");
         });
 
-        modelBuilder.Entity<SalesDetail>(entity =>
-        {
-            entity.HasKey(e => e.SalesDetailsId);
-
-            entity.Property(e => e.ChalanNo)
-                .IsRequired()
-                .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.Quantity).HasColumnType("decimal(18, 0)");
-            entity.Property(e => e.UnitPrice).HasColumnType("decimal(18, 0)");
-
-            entity.HasOne(d => d.Product).WithMany(p => p.SalesDetails)
-                .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_SalesDetails_Products");
-
-            entity.HasOne(d => d.Sales).WithMany(p => p.SalesDetails)
-                .HasForeignKey(d => d.SalesId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_SalesDetails_Sales");
-
-            //entity.HasOne(d => d.SoldByNavigation).WithMany(p => p.SalesDetails)
-            //    .HasForeignKey(d => d.SoldBy)
-            //    .OnDelete(DeleteBehavior.ClientSetNull)
-            //    .HasConstraintName("FK_SalesDetails_UserCache");
-        });
-
         modelBuilder.Entity<SalesPaymentRecord>(entity =>
         {
             entity.HasKey(e => e.SalesPaymentId);
 
+            entity.HasIndex(e => e.InvoiceId, "IX_SalesPaymentRecords_SalesId");
+
             entity.Property(e => e.PaymentAmount).HasColumnType("decimal(18, 0)");
             entity.Property(e => e.PaymentDate).HasPrecision(0);
 
-            entity.HasOne(d => d.Sales).WithMany(p => p.SalesPaymentRecords)
-                .HasForeignKey(d => d.SalesId)
+            entity.HasOne(d => d.Invoice).WithMany(p => p.SalesPaymentRecords)
+                .HasForeignKey(d => d.InvoiceId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SalesPaymentRecords_Sales");
         });
-
-        //modelBuilder.Entity<UserCache>(entity =>
-        //{
-        //    entity.HasKey(e => e.UserId);
-
-        //    entity.ToTable("UserCache");
-
-        //    entity.Property(e => e.UserId).ValueGeneratedNever();
-        //});
 
         OnModelCreatingPartial(modelBuilder);
     }

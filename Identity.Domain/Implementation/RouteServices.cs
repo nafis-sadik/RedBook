@@ -1,5 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using Identity.Data;
+﻿using Identity.Data.CommonConstant;
 using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
@@ -13,7 +12,6 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System.Collections.Generic;
 
 namespace Identity.Domain.Implementation
 {
@@ -22,7 +20,7 @@ namespace Identity.Domain.Implementation
         private IRepositoryBase<Role> _roleRepo;
         private IRepositoryBase<Route> _routeRepo;
         private IRepositoryBase<Application> _appRepo;
-        private IRepositoryBase<UserRole> _userRoleMappingRepo;
+        private IRepositoryBase<UserRoleMapping> _userRoleMappingRepo;
         private IRepositoryBase<RoleRouteMapping> _roleMappingRepo;
         private IRepositoryBase<RouteType> _routeTypeRepo; 
 
@@ -37,32 +35,19 @@ namespace Identity.Domain.Implementation
         
         public async Task<RouteModel> AddRoute(RouteModel routeModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _routeRepo = transaction.GetRepository<Route>();
-                _roleRepo = transaction.GetRepository<Role>();
-                _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
+                _routeRepo = factory.GetRepository<Route>();
+                _roleRepo = factory.GetRepository<Role>();
+                _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
+                _roleMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 // Add the route
                 Route routeEntity = await _routeRepo.InsertAsync(Mapper.Map<Route>(routeModel));
 
-                await transaction.SaveChangesAsync();
-
-                // Allow system admin users to access the route
-                Role[]? sysAdminRoles = await _roleRepo.UnTrackableQuery().Where(x => x.IsSystemAdmin == true).ToArrayAsync();
-
-                foreach(var role in sysAdminRoles)
-                {
-                    await _roleMappingRepo.InsertAsync(new RoleRouteMapping
-                    {
-                        RoleId = role.RoleId,
-                        RouteId = routeEntity.RouteId,
-                    });
-                }
-
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
 
                 return Mapper.Map<RouteModel>(routeEntity);
             }
@@ -70,15 +55,16 @@ namespace Identity.Domain.Implementation
 
         public async Task DeleteRoute(int routeId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _routeRepo = transaction.GetRepository<Route>();
+                _roleRepo = factory.GetRepository<Role>();
+                _routeRepo = factory.GetRepository<Route>();
+                _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 await _routeRepo.DeleteAsync(routeId);
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
             }
         }
 
@@ -87,22 +73,22 @@ namespace Identity.Domain.Implementation
         /// </summary>
         public async Task<IEnumerable<RouteModel>> GetAllAppRoutes(int appId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _routeRepo = transaction.GetRepository<Route>();
-                _userRoleMappingRepo = transaction.GetRepository<UserRole>();
+                _roleRepo = factory.GetRepository<Role>();
+                _routeRepo = factory.GetRepository<Route>();
+                _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
 
                 var query = _routeRepo.UnTrackableQuery();
 
-                if (await this.HasSystemAdminPriviledge(_roleRepo)) {
+                if (await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) {
                     query = query.Where(x => x.ApplicationId == appId);
                 } else {
                     if (_userRoleMappingRepo.TrackableQuery().Where(x => x.UserId == User.UserId && x.Role.IsAdmin).Any())
                     {
                         query = query.Where(x => x.ApplicationId == appId && x.RouteId != RouteTypeConsts.SysAdminRoute.RouteTypeId && x.RouteId != RouteTypeConsts.RetailerRoute.RouteTypeId);
                     }
-                    else if (await this.HasRetailerPriviledge(_roleRepo))
+                    else if (await this.HasRetailerPriviledge(_userRoleMappingRepo))
                     {
                         query = query.Where(x => x.ApplicationId == appId && x.RouteId == RouteTypeConsts.RetailerRoute.RouteTypeId);
                     }
@@ -125,11 +111,11 @@ namespace Identity.Domain.Implementation
 
         public async Task<IEnumerable<RouteModel>> GetAppMenuRoutes(int appId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _routeRepo = transaction.GetRepository<Route>();
-                _appRepo = transaction.GetRepository<Application>();
+                _roleRepo = factory.GetRepository<Role>();
+                _routeRepo = factory.GetRepository<Route>();
+                _appRepo = factory.GetRepository<Application>();
 
                 // Get all roles assigned to requester user
                 List<Role> requesterRoles = new List<Role>();
@@ -157,9 +143,9 @@ namespace Identity.Domain.Implementation
                         break;
                     } else if (requesterRole.IsAdmin) {
                         query = query.Where(x => x.ApplicationId == requestSourceApp.ApplicationId
-                            && (x.RouteTypesId == RouteTypeConsts.AdminRoute.RouteTypeId || x.RouteTypesId == RouteTypeConsts.GenericRoute.RouteTypeId)).Distinct();
+                            && (x.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId || x.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId)).Distinct();
                     } else {
-                        query = query.Where(x => x.ApplicationId == requestSourceApp.ApplicationId && x.RouteTypesId == RouteTypeConsts.GenericRoute.RouteTypeId).Distinct();
+                        query = query.Where(x => x.ApplicationId == requestSourceApp.ApplicationId && x.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId).Distinct();
                     }
                 }
 
@@ -176,12 +162,12 @@ namespace Identity.Domain.Implementation
 
         public async Task<PagedModel<RouteModel>> GetPagedRoutes(PagedModel<RouteModel> pagedRoutes)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _routeRepo = transaction.GetRepository<Route>();
+                _roleRepo = factory.GetRepository<Role>();
+                var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (! await this.HasSystemAdminPriviledge(_roleRepo))
+                if (! await this.HasSystemAdminPriviledge(_userRoleRepo))
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 if (string.IsNullOrEmpty(pagedRoutes.SearchString)) {
@@ -243,9 +229,9 @@ namespace Identity.Domain.Implementation
 
         public async Task<RouteModel?> GetRoute(int routeId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _routeRepo = transaction.GetRepository<Route>();
+                _routeRepo = factory.GetRepository<Route>();
                 Route? routeEntity = await _routeRepo.GetAsync(routeId);
 
                 if (routeEntity != null)
@@ -257,12 +243,13 @@ namespace Identity.Domain.Implementation
 
         public async Task<IEnumerable<RouteModel>> GetRoutesByRoleId(int roleId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleMappingRepo = transaction.GetRepository<RoleRouteMapping>();
+                _roleMappingRepo = factory.GetRepository<RoleRouteMapping>();
+                _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
 
                 var data = await _roleMappingRepo.UnTrackableQuery()
-                    .Where(x => x.RoleId == roleId && (x.Route.RouteTypesId == RouteTypeConsts.GenericRoute.RouteTypeId || x.Route.RouteTypesId == RouteTypeConsts.AdminRoute.RouteTypeId))
+                    .Where(x => x.RoleId == roleId && (x.Route.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId || x.Route.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId))
                     .Select(x => new RouteModel
                     {
                         RouteId = x.Route.RouteId,
@@ -275,12 +262,13 @@ namespace Identity.Domain.Implementation
 
         public async Task<RouteModel> UpdateRoute(RouteModel routeModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _routeRepo = transaction.GetRepository<Route>();
-                _roleRepo = transaction.GetRepository<Role>();
+                _routeRepo = factory.GetRepository<Route>();
+                _roleRepo = factory.GetRepository<Role>();
+                _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Route? routeEntity = await _routeRepo.GetAsync(routeModel.RouteId);
                 if (routeEntity == null)
@@ -296,7 +284,7 @@ namespace Identity.Domain.Implementation
 
                 routeEntity = _routeRepo.Update(routeEntity);
 
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
                 return Mapper.Map<RouteModel>(routeEntity);
             }
         }

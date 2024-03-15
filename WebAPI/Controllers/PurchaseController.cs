@@ -26,6 +26,6 @@ namespace Inventory.WebAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> PurchaseProduct([FromQuery] PagedModel<PurchaseModel> pagedModel) => Ok(await _productPurchaseInvoice.GetPagedInvoiceAsync(pagedModel));
+        public async Task<IActionResult> PurchaseProduct([FromQuery] PagedPurchaseInvoiceModel pagedModel) => Ok(await _productPurchaseInvoice.GetPagedInvoiceAsync(pagedModel));
     }
 }

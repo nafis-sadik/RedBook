@@ -2,7 +2,7 @@
 
 namespace RedBook.Core.UnitOfWork
 {
-    public interface IUnitOfWork: IDisposable
+    public interface IRepositoryFactory: IDisposable
     {
 
         /// <summary>
@@ -24,5 +24,10 @@ namespace RedBook.Core.UnitOfWork
         /// Removes all entities from tracking
         /// </summary>
         void DetachAllEntities();
+
+        /// <summary>
+        /// Rollbacks to last commit
+        /// </summary>
+        Task RollbackAsync();
     }
 }

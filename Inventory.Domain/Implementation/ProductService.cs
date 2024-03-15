@@ -14,6 +14,7 @@ namespace Inventory.Domain.Implementation
 {
     public class ProductService : ServiceBase, IProductService
     {
+        private IRepositoryFactory _repositoryFactory;
         private IRepositoryBase<Product> _productRepo;
 
         public ProductService(
@@ -25,16 +26,16 @@ namespace Inventory.Domain.Implementation
 
         public async Task<ProductModel> AddNewProductAsync(ProductModel productModel)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _productRepo = unitOfWork.GetRepository<Product>();
+                _productRepo = _repositoryFactory.GetRepository<Product>();
 
                 Product product = Mapper.Map<Product>(productModel);
                 product.CreateBy = User.UserId;
                 product.CreateDate = DateTime.UtcNow;
                 product = await _productRepo.InsertAsync(product);
 
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
 
                 return Mapper.Map<ProductModel>(product);
             }
@@ -42,21 +43,21 @@ namespace Inventory.Domain.Implementation
 
         public async Task DeleteProductAsync(int categoryId)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _productRepo = unitOfWork.GetRepository<Product>();
+                _productRepo = _repositoryFactory.GetRepository<Product>();
 
                 await _productRepo.DeleteAsync(categoryId);
 
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
             }
         }
 
         public async Task<PagedModel<ProductModel>> GetProductsUnderOrganizationAsync(PagedModel<ProductModel> pagedModel, int orgId)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _productRepo = unitOfWork.GetRepository<Product>();
+                _productRepo = _repositoryFactory.GetRepository<Product>();
 
                 var query = _productRepo.UnTrackableQuery();
 
@@ -96,9 +97,9 @@ namespace Inventory.Domain.Implementation
 
         public async Task<ProductModel> UpdateProductAsync(ProductModel productModel)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _productRepo = unitOfWork.GetRepository<Product>();
+                _productRepo = _repositoryFactory.GetRepository<Product>();
 
                 Product? product = await _productRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ProductId == productModel.ProductId);
 
@@ -111,7 +112,7 @@ namespace Inventory.Domain.Implementation
 
                 _productRepo.Update(product);
 
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
 
                 return Mapper.Map<ProductModel>(productModel);
             }

@@ -18,6 +18,7 @@ namespace Inventory.Domain.Implementation
 {
     public class SubcategoryService : ServiceBase, ISubcategoryService
     {
+        private IRepositoryFactory _repositoryFactory;
         private IRepositoryBase<Category> _categoryRepo;
         public SubcategoryService(
             ILogger<SubcategoryService> logger,
@@ -28,16 +29,16 @@ namespace Inventory.Domain.Implementation
 
         public async Task<CategoryModel> AddSubcategoryAsync(CategoryModel categoryModel)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _categoryRepo = unitOfWork.GetRepository<Category>();
+                _categoryRepo = _repositoryFactory.GetRepository<Category>();
                 Category category = Mapper.Map<Category>(categoryModel);
                 category.CreateDate = DateTime.Now;
                 category.CreatedBy = User.UserId;
 
                 category = await _categoryRepo.InsertAsync(category);
 
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
 
                 CategoryModel data = Mapper.Map<CategoryModel>(category);
 
@@ -47,9 +48,9 @@ namespace Inventory.Domain.Implementation
 
         public async Task DeleteSubcategoryAsync(int categoryId)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _categoryRepo = unitOfWork.GetRepository<Category>();
+                _categoryRepo = _repositoryFactory.GetRepository<Category>();
 
                 // Remove corresponding children first
                 await _categoryRepo.DeleteAsync(x => x.ParentCategoryId == categoryId);
@@ -57,15 +58,15 @@ namespace Inventory.Domain.Implementation
                 // Then remove the target item
                 await _categoryRepo.DeleteAsync(categoryId);
 
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
             }
         }
 
         public async Task<IEnumerable<CategoryModel>> GetSubcategoriesUnderCategory(int categoryId)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _categoryRepo = unitOfWork.GetRepository<Category>();
+                _categoryRepo = _repositoryFactory.GetRepository<Category>();
 
                 var data = await _categoryRepo
                     .UnTrackableQuery()
@@ -84,9 +85,9 @@ namespace Inventory.Domain.Implementation
 
         public async Task<CategoryModel> UpdateSubcategoryAsync(CategoryModel categoryModel)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _categoryRepo = unitOfWork.GetRepository<Category>();
+                _categoryRepo = _repositoryFactory.GetRepository<Category>();
 
                 Category? category = await _categoryRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.CategoryId == categoryModel.CategoryId);
                 if (category == null) throw new ArgumentException("Resource not found");
@@ -98,7 +99,7 @@ namespace Inventory.Domain.Implementation
 
                 _categoryRepo.Update(category);
 
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
 
                 return Mapper.Map<CategoryModel>(categoryModel);
             }

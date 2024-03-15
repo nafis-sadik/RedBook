@@ -16,7 +16,7 @@ namespace Identity.Domain.Implementation
     public class RoleService : ServiceBase, IRoleService
     {
         private IRepositoryBase<Role> _roleRepo;
-        private IRepositoryBase<UserRole> _userRoleRepo;
+        private IRepositoryBase<UserRoleMapping> _userRoleRepo;
         private IRepositoryBase<RoleRouteMapping> _roleRouteMappingRepo;
 
         public RoleService(
@@ -32,11 +32,12 @@ namespace Identity.Domain.Implementation
         {
             if (role.OrganizationId <= 0) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
 
-            using(var transaction = UnitOfWorkManager.Begin())
+            using(var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
+                _roleRepo = factory.GetRepository<Role>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasAdminPriviledge(_roleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Role roleEntity = await _roleRepo.InsertAsync(new Role
                 {
@@ -45,7 +46,7 @@ namespace Identity.Domain.Implementation
                     OrganizationId = role.OrganizationId
                 });
 
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
 
                 return Mapper.Map<RoleModel>(roleEntity);
             }
@@ -54,29 +55,30 @@ namespace Identity.Domain.Implementation
         // Org admin only
         public async Task DeleteRoleAsync(int roleId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _userRoleRepo = transaction.GetRepository<UserRole>();
+                _roleRepo = factory.GetRepository<Role>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                Role? requestingUserRoleEntity = await _roleRepo.GetAsync(roleId);
-                if (requestingUserRoleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
+                Role? role = await _roleRepo.GetAsync(roleId);
+                if (role == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
                 
-                if (!await this.HasAdminPriviledge(_roleRepo, requestingUserRoleEntity.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
                 
-                _roleRepo.Delete(requestingUserRoleEntity);
-                await transaction.SaveChangesAsync();
+                _roleRepo.Delete(role);
+                await factory.SaveChangesAsync();
             }
         }
 
         // Org admin only
         public async Task<IEnumerable<RoleModel>> GetOrganizationRoles(int orgId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
+                _roleRepo = factory.GetRepository<Role>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasAdminPriviledge(_roleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 return await _roleRepo.UnTrackableQuery()
                             .Where(x => x.OrganizationId == orgId)
@@ -91,11 +93,11 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task AllowRouteForRole(int roleId, int routeId)
+        public async Task InvertRouteRoleMapping(int roleId, int routeId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRouteMappingRepo = transaction.GetRepository<RoleRouteMapping>();
+                _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
                 RoleRouteMapping? existingPermission = await _roleRouteMappingRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RouteId == routeId && x.RoleId == roleId);
                 
@@ -109,35 +111,36 @@ namespace Identity.Domain.Implementation
                     });
                 }
 
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
             }
         }
 
         // Org admin only
         public async Task<RoleModel> UpdateRoleAsync(RoleModel role)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
+                _roleRepo = factory.GetRepository<Role>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasAdminPriviledge(_roleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Role? roleEntity = await _roleRepo.GetAsync(role.RoleId);
                 if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
                 Mapper.Map(role, roleEntity);
                 roleEntity = _roleRepo.Update(roleEntity);
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
 
                 return Mapper.Map<RoleModel>(roleEntity);
             }
         }
 
-        public async Task<int[]?> GetOrganizationsAllowedToUserByRoute(string userId, int routeId)
+        public async Task<int[]?> GetOrganizationsAllowedToUserByRoute(int userId, int routeId)
         {
-            using(var unitOfWord = UnitOfWorkManager.Begin())
+            using(var unitOfWord = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _userRepo = unitOfWord.GetRepository<User>();
-                _userRoleRepo = unitOfWord.GetRepository<UserRole>();
+                _userRoleRepo = unitOfWord.GetRepository<UserRoleMapping>();
                 _roleRouteMappingRepo = unitOfWord.GetRepository<RoleRouteMapping>();
 
                 User? usr = await _userRepo.GetAsync(userId);

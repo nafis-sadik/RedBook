@@ -24,7 +24,7 @@ namespace RedBook.Core
             });
 
             // Unit Of Work
-            services.AddScoped<IUnitOfWork, EfUnitOfWork>();
+            services.AddScoped<IRepositoryFactory, EFRepositoryFactory>();
             services.AddScoped<IUnitOfWorkManager, EFUnitOfWorkManager>();
 
             // Claims

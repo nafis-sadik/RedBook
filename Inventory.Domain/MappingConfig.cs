@@ -11,11 +11,10 @@ namespace Inventory.Domain
             CreateMap<Purchase, PurchaseModel>().ReverseMap();
 
             CreateMap<Category, CategoryModel>()
-                .ForMember(dest => dest.BusinessId, opt => opt.MapFrom(opt => opt.OrganizationId))
+                .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.OrganizationId))
                 .ReverseMap()
-                .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.BusinessId))
+                .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.OrganizationId))
                 .ForMember(dest => dest.Products, opt => opt.Ignore())
-                .ForMember(dest => dest.SubCategories, opt => opt.Ignore())
                 .ForMember(dest => dest.ParentCategory, opt => opt.Ignore());
 
             CreateMap<ProductModel, Product>()
@@ -27,8 +26,6 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.SubcategoryId, opt => opt.MapFrom(opt => opt.CategoryId))
                 .ForMember(dest => dest.PurchasePrice, opt => opt.Ignore())
                 .ForMember(dest => dest.RetailPrice, opt => opt.Ignore());
-
-            CreateMap<Data.Entities.Inventory, InventoryModel>();
 
             CreateMap<CommonAttribute, CommonAttributeModel>()
                 .ReverseMap()

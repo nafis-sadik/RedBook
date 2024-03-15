@@ -1,4 +1,5 @@
-﻿using Identity.Data.Entities;
+﻿using Identity.Data.CommonConstant;
+using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,6 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System.Linq;
 
 namespace Identity.Domain.Implementation
 {
@@ -19,7 +19,7 @@ namespace Identity.Domain.Implementation
         private IRepositoryBase<Role> _roleRepo;
         private IRepositoryBase<User> _userRepo;
         private IRepositoryBase<Organization> _orgRepo;
-        private IRepositoryBase<UserRole> _userRoleRepo;
+        private IRepositoryBase<UserRoleMapping> _userRoleRepo;
         private IRepositoryBase<RoleRouteMapping> _roleRouteMappingRepo;
 
         public OrganizationService(
@@ -32,104 +32,55 @@ namespace Identity.Domain.Implementation
 
         public async Task<OrganizationModel> AddOrganizationAsync(OrganizationModel organizationModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _orgRepo = transaction.GetRepository<Organization>();
-                _userRoleRepo = transaction.GetRepository<UserRole>();
+                _roleRepo = factory.GetRepository<Role>();
+                _orgRepo = factory.GetRepository<Organization>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 // Creating the new organization
                 Organization orgEntity = Mapper.Map<Organization>(organizationModel);
 
-                orgEntity.OrganizationId = 0;
-                orgEntity.CreateDate = DateTime.UtcNow;
                 orgEntity.CreatedBy = User.UserId;
+                orgEntity.CreateDate = DateTime.UtcNow;
                 orgEntity = await _orgRepo.InsertAsync(orgEntity);
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
 
                 // Creating admin role for the organization
-                Role? adminRoleForNewOrg = null;
-                if (orgEntity != null)
+                Role? adminRoleForNewOrg = await _roleRepo.InsertAsync(new Role
                 {
-                    adminRoleForNewOrg = await _roleRepo.InsertAsync(new Role
-                    {
-                        IsAdmin = true,
-                        IsRetailer = false,
-                        RoleName = "Admin",
-                        IsSystemAdmin = false,
-                        OrganizationId = orgEntity.OrganizationId,
-                    });
+                    IsAdmin = RoleConstants.OwnerAdmin.IsAdmin,
+                    IsRetailer = RoleConstants.OwnerAdmin.IsRetailer,
+                    IsOwner = RoleConstants.OwnerAdmin.IsOwner,
+                    IsSystemAdmin = RoleConstants.OwnerAdmin.IsSystemAdmin,
+                    RoleName = RoleConstants.OwnerAdmin.RoleName,
+                    OrganizationId = orgEntity.OrganizationId,
+                });
+                await factory.SaveChangesAsync();
 
-                    await transaction.SaveChangesAsync();
-                }
-                else
-                    throw new ArgumentException("Failed to add new organization, internal error occured");
-
-                // If the user is not retail user, the org is being created from settings page by an admin user.
-                // Thus, the user registering this organization shall be considered the admin users of the new organization
-                if (!await this.HasRetailerPriviledge(_roleRepo)) {
-                    await _userRoleRepo.InsertAsync(new UserRole
-                    {
-                        RoleId = adminRoleForNewOrg.RoleId,
-                        UserId = User.UserId,
-                    });
-
-                    await transaction.SaveChangesAsync();
-                }
+                // User role mapping, onboarding api shall take care of the retail user scinerio
+                await _userRoleRepo.InsertAsync(new UserRoleMapping
+                {
+                    RoleId = adminRoleForNewOrg.RoleId,
+                    UserId = User.UserId,
+                });
+                await factory.SaveChangesAsync();
 
                 return Mapper.Map<OrganizationModel>(orgEntity);
             }
         }
 
-        public async Task<UserModel> AddUserToBusiness(UserModel userModel)
-        {
-            using(var transaction = UnitOfWorkManager.Begin())
-            {
-                _userRepo = transaction.GetRepository<User>();
-                _userRoleRepo = transaction.GetRepository<UserRole>();
-
-                User? userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Email == userModel.Email);
-                if(userEntity == null)
-                {
-                    userEntity = await _userRepo.InsertAsync(new User {
-                        UserId = Guid.NewGuid().ToString(),
-                        FirstName = userModel.FirstName,
-                        LastName = userModel.LastName,
-                        Email = userModel.Email,
-                        UserName = userModel.UserName,
-                        Status = CommonConstants.StatusTypes.Active.ToString(),
-                        Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword)
-                    });
-
-                    await transaction.SaveChangesAsync();
-                }
-
-                foreach(RoleModel role in userModel.Roles)
-                {
-                    await _userRoleRepo.InsertAsync(new UserRole
-                    {
-                        RoleId = role.RoleId,
-                        UserId = userEntity.UserId,
-                    });                
-                }
-
-                await transaction.SaveChangesAsync();
-
-                return Mapper.Map<UserModel>(userEntity);
-            }
-        }
-
         public async Task DeleteOrganizationAsync(int OrganizationId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _orgRepo = transaction.GetRepository<Organization>();
-                _userRoleRepo = transaction.GetRepository<UserRole>();
-                _roleRouteMappingRepo = transaction.GetRepository<RoleRouteMapping>();
+                _roleRepo = factory.GetRepository<Role>();
+                _orgRepo = factory.GetRepository<Organization>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
                 // Admin priviledge check
-                if (!await this.HasAdminPriviledge(_roleRepo, OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasOwnerAdminPriviledge(_userRoleRepo, OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 // Delete child data records first
                 int[]? orgRolesIds = await _roleRepo.UnTrackableQuery().Where(x => x.OrganizationId == OrganizationId).Select(x => x.RoleId).ToArrayAsync();
@@ -141,7 +92,7 @@ namespace Identity.Domain.Implementation
                     {
                         await _userRoleRepo.DeleteAsync(mappingId);
                     }
-                    await transaction.SaveChangesAsync();
+                    await factory.SaveChangesAsync();
 
                     // Delete Role Route Mapping Records
                     int[]? roleRouteMappingIds = await _roleRouteMappingRepo.UnTrackableQuery().Where(x => x.RoleId == orgRoleId).Select(x => x.MappingId).ToArrayAsync();
@@ -149,23 +100,23 @@ namespace Identity.Domain.Implementation
                     {
                         await _roleRouteMappingRepo.DeleteAsync(mappingId);
                     }
-                    await transaction.SaveChangesAsync();
+                    await factory.SaveChangesAsync();
 
                     await _roleRepo.DeleteAsync(orgRoleId);
-                    await transaction.SaveChangesAsync();
+                    await factory.SaveChangesAsync();
                 }
 
                 await _orgRepo.DeleteAsync(OrganizationId);
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
             }
         }
 
         public async Task<OrganizationModel> GetOrganizationAsync(int OrganizationId)
         {
             Organization? orgEntity;
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _orgRepo = transaction.GetRepository<Organization>();
+                _orgRepo = factory.GetRepository<Organization>();
                 orgEntity = await _orgRepo.GetAsync(OrganizationId);
             }
             if (orgEntity == null) throw new ArgumentException($"Organization with identifier {OrganizationId} was not found");
@@ -176,11 +127,11 @@ namespace Identity.Domain.Implementation
         {
             List<OrganizationModel> organizationModels = new List<OrganizationModel>();
 
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRoleRepo = transaction.GetRepository<UserRole>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                return await _userRoleRepo.UnTrackableQuery().Where(x => x.Role.IsAdmin && x.UserId == User.UserId)
+                return await _userRoleRepo.UnTrackableQuery().Where(x => (x.Role.IsAdmin || x.Role.IsOwner) && x.UserId == User.UserId)
                     .Select(x => new OrganizationModel {
                         OrganizationId = x.Role.Organization.OrganizationId,
                         OrganizationName = x.Role.Organization.OrganizationName
@@ -190,9 +141,9 @@ namespace Identity.Domain.Implementation
 
         public async Task<PagedModel<OrganizationModel>> GetPagedOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _orgRepo = transaction.GetRepository<Organization>();
+                _orgRepo = factory.GetRepository<Organization>();
 
                 pagedOrganizationModel.SourceData = await _orgRepo.UnTrackableQuery()
                     .Where(x => x.OrganizationId > 0)
@@ -209,12 +160,12 @@ namespace Identity.Domain.Implementation
 
         public async Task<OrganizationModel> UpdateOrganizationAsync(OrganizationModel organizationModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = transaction.GetRepository<Role>();
-                _orgRepo = transaction.GetRepository<Organization>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                _orgRepo = factory.GetRepository<Organization>();
 
-                if (!await this.HasAdminPriviledge(_roleRepo, organizationModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasAdminPriviledge(_userRoleRepo, organizationModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Organization? orgEntity = await _orgRepo.GetAsync(organizationModel.OrganizationId);
                 if (orgEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
@@ -222,76 +173,9 @@ namespace Identity.Domain.Implementation
                 orgEntity = Mapper.Map(organizationModel, orgEntity);
 
                 orgEntity = _orgRepo.Update(orgEntity);
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
     
                 return Mapper.Map<OrganizationModel>(orgEntity);
-            }
-        }
-
-        public async Task<PagedModel<UserModel>> GetUserByOrganizationId(PagedModel<UserModel> pagedModel, int orgId)
-        {
-            using (var transaction = UnitOfWorkManager.Begin())
-            {
-                _roleRepo = transaction.GetRepository<Role>();
-                _userRoleRepo = transaction.GetRepository<UserRole>();
-
-                if (!await this.HasAdminPriviledge(_roleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-
-
-                int[] userRoleMappingIds = await _roleRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId).Select(x => x.RoleId).ToArrayAsync();
-
-                var query = _userRoleRepo.UnTrackableQuery()
-                    .Where(x => userRoleMappingIds.Contains(x.RoleId));
-
-                if (!string.IsNullOrEmpty(pagedModel.SearchString))
-                {
-                    query = query.Where(x =>
-                            userRoleMappingIds.Contains(x.RoleId) && (
-                                x.User.FirstName.ToLower().Contains(pagedModel.SearchString.ToLower())
-                                || x.User.LastName.ToLower().Contains(pagedModel.SearchString.ToLower())
-                                || x.User.UserName.ToLower().Contains(pagedModel.SearchString.ToLower())
-                                || x.Role.RoleName.ToLower().Contains(pagedModel.SearchString.ToLower()))
-                        );
-                }
-
-                pagedModel.SourceData = await query
-                    .Skip(pagedModel.Skip)
-                    .Take(pagedModel.PageLength)
-                    .Distinct()
-                    .Select(u => new UserModel
-                    {
-                        UserId = u.User.UserId,
-                        FirstName = u.User.FirstName,
-                        LastName = u.User.LastName,
-                        UserName = u.User.UserName,
-                        Email = u.User.Email,
-                        Roles = _userRoleRepo
-                                    .UnTrackableQuery()
-                                    .Where(x => x.UserId == u.UserId && x.Role.OrganizationId == orgId)
-                                    .Select(x => new RoleModel
-                                    {
-                                        RoleId = x.RoleId,
-                                        RoleName = x.Role.RoleName
-                                    })
-                                    .ToArray()
-                    })
-                    .ToListAsync();
-
-                pagedModel.TotalItems = await query.CountAsync();
-                pagedModel.SearchString = pagedModel.SearchString == null || pagedModel.SearchString == "null" ? "" : pagedModel.SearchString;
-                return pagedModel;
-            }
-        }
-
-        public async Task RemoveUserFromOrganization(string userId, int orgId)
-        {
-            using (var transaction = UnitOfWorkManager.Begin())
-            {
-                _userRoleRepo = transaction.GetRepository<UserRole>();
-
-                await _userRoleRepo.DeleteAsync(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin);
-
-                await transaction.SaveChangesAsync();
             }
         }
     }

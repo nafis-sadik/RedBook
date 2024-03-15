@@ -5,11 +5,11 @@ using RedBook.Core.UnitOfWork;
 
 namespace RedBook.Core.EntityFramework
 {
-    public class EfUnitOfWork : IUnitOfWork
+    public class EFRepositoryFactory : IRepositoryFactory
     {
         public readonly DbContext _dbContext;
 
-        public EfUnitOfWork(DbContext dbContext)
+        public EFRepositoryFactory(DbContext dbContext)
         {
             _dbContext = dbContext;
         }
@@ -25,9 +25,11 @@ namespace RedBook.Core.EntityFramework
                 entity.State = EntityState.Detached;
             }
         }
-        public void Dispose() => _dbContext.Dispose();
+
         public IRepositoryBase<TEntity> GetRepository<TEntity>() where TEntity : class => new RepositoryBase<TEntity>(_dbContext);
         public void SaveChanges() => _dbContext.SaveChanges();
         public async Task SaveChangesAsync() => await _dbContext.SaveChangesAsync();
+        public async Task RollbackAsync() => await _dbContext.Database.RollbackTransactionAsync();
+        public async void Dispose() { await _dbContext.DisposeAsync(); }
     }
 }

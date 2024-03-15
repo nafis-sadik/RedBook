@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace RedBook.Core.Repositories
 {
@@ -40,6 +41,31 @@ namespace RedBook.Core.Repositories
 
         // Update
         public virtual TEntity Update(TEntity entity) => _dbSet.Update(entity).Entity;
+        public void Patch(object pk, IDictionary<string, object> newEntries)
+        {
+            TEntity? entity = Activator.CreateInstance(typeof(TEntity)) as TEntity;
+            if(entity == null) throw new ArgumentNullException($"Unable to create entity of type {nameof(entity)}");
+
+            PropertyInfo? primaryKeyColumn = _dbContext.Model.FindEntityType(typeof(TEntity))?.FindPrimaryKey()?.Properties.Single().PropertyInfo;
+            if (primaryKeyColumn == null) throw new ArgumentException($"Unable to locate primary key for type {nameof(entity)}");
+
+            if (primaryKeyColumn.PropertyType == pk.GetType())
+                primaryKeyColumn.SetValue(entity, pk);
+            else
+                throw new ArgumentException($"Cannot set value of type {pk.GetType()} for the primary key {primaryKeyColumn.Name} of type {primaryKeyColumn.PropertyType}");
+            
+            foreach (KeyValuePair<string, object> property in newEntries)
+            {
+                PropertyEntry targetProperty = _dbContext.Entry(entity).Property(property.Key);
+                if (targetProperty.GetType() == property.Value.GetType())
+                {
+                    targetProperty.CurrentValue = property.Value;
+                    targetProperty.IsModified = true;
+                }
+                else
+                    throw new ArgumentException($"The type of the provided value does not match the type of the property. Property: {property.Key}, Provided Type: {property.Value.GetType()}, Expected Type: {targetProperty.CurrentValue?.GetType()}");
+            }
+        }
 
         // Delete
         public void Delete(TEntity entity) => _dbSet.Remove(entity);

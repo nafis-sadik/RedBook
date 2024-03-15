@@ -8,7 +8,7 @@
 
         public int? ParentCategoryId { get; set; }
 
-        public int BusinessId { get; set; }
+        public int OrganizationId { get; set; }
 
         public DateTime CreateDate { get; set; }
 

@@ -11,8 +11,5 @@ namespace Identity.Domain.Abstraction
         Task<PagedModel<OrganizationModel>> GetPagedOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel);
         Task<OrganizationModel> UpdateOrganizationAsync(OrganizationModel Organization);
         Task DeleteOrganizationAsync(int OrganizationId);
-        Task<UserModel> AddUserToBusiness(UserModel userModel);
-        Task<PagedModel<UserModel>> GetUserByOrganizationId(PagedModel<UserModel> pagedModel, int orgId);
-        Task RemoveUserFromOrganization(string userId, int orgId);
     }
 }

@@ -7,15 +7,21 @@ public partial class Sale
 {
     public int SalesId { get; set; }
 
-    public DateTime SalesDate { get; set; }
+    public int InvoiceId { get; set; }
 
-    public string SoldBy { get; set; }
+    public int ProductId { get; set; }
 
-    public decimal TotalAmount { get; set; }
+    public string ChalanNo { get; set; }
 
-    public int OrganizationId { get; set; }
+    public decimal Quantity { get; set; }
 
-    public virtual ICollection<SalesDetail> SalesDetails { get; set; } = new List<SalesDetail>();
+    public decimal UnitPrice { get; set; }
 
-    public virtual ICollection<SalesPaymentRecord> SalesPaymentRecords { get; set; } = new List<SalesPaymentRecord>();
+    public int CreateBy { get; set; }
+
+    public DateTime CreateDate { get; set; }
+
+    public virtual SalesInvoice Invoice { get; set; }
+
+    public virtual Product Product { get; set; }
 }

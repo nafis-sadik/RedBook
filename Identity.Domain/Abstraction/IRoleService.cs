@@ -10,10 +10,10 @@ namespace Identity.Domain.Abstraction
 
         Task<IEnumerable<RoleModel>> GetOrganizationRoles(int orgId);
 
-        Task<int[]?> GetOrganizationsAllowedToUserByRoute(string userId, int routeId);
+        Task<int[]?> GetOrganizationsAllowedToUserByRoute(int userId, int routeId);
 
         Task DeleteRoleAsync(int roleId);
 
-        Task AllowRouteForRole(int roleId, int routeId);
+        Task InvertRouteRoleMapping(int roleId, int routeId);
     }
 }

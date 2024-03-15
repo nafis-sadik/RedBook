@@ -11,13 +11,13 @@ namespace RedBook.Core.Models
             _contextReference = contextReference;
         }
 
-        public string UserId
+        public int UserId
         {
             get
             {
-                string? guid = _contextReference.Claims.FirstOrDefault(x => x.Type.Equals("UserId", StringComparison.InvariantCultureIgnoreCase))?.Value;
-                if (!string.IsNullOrWhiteSpace(guid))
-                    return guid;
+                string? _userId = _contextReference.Claims.FirstOrDefault(x => x.Type.Equals("UserId", StringComparison.InvariantCultureIgnoreCase))?.Value;
+                if (!string.IsNullOrWhiteSpace(_userId) && int.TryParse(_userId, out int userId))
+                    return userId;
                 else
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
             }

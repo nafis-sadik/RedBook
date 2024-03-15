@@ -13,6 +13,7 @@ namespace Inventory.Domain.Implementation
 {
     public class CategoryService : ServiceBase, ICategoryService
     {
+        private IRepositoryFactory _repositoryFactory;
         private IRepositoryBase<Category> _categoryRepo;
         public CategoryService(
             ILogger<CategoryService> logger,
@@ -23,19 +24,19 @@ namespace Inventory.Domain.Implementation
 
         public async Task<CategoryModel> AddCategoryAsync(CategoryModel categoryModel)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _categoryRepo = unitOfWork.GetRepository<Category>();
+                _categoryRepo = _repositoryFactory.GetRepository<Category>();
 
                 Category category = await _categoryRepo.InsertAsync(new Category
                 {
                     CatagoryName = categoryModel.CatagoryName,
-                    CreateDate = DateTime.Now,
                     CreatedBy = User.UserId,
-                    OrganizationId = categoryModel.BusinessId
+                    CreateDate = DateTime.Now,
+                    OrganizationId = categoryModel.OrganizationId
                 });
 
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
 
                 CategoryModel data = Mapper.Map<CategoryModel>(category);
 
@@ -45,19 +46,19 @@ namespace Inventory.Domain.Implementation
 
         public async Task DeleteCategoryAsync(int categoryId)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _categoryRepo = unitOfWork.GetRepository<Category>();
+                _categoryRepo = _repositoryFactory.GetRepository<Category>();
                 await _categoryRepo.DeleteAsync(categoryId);
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
             }
         }
 
         public async Task<IEnumerable<CategoryModel>> GetByOrganizationAsync(int orgId)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _categoryRepo = unitOfWork.GetRepository<Category>();
+                _categoryRepo = _repositoryFactory.GetRepository<Category>();
 
                 List<CategoryModel> data = await _categoryRepo.UnTrackableQuery()
                     .Where(x => x.OrganizationId == orgId && x.ParentCategory == null)
@@ -65,7 +66,7 @@ namespace Inventory.Domain.Implementation
                     {
                         CategoryId = x.CategoryId,
                         CatagoryName = x.CatagoryName,
-                        BusinessId = x.OrganizationId,
+                        OrganizationId = x.OrganizationId,
                     }).ToListAsync();
 
                 return data;
@@ -74,9 +75,9 @@ namespace Inventory.Domain.Implementation
 
         public async Task<CategoryModel> UpdateCategoryAsync(CategoryModel categoryModel)
         {
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _categoryRepo = unitOfWork.GetRepository<Category>();
+                _categoryRepo = _repositoryFactory.GetRepository<Category>();
 
                 Category? category = await _categoryRepo.GetAsync(categoryModel.CategoryId);
 
@@ -87,7 +88,7 @@ namespace Inventory.Domain.Implementation
                 category.UpdatedBy = User.UserId;
 
                 _categoryRepo.Update(category);
-                await unitOfWork.SaveChangesAsync();
+                await _repositoryFactory.SaveChangesAsync();
 
                 return Mapper.Map<CategoryModel>(categoryModel);
             }

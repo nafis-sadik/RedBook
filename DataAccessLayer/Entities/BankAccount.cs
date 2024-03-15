@@ -12,6 +12,4 @@ public partial class BankAccount
     public int BranchId { get; set; }
 
     public virtual BankBranch Branch { get; set; }
-
-    public virtual ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
 }

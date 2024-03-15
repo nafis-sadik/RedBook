@@ -2,6 +2,7 @@
 using Inventory.Data.Entities;
 using Inventory.Data.Models;
 using Inventory.Domain.Abstraction;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Domain;
@@ -14,7 +15,9 @@ namespace Inventory.Domain.Implementation
 {
     public class ProductPurchaseInvoice : ServiceBase, IProductPurchaseInvoice
     {
+        private IRepositoryFactory _repositoryFactory;
         private IRepositoryBase<Purchase> _purchaseRepo;
+        private IRepositoryBase<PurchaseInvoice> _purchaseInvoiceRepo;
         public ProductPurchaseInvoice(
             ILogger<ProductPurchaseInvoice> logger,
             IObjectMapper mapper,
@@ -23,18 +26,37 @@ namespace Inventory.Domain.Implementation
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork) { }
 
         public Task AddNewInvoiceAsync(PurchaseModel purchaseModel) => throw new NotImplementedException();
-
-        public async Task<PagedModel<PurchaseModel>> GetPagedInvoiceAsync(PagedModel<PurchaseModel> purchaseModel)
+        public async Task<PagedPurchaseInvoiceModel> GetPagedInvoiceAsync(PagedPurchaseInvoiceModel invoiceModel)
         {
-            int purchaseInvoiceRouteId = 3;
-            using(var unitOfWork = UnitOfWorkManager.Begin())
+            using(_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _purchaseRepo = unitOfWork.GetRepository<Purchase>();
+                _purchaseRepo = _repositoryFactory.GetRepository<Purchase>();
+                _purchaseInvoiceRepo = _repositoryFactory.GetRepository<PurchaseInvoice>();
 
-                OrganizationClient orgClient = new OrganizationClient(InternalAPICallService.JWTForInternal);
-                await orgClient.AllowedOrganizationsAsync($"GetAllowedOrganizationsToUserByRoute/{User.UserId}/{purchaseInvoiceRouteId}");
-                //_purchaseRepo.UnTrackableQuery().Where(x => x.)
-                throw new NotImplementedException();
+                var query = _purchaseInvoiceRepo.UnTrackableQuery().Where(i => i.OrganizationId == invoiceModel.OrganizationId);
+
+                if (!string.IsNullOrEmpty(invoiceModel.SearchString))
+                    query = query.Where(i => i.ChalanNumber == invoiceModel.ChalanNumber || i.CheckNumber == invoiceModel.CheckNumber);
+
+                invoiceModel.TotalItems = await query.CountAsync();
+
+                query = query.Skip(invoiceModel.Skip)
+                    .Take(invoiceModel.PageLength)
+                    .OrderByDescending(i => i.CreateDate);
+
+                invoiceModel.SourceData = await query.Select(i => new PurchaseInvoiceModel
+                {
+                    InvoiceId = i.InvoiceId,
+                    ChalanNumber = i.ChalanNumber,
+                    TotalPurchasePrice = i.TotalPurchasePrice,
+                    SearchString = invoiceModel.SearchString,
+                    PageLength = invoiceModel.PageLength,
+                    PageNumber = invoiceModel.PageNumber,
+                    TotalItems = i.Purchases.Count(),
+                    SourceData = i.Purchases.Select(p => new ProductModel { ProductId = p.ProductId, ProductName = p.Product.ProductName})
+                }).ToListAsync();
+
+                return invoiceModel;
             }
         }
 

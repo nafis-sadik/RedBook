@@ -1,28 +1,21 @@
-﻿namespace Inventory.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Inventory.Data.Entities;
 
 public partial class Purchase
 {
     public int PurchaseId { get; set; }
 
-    public DateTime PurchaseDate { get; set; }
+    public int ProductId { get; set; }
 
-    public int PurchasedBy { get; set; }
+    public decimal Quantity { get; set; }
 
-    public int AccountId { get; set; }
+    public decimal UnitPrice { get; set; }
 
-    public string CheckNumber { get; set; }
+    public int InvoiceId { get; set; }
 
-    public decimal TotalPurchasePrice { get; set; }
+    public virtual PurchaseInvoice Invoice { get; set; }
 
-    public int OrganizationId { get; set; }
-
-    public string ChalanNumber { get; set; }
-
-    public virtual BankAccount Account { get; set; }
-
-    public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
-
-    public virtual ICollection<PurchaseDetail> PurchaseDetails { get; set; } = new List<PurchaseDetail>();
-
-    public virtual ICollection<PurchasePayment> PurchasePayments { get; set; } = new List<PurchasePayment>();
+    public virtual Product Product { get; set; }
 }

@@ -54,7 +54,7 @@ namespace Identity.WebAPI.Controllers
         [Route("/AllowRouteForRole/{roleId}/{routeId}")]
         public async Task<IActionResult> MapRoleRoute(int roleId, int routeId)
         {
-            await _roleServices.AllowRouteForRole(roleId, routeId);
+            await _roleServices.InvertRouteRoleMapping(roleId, routeId);
             return Ok();
         }
 
@@ -63,6 +63,6 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         [HttpGet]
         [Route("/GetAllowedOrganizationsToUserByRoute/{userId}/{routeId}")]
-        public async Task<IActionResult> GetOrganizationsAllowedToUserByRoute(string userId, int routeId) => Ok(await _roleServices.GetOrganizationsAllowedToUserByRoute(userId, routeId));
+        public async Task<IActionResult> GetOrganizationsAllowedToUserByRoute(int userId, int routeId) => Ok(await _roleServices.GetOrganizationsAllowedToUserByRoute(userId, routeId));
     }
 }

@@ -26,6 +26,7 @@ namespace RedBook.Core.Repositories
 
         // Update
         TEntity Update(TEntity entity);
+        void Patch(object pk, IDictionary<string, object> newEntries);
 
         // Delete
         Task DeleteAsync(int id);

@@ -1,4 +1,7 @@
-﻿namespace Inventory.Data.Entities;
+﻿using System;
+using System.Collections.Generic;
+
+namespace Inventory.Data.Entities;
 
 public partial class Category
 {
@@ -10,18 +13,17 @@ public partial class Category
 
     public DateTime CreateDate { get; set; }
 
-    public string CreatedBy { get; set; }
+    public int CreatedBy { get; set; }
 
     public DateTime? UpdateDate { get; set; }
 
-    public string? UpdatedBy { get; set; }
+    public int? UpdatedBy { get; set; }
 
     public int OrganizationId { get; set; }
 
-    //public virtual UserCache CreatedByNavigation { get; set; }
-    public virtual Category ParentCategory { get; set; }
-    public virtual ICollection<Category> SubCategories { get; set; } = new List<Category>();
-    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+    public virtual ICollection<Category> InverseParentCategory { get; set; } = new List<Category>();
 
-    //public virtual UserCache UpdatedByNavigation { get; set; }
+    public virtual Category ParentCategory { get; set; }
+
+    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 }

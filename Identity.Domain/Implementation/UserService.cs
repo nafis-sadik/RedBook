@@ -14,14 +14,16 @@ using RedBook.Core.UnitOfWork;
 using Identity.Domain.Abstraction;
 using RedBook.Core.Security;
 using Microsoft.AspNetCore.Http;
+using RedBook.Core.Models;
 
 namespace Identity.Domain.Implementation
 {
     public class UserService : ServiceBase, IUserService
     {
+        private IRepositoryFactory _repositoryFactory;
         private IRepositoryBase<User> _userRepo;
         private IRepositoryBase<Role> _roleRepo;
-        private IRepositoryBase<UserRole> _userRoleRepo;
+        private IRepositoryBase<UserRoleMapping> _userRoleRepo;
 
         public UserService(
             ILogger<UserService> logger,
@@ -38,10 +40,10 @@ namespace Identity.Domain.Implementation
             User? userEntity;
             int[] userRolesIds;
             string[] userRoleNames;
-            using (var unitOfWork = UnitOfWorkManager.Begin())
+            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRepo = unitOfWork.GetRepository<User>();
-                _userRoleRepo = unitOfWork.GetRepository<UserRole>();
+                _userRepo = _repositoryFactory.GetRepository<User>();
+                _userRoleRepo = _repositoryFactory.GetRepository<UserRoleMapping>();
 
                 // Find user
                 userEntity = await _userRepo
@@ -67,7 +69,7 @@ namespace Identity.Domain.Implementation
             {
                 byte[] tokenKey = Encoding.ASCII.GetBytes(CommonConstants.PasswordConfig.Salt);
                 return GenerateJwtToken(new List<Claim> {
-                    new Claim("UserId", userEntity.UserId),
+                    new Claim("UserId", userEntity.UserId.ToString()),
                     new Claim("UserName", userEntity.UserName),
                     new Claim("UserRoles", string.Join(",", userRoleNames)),
                     new Claim("UserRoleIds", string.Join(",", userRolesIds))
@@ -80,10 +82,10 @@ namespace Identity.Domain.Implementation
         // User API
         public async Task<UserModel> UpdateAsync(UserModel userModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRepo = transaction.GetRepository<User>();
-                _userRoleRepo = transaction.GetRepository<UserRole>();
+                _userRepo = factory.GetRepository<User>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
                 User? userEntity = await _userRepo.GetAsync(userModel.UserId);
 
                 if (userEntity == null)
@@ -102,9 +104,9 @@ namespace Identity.Domain.Implementation
                     userEntity.UserName = userModel.UserName;
 
                     int[] userModelRoleIds = userModel.Roles.Select(x => x.RoleId).ToArray();
-                    UserRole[] roleMappingRecords = await _userRoleRepo.UnTrackableQuery()
+                    UserRoleMapping[] roleMappingRecords = await _userRoleRepo.UnTrackableQuery()
                         .Where(x => x.UserId == userModel.UserId && userModel.OrganizationId == x.Role.OrganizationId)
-                        .Select(x => new UserRole {
+                        .Select(x => new UserRoleMapping {
                             RoleId = x.RoleId,
                             UserRoleId = x.UserRoleId,
                         })
@@ -113,14 +115,14 @@ namespace Identity.Domain.Implementation
                     foreach(int roleId in userModelRoleIds)
                     {
                         if(roleMappingRecords.First(x => x.RoleId == roleId) == null)
-                            await _userRoleRepo.InsertAsync(new UserRole
+                            await _userRoleRepo.InsertAsync(new UserRoleMapping
                             {
                                 RoleId = roleId,
                                 UserId = userModel.UserId,
                             });
                     }
 
-                    foreach (UserRole role in roleMappingRecords)
+                    foreach (UserRoleMapping role in roleMappingRecords)
                     {
                         if (!userModelRoleIds.Contains(role.RoleId))
                             _userRoleRepo.Delete(role);
@@ -129,18 +131,18 @@ namespace Identity.Domain.Implementation
 
                 userEntity = _userRepo.Update(userEntity);
 
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
 
                 return Mapper.Map<UserModel>(userEntity);    
             }
         }
 
-        public async Task<UserModel?> GetById(string userId)
+        public async Task<UserModel?> GetById(int userId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRepo = transaction.GetRepository<User>();
-                _roleRepo = transaction.GetRepository<Role>();
+                _userRepo = factory.GetRepository<User>();
+                _roleRepo = factory.GetRepository<Role>();
 
                 Role? roleEntity = await _roleRepo.GetAsync(userId);
                 if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
@@ -149,11 +151,11 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<bool> ArchiveAccount(string userId)
+        public async Task<bool> ArchiveAccount(int userId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRepo = transaction.GetRepository<User>();
+                _userRepo = factory.GetRepository<User>();
 
                 if (User.UserId == userId)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
@@ -162,21 +164,21 @@ namespace Identity.Domain.Implementation
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
-                userEntity.Status = CommonConstants.StatusTypes.Archived.ToString();
+                userEntity.Status = false;
                 _userRepo.Update(userEntity);
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
             }
 
             return true;
         }
 
-        public async Task ResetPassword(string userId)
+        public async Task ResetPassword(int userId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRepo = transaction.GetRepository<User>();
-                _roleRepo = transaction.GetRepository<Role>();
-                var _orgRepo = transaction.GetRepository<Organization>();
+                _userRepo = factory.GetRepository<User>();
+                _roleRepo = factory.GetRepository<Role>();
+                var _orgRepo = factory.GetRepository<Organization>();
 
                 User? userEntity = await _userRepo.GetAsync(User.UserId);
                 if (userEntity == null)
@@ -190,18 +192,18 @@ namespace Identity.Domain.Implementation
                 userEntity.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword);
                 _userRepo.Update(userEntity);
 
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
             }
         }
 
         // SysAdmin Only API
         public async Task<UserModel> RegisterNewUser(UserModel userModel)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRepo = transaction.GetRepository<User>();
-                _roleRepo = transaction.GetRepository<Role>();
-                _userRoleRepo = transaction.GetRepository<UserRole>();
+                _userRepo = factory.GetRepository<User>();
+                _roleRepo = factory.GetRepository<Role>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 if (string.IsNullOrEmpty(userModel.Email))
                     throw new ArgumentException("Email not provided");
@@ -210,11 +212,10 @@ namespace Identity.Domain.Implementation
                 if(newUser == null)
                 {
                     newUser = Mapper.Map<User>(userModel);
-                    newUser.UserId = Guid.NewGuid().ToString();
                     newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword);
-                    newUser.Status = CommonConstants.StatusTypes.Active.ToString();
+                    newUser.Status = true;
                     newUser = await _userRepo.InsertAsync(newUser);
-                    await transaction.SaveChangesAsync();
+                    await factory.SaveChangesAsync();
                 }
 
                 Role? orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId && x.IsAdmin);
@@ -232,16 +233,16 @@ namespace Identity.Domain.Implementation
                     await _roleRepo.SaveChangesAsync();
                 }
 
-                UserRole userRole = await _userRoleRepo.InsertAsync(new UserRole {
+                UserRoleMapping userRole = await _userRoleRepo.InsertAsync(new UserRoleMapping {
                     RoleId = orgAdminRole.RoleId,
                     UserId = newUser.UserId,
                 });
 
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
 
                 // Allow Org admin Routes
-                var _routeRepo = transaction.GetRepository<Route>();
-                var _roleRouteRepo = transaction.GetRepository<RoleRouteMapping>();
+                var _routeRepo = factory.GetRepository<Route>();
+                var _roleRouteRepo = factory.GetRepository<RoleRouteMapping>();
                 var allRoutesOfApp = _routeRepo.UnTrackableQuery().Where(x => x.ApplicationId == userModel.ApplicationId);
 
                 foreach (var route in allRoutesOfApp)
@@ -253,44 +254,44 @@ namespace Identity.Domain.Implementation
                     });
                 }
 
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
 
                 return Mapper.Map<UserModel>(newUser);
             }
         }
 
-        public async Task DeleteAccount(string userId)
+        public async Task DeleteAccount(int userId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRepo = transaction.GetRepository<User>();
-                _roleRepo = transaction.GetRepository<Role>();
+                _userRepo = factory.GetRepository<User>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (! await this.HasSystemAdminPriviledge(_roleRepo))
+                if (! await this.HasSystemAdminPriviledge(_userRoleRepo))
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 await _userRepo.DeleteAsync(userId);
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
             }
         }
 
-        public async Task UnArchiveAccount(string userId)
+        public async Task UnArchiveAccount(int userId)
         {
-            using (var transaction = UnitOfWorkManager.Begin())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _userRepo = transaction.GetRepository<User>();
-                _roleRepo = transaction.GetRepository<Role>();
+                _userRepo = factory.GetRepository<User>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasSystemAdminPriviledge(_roleRepo))
+                if (!await this.HasSystemAdminPriviledge(_userRoleRepo))
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 User? userEntity = await _userRepo.GetAsync(userId);
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
-                userEntity.Status = CommonConstants.StatusTypes.Active.ToString();
+                userEntity.Status = true;
                 _userRepo.Update(userEntity);
-                await transaction.SaveChangesAsync();
+                await factory.SaveChangesAsync();
             }
         }
 
@@ -330,6 +331,114 @@ namespace Identity.Domain.Implementation
             }
 
             return tokenHandler.WriteToken(token);
+        }
+
+        public async Task<UserModel> AddUserToBusiness(UserModel userModel)
+        {
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                _userRepo = factory.GetRepository<User>();
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+
+                if (!await this.HasOwnerAdminPriviledge(_userRoleRepo, userModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                User? userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Email == userModel.Email);
+                if (userEntity == null)
+                {
+                    userEntity = await _userRepo.InsertAsync(new User
+                    {
+                        FirstName = userModel.FirstName,
+                        LastName = userModel.LastName,
+                        Email = userModel.Email,
+                        UserName = userModel.UserName,
+                        Address = userModel.Address,
+                        PhoneNumber = userModel.PhoneNumber,
+                        Status = true,
+                        Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword)
+                    });
+
+                    await factory.SaveChangesAsync();
+                }
+
+                // Assigned role selectef from the front end dropdown
+                foreach (RoleModel role in userModel.Roles)
+                {
+                    await _userRoleRepo.InsertAsync(new UserRoleMapping
+                    {
+                        RoleId = role.RoleId,
+                        UserId = userEntity.UserId,
+                    });
+                }
+
+                await factory.SaveChangesAsync();
+
+                return Mapper.Map<UserModel>(userEntity);
+            }
+        }
+
+        public async Task<PagedModel<UserModel>> GetUserByOrganizationId(PagedModel<UserModel> pagedModel, int orgId)
+        {
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+
+                if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                var query = _userRoleRepo.UnTrackableQuery()
+                    .Where(x => x.Role.OrganizationId == orgId);
+
+                if (!string.IsNullOrEmpty(pagedModel.SearchString))
+                {
+                    query = query.Where(x =>
+                                x.User.FirstName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                                || x.User.LastName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                                || x.User.UserName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                                || x.Role.RoleName.ToLower().Contains(pagedModel.SearchString.ToLower())
+                        );
+                }
+
+                pagedModel.SourceData = await query
+                    .Skip(pagedModel.Skip)
+                    .Take(pagedModel.PageLength)
+                    .Distinct()
+                    .Select(u => new UserModel
+                    {
+                        UserId = u.User.UserId,
+                        FirstName = u.User.FirstName,
+                        LastName = u.User.LastName,
+                        UserName = u.User.UserName,
+                        Email = u.User.Email,
+                        PhoneNumber = u.User.PhoneNumber,
+                        Roles = _userRoleRepo
+                                    .UnTrackableQuery()
+                                    .Where(x => x.UserId == u.UserId && x.Role.OrganizationId == orgId)
+                                    .Select(x => new RoleModel
+                                    {
+                                        RoleId = x.RoleId,
+                                        RoleName = x.Role.RoleName
+                                    })
+                                    .ToArray()
+                    })
+                    .ToListAsync();
+
+                pagedModel.TotalItems = await query.CountAsync();
+                pagedModel.SearchString = pagedModel.SearchString == null || pagedModel.SearchString == "null" ? "" : pagedModel.SearchString;
+                return pagedModel;
+            }
+        }
+
+        public async Task RemoveUserFromOrganization(int userId, int orgId)
+        {
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+
+                if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                await _userRoleRepo.DeleteAsync(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin);
+
+                await factory.SaveChangesAsync();
+            }
         }
     }
 }
