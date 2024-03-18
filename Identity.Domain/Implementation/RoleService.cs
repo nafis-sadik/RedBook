@@ -86,7 +86,7 @@ namespace Identity.Domain.Implementation
                             {
                                 RoleId = x.RoleId,
                                 OrganizationId = x.OrganizationId,
-                                IsAdmin = x.IsAdmin,
+                                IsAdmin = x.IsAdmin == true,
                                 RoleName = x.RoleName,
                             })
                             .ToListAsync();

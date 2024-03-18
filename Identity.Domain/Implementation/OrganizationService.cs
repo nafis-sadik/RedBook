@@ -131,7 +131,7 @@ namespace Identity.Domain.Implementation
             {
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                return await _userRoleRepo.UnTrackableQuery().Where(x => (x.Role.IsAdmin || x.Role.IsOwner) && x.UserId == User.UserId)
+                return await _userRoleRepo.UnTrackableQuery().Where(x => (x.Role.IsAdmin == true || x.Role.IsOwner) && x.UserId == User.UserId)
                     .Select(x => new OrganizationModel {
                         OrganizationId = x.Role.Organization.OrganizationId,
                         OrganizationName = x.Role.Organization.OrganizationName

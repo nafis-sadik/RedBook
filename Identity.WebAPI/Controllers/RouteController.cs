@@ -33,7 +33,7 @@ namespace Identity.WebAPI.Controllers
         public async Task<IActionResult> GetPaged([FromQuery] PagedModel<RouteModel> pagedRouteCollection) => Ok(await _routeServices.GetPagedRoutes(pagedRouteCollection));
 
         /// <summary>
-        /// Returns allowed routes of requesting user
+        /// Returns all routes of specified application
         /// </summary>
         [HttpGet]
         [Route("GetAppRoutes/{appId}")]
@@ -43,8 +43,8 @@ namespace Identity.WebAPI.Controllers
         /// Returns allowed menu routes of requesting user
         /// </summary>
         [HttpGet]
-        [Route("GetMenuRoutes/{appId}")]
-        public async Task<IActionResult> GetMenu(int appId) => Ok(await _routeServices.GetAppMenuRoutes(appId));
+        [Route("GetMenuRoutes")]
+        public async Task<IActionResult> GetMenu() => Ok(await _routeServices.GetAppMenuRoutes());
 
         /// <summary>
         /// Returns detailed info of route identified by id provided

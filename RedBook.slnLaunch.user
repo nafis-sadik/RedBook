@@ -4,11 +4,13 @@
     "Projects": [
       {
         "Name": "WebAPI\\Inventory.WebAPI.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": ""
       },
       {
         "Name": "Identity.WebAPI\\Identity.WebAPI.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": ""
       }
     ]
   }

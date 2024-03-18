@@ -53,7 +53,6 @@ public partial class RedbookIdentityContext : DbContext
         modelBuilder.Entity<Organization>(entity =>
         {
             entity.Property(e => e.Address).HasMaxLength(100);
-            entity.Property(e => e.CreatedBy).IsRequired();
             entity.Property(e => e.LogoUrl).HasMaxLength(100);
             entity.Property(e => e.OrganizationName)
                 .IsRequired()

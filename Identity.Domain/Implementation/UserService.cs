@@ -218,7 +218,7 @@ namespace Identity.Domain.Implementation
                     await factory.SaveChangesAsync();
                 }
 
-                Role? orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId && x.IsAdmin);
+                Role? orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId && x.IsAdmin == true);
                 if (orgAdminRole == null)
                 {
                     orgAdminRole = await _roleRepo.InsertAsync(new Role
@@ -435,7 +435,7 @@ namespace Identity.Domain.Implementation
 
                 if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                await _userRoleRepo.DeleteAsync(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin);
+                await _userRoleRepo.DeleteAsync(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin == true);
 
                 await factory.SaveChangesAsync();
             }

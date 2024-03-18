@@ -84,7 +84,7 @@ namespace Identity.Domain.Implementation
                 if (await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) {
                     query = query.Where(x => x.ApplicationId == appId);
                 } else {
-                    if (_userRoleMappingRepo.TrackableQuery().Where(x => x.UserId == User.UserId && x.Role.IsAdmin).Any())
+                    if (_userRoleMappingRepo.TrackableQuery().Where(x => x.UserId == User.UserId && x.Role.IsAdmin == true).Any())
                     {
                         query = query.Where(x => x.ApplicationId == appId && x.RouteId != RouteTypeConsts.SysAdminRoute.RouteTypeId && x.RouteId != RouteTypeConsts.RetailerRoute.RouteTypeId);
                     }
@@ -109,13 +109,14 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<IEnumerable<RouteModel>> GetAppMenuRoutes(int appId)
+        public async Task<IEnumerable<RouteModel>> GetAppMenuRoutes()
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 _roleRepo = factory.GetRepository<Role>();
                 _routeRepo = factory.GetRepository<Route>();
                 _appRepo = factory.GetRepository<Application>();
+                _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
 
                 // Get all roles assigned to requester user
                 List<Role> requesterRoles = new List<Role>();
@@ -132,16 +133,15 @@ namespace Identity.Domain.Implementation
                 // Find request source applicaiton
                 Application? requestSourceApp = await _appRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ApplicationUrl == origin);
                 if (requestSourceApp == null) throw new ArgumentException("Request from invalid application");
-                if (requestSourceApp.ApplicationId != appId) throw new ArgumentException("Request from invalid application");
-
-                IQueryable<Route> query = _routeRepo.UnTrackableQuery();
+                
+                var query = _routeRepo.UnTrackableQuery();
                 foreach (Role requesterRole in requesterRoles)
                 {
                     // If the user is a sys admin user, return all available routes
-                    if (requesterRole.IsSystemAdmin){
-                        query = query.Where(x => x.ApplicationId == appId);
+                    if (requesterRole.IsSystemAdmin == true) {
+                        query = query.Where(x => x.ApplicationId == requestSourceApp.ApplicationId);
                         break;
-                    } else if (requesterRole.IsAdmin) {
+                    } else if (requesterRole.IsAdmin == true) {
                         query = query.Where(x => x.ApplicationId == requestSourceApp.ApplicationId
                             && (x.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId || x.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId)).Distinct();
                     } else {
@@ -149,14 +149,20 @@ namespace Identity.Domain.Implementation
                     }
                 }
 
-                return await query.Select(x => new RouteModel
+                try
                 {
-                    RouteId = x.RouteId,
-                    RouteValue = x.Route1,
-                    RouteName = x.RouteName,
-                    Description = x.Description,
-                    ParentRouteId = x.ParentRouteId
-                }).ToListAsync();
+                    return await query.Select(x => new RouteModel
+                    {
+                        RouteId = x.RouteId,
+                        RouteValue = x.Route1,
+                        RouteName = x.RouteName,
+                        Description = x.Description,
+                        ParentRouteId = x.ParentRouteId
+                    }).ToListAsync();
+                }catch (Exception ex)
+                {
+                    throw new Exception(ex.ToString());
+                }
             }
         }
 
@@ -185,7 +191,8 @@ namespace Identity.Domain.Implementation
                             RouteValue = x.Route1,
                             ParentRouteId = x.ParentRouteId,
                             ApplicationName = x.Application.ApplicationName
-                        }).ToListAsync();
+                        })
+                        .ToListAsync();
 
                     pagedRoutes.TotalItems = await _routeRepo.UnTrackableQuery()
                         .Where(x => x.RouteId > 0).CountAsync();
@@ -211,7 +218,8 @@ namespace Identity.Domain.Implementation
                             RouteValue = x.Route1,
                             ParentRouteId = x.ParentRouteId,
                             ApplicationName = x.Application.ApplicationName
-                        }).ToListAsync();
+                        })
+                        .ToListAsync();
 
                     pagedRoutes.TotalItems = await _routeRepo.UnTrackableQuery()
                         .Where(x =>
