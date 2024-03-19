@@ -149,20 +149,14 @@ namespace Identity.Domain.Implementation
                     }
                 }
 
-                try
+                return await query.Select(x => new RouteModel
                 {
-                    return await query.Select(x => new RouteModel
-                    {
-                        RouteId = x.RouteId,
-                        RouteValue = x.Route1,
-                        RouteName = x.RouteName,
-                        Description = x.Description,
-                        ParentRouteId = x.ParentRouteId
-                    }).ToListAsync();
-                }catch (Exception ex)
-                {
-                    throw new Exception(ex.ToString());
-                }
+                    RouteId = x.RouteId,
+                    RouteValue = x.Route1,
+                    RouteName = x.RouteName,
+                    Description = x.Description,
+                    ParentRouteId = x.ParentRouteId
+                }).ToListAsync();
             }
         }
 
@@ -171,6 +165,7 @@ namespace Identity.Domain.Implementation
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 _roleRepo = factory.GetRepository<Role>();
+                _routeRepo = factory.GetRepository<Route>();
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 if (! await this.HasSystemAdminPriviledge(_userRoleRepo))
