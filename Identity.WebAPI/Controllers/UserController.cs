@@ -113,7 +113,7 @@ namespace Identity.WebAPI.Controllers
         /// <param name="userModel">User details object<see cref="UserModel"/>Data of user to be added to the business</param>
         [HttpPost]
         [Authorize]
-        [Route("User")]
+        [Route("Business")]
         public async Task<IActionResult> AddUserToBusiness(UserModel userModel) => Ok(await _userServices.AddUserToBusiness(userModel));
 
         /// <summary>
@@ -123,17 +123,17 @@ namespace Identity.WebAPI.Controllers
         /// <param name="orgId">Organization Id <see cref="int"/></param>
         [HttpDelete]
         [Authorize]
-        [Route("User/{userId}/{orgId}")]
+        [Route("Business/{userId}/{orgId}")]
         public async Task RemoveUserFromBusiness(int userId, int orgId) => await _userServices.RemoveUserFromOrganization(userId, orgId);
 
         /// <summary>
         /// Get user list under organization (organization admin access only)
         /// </summary>
-        /// <param name="businessId">Organization Id <see cref="int"/></param>
+        /// <param name="orgId">Organization Id <see cref="int"/></param>
         /// <param name="pagedModel">Organization Id <see cref="PagedModel<UserModel>"/></param>
         [HttpGet]
         [Authorize]
-        [Route("User")]
-        public async Task<IActionResult> GetUserByBusiness([FromQuery] PagedModel<UserModel> pagedModel, [FromQuery] int businessId) => Ok(await _userServices.GetUserByOrganizationId(pagedModel, businessId));
+        [Route("{orgId}")]
+        public async Task<IActionResult> GetUserByBusiness([FromQuery] PagedModel<UserModel> pagedModel, int orgId) => Ok(await _userServices.GetUserByOrganizationId(pagedModel, orgId));
     }
 }
