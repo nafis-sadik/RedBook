@@ -101,7 +101,7 @@ public partial class RedbookInventoryContext : DbContext
                 .IsUnicode(false);
             entity.Property(e => e.CreateDate).HasPrecision(0);
             entity.Property(e => e.UpdateDate).HasPrecision(0);
-
+            entity.Property(e => e.ParentCategoryId).IsRequired(false);
             entity.HasOne(d => d.ParentCategory).WithMany(p => p.InverseParentCategory).HasForeignKey(d => d.ParentCategoryId);
         });
 

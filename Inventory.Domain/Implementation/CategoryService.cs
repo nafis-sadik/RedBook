@@ -60,16 +60,14 @@ namespace Inventory.Domain.Implementation
             {
                 _categoryRepo = _repositoryFactory.GetRepository<Category>();
 
-                List<CategoryModel> data = await _categoryRepo.UnTrackableQuery()
-                    .Where(x => x.OrganizationId == orgId && x.ParentCategory == null)
+                return await _categoryRepo.UnTrackableQuery()
+                    .Where(x => x.OrganizationId == orgId && x.ParentCategoryId == null)
                     .Select(x => new CategoryModel
                     {
                         CategoryId = x.CategoryId,
                         CatagoryName = x.CatagoryName,
                         OrganizationId = x.OrganizationId,
                     }).ToListAsync();
-
-                return data;
             }
         }
 

@@ -31,7 +31,7 @@ namespace Inventory.Data.Migrations
                     CategoryId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CatagoryName = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    ParentCategoryId = table.Column<int>(type: "int", nullable: false),
+                    ParentCategoryId = table.Column<int>(type: "int", nullable: true),
                     CreateDate = table.Column<DateTime>(type: "datetime2(0)", precision: 0, nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: false),
                     UpdateDate = table.Column<DateTime>(type: "datetime2(0)", precision: 0, nullable: true),
@@ -282,7 +282,8 @@ namespace Inventory.Data.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Categories_ParentCategoryId",
                 table: "Categories",
-                column: "ParentCategoryId");
+                column: "ParentCategoryId",
+                unique: false);
 
             migrationBuilder.CreateIndex(
                 name: "PK__CommonAt__3214EC0712D1E7C6",
