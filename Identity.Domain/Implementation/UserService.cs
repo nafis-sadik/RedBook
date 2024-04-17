@@ -435,7 +435,7 @@ namespace Identity.Domain.Implementation
 
                 if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                await _userRoleRepo.DeleteAsync(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin == true);
+                await _userRoleRepo.TrackableQuery().Where(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin == true).ExecuteDeleteAsync();
 
                 await factory.SaveChangesAsync();
             }

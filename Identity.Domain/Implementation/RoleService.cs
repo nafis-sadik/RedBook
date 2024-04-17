@@ -60,7 +60,7 @@ namespace Identity.Domain.Implementation
                 _roleRepo = factory.GetRepository<Role>();
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                Role? role = await _roleRepo.GetAsync(roleId);
+                Role role = await _roleRepo.GetAsync(roleId);
                 if (role == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
                 
                 if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
@@ -135,7 +135,7 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<int[]?> GetOrganizationsAllowedToUserByRoute(int userId, int routeId)
+        public async Task<int[]> GetOrganizationsAllowedToUserByRoute(int userId, int routeId)
         {
             using(var unitOfWord = UnitOfWorkManager.GetRepositoryFactory())
             {
@@ -143,17 +143,17 @@ namespace Identity.Domain.Implementation
                 _userRoleRepo = unitOfWord.GetRepository<UserRoleMapping>();
                 _roleRouteMappingRepo = unitOfWord.GetRepository<RoleRouteMapping>();
 
-                User? usr = await _userRepo.GetAsync(userId);
+                User usr = await _userRepo.GetAsync(userId);
                 if (usr == null) throw new ArgumentException("Resource not found");
 
                 // Need to check if is admin
-                int[]? roleOrfids = await _roleRouteMappingRepo
+                int[] roleOrfids = await _roleRouteMappingRepo
                     .UnTrackableQuery()
                     .Where(x => x.RouteId == routeId)
                     .Select(x => x.Role.OrganizationId)
                     .ToArrayAsync();
 
-                int[]? userOrgIds = await _userRoleRepo
+                int[] userOrgIds = await _userRoleRepo
                     .UnTrackableQuery()
                     .Where(x => x.UserId == userId && x.RoleId == routeId)
                     .Select(x => x.Role.OrganizationId)

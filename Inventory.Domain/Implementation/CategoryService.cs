@@ -4,6 +4,7 @@ using Inventory.Domain.Abstraction;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
+using RedBook.Core.Constants;
 using RedBook.Core.Domain;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
@@ -49,7 +50,15 @@ namespace Inventory.Domain.Implementation
             using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 _categoryRepo = _repositoryFactory.GetRepository<Category>();
+                Category? category = await _categoryRepo.GetAsync(categoryId);
+                if (category == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
+
+                int id = 0;
+                if(category.ParentCategoryId == null)
+                    id = await _categoryRepo.TrackableQuery().Where(x => x.ParentCategoryId == categoryId).ExecuteDeleteAsync();
+
                 await _categoryRepo.DeleteAsync(categoryId);
+
                 await _repositoryFactory.SaveChangesAsync();
             }
         }

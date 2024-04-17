@@ -53,7 +53,7 @@ namespace Inventory.Domain.Implementation
                 _categoryRepo = _repositoryFactory.GetRepository<Category>();
 
                 // Remove corresponding children first
-                await _categoryRepo.DeleteAsync(x => x.ParentCategoryId == categoryId);
+                await _categoryRepo.TrackableQuery().Where(x => x.ParentCategoryId == categoryId).ExecuteDeleteAsync();
 
                 // Then remove the target item
                 await _categoryRepo.DeleteAsync(categoryId);

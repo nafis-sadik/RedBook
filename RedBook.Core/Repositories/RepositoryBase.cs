@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Microsoft.EntityFrameworkCore.Metadata;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -88,13 +89,17 @@ namespace RedBook.Core.Repositories
                 throw new ArgumentException($"Object with identifier {id} was not found");
         }
 
-        public async Task DeleteAsync(Expression<Func<TEntity, bool>> where)
+        public async Task<int> DeleteAsync(string propertyName, string symbol, string value)
         {
-            var objects = await UnTrackableQuery().Where(where).ToArrayAsync();
-            foreach (var obj in objects)
-            {
-                _dbSet.Remove(obj);
-            }
+            // Get the entity type and its SQL table name
+            IEntityType? entityType = _dbContext.Model.FindEntityType(typeof(TEntity));
+            var tableName = entityType?.GetTableName();
+
+            // Build the SQL command
+            string sqlCommand = $"DELETE FROM {tableName} WHERE {propertyName} {symbol} {value}";
+
+            // Execute the SQL command
+            return await _dbContext.Database.ExecuteSqlRawAsync(sqlCommand);
         }
 
         // Utilities

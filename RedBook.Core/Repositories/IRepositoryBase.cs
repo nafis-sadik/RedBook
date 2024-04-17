@@ -32,7 +32,7 @@ namespace RedBook.Core.Repositories
         Task DeleteAsync(int id);
         Task DeleteAsync(string id);
         void Delete(TEntity entity);
-        Task DeleteAsync(Expression<Func<TEntity, bool>> where);
+        Task<int> DeleteAsync(string propertyName, string symbol, string value);
 
         // Utilities
         Task SaveChangesAsync();
