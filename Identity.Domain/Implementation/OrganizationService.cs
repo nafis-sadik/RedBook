@@ -139,6 +139,23 @@ namespace Identity.Domain.Implementation
             }
         }
 
+        public async Task<IEnumerable<OrganizationModel>> GetUserOrganizationsAsync()
+        {
+            using(var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+
+                return await _userRoleRepo.UnTrackableQuery()
+                    .Where(x => x.UserId == User.UserId)
+                    .Select(mapping => new OrganizationModel
+                    {
+                        OrganizationId = mapping.Role.OrganizationId,
+                        OrganizationName = mapping.Role.Organization.OrganizationName
+                    })
+                    .ToListAsync();
+            }
+        }
+
         public async Task<PagedModel<OrganizationModel>> GetPagedOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())

@@ -26,6 +26,12 @@ namespace Identity.WebAPI.Controllers
         }
 
         /// <summary>
+        /// Get list of organizations that the user is tagged with
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetUserOrgs() => Ok(await _organizationService.GetUserOrganizationsAsync());
+
+        /// <summary>
         /// Get organization details by organization Id
         /// </summary>
         /// <param name="orgId">Organization Id or unique identifier which is the primary key of organization table</param>
