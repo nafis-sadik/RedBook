@@ -13,6 +13,8 @@ public partial class Organization
 
     public string LogoUrl { get; set; }
 
+    public float SubscriptionFee { get; set; } = 0;
+
     public DateTime CreateDate { get; set; }
 
     public int CreatedBy { get; set; }

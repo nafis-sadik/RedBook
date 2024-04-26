@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace Identity.Domain.Abstraction
 {
-    public interface IOnboardingService
+    public interface ICustomerService
     {
-        public Task OnboardUser(UserModel userModel, OrganizationModel org);
+        public Task OnboardUser(UserModel user, OrganizationModel org);
     }
 }

@@ -28,7 +28,7 @@ namespace Identity.WebAPI.Configurations
             services.AddScoped<IOrganizationService, OrganizationService>();
             services.AddScoped<IApplicationService, ApplicationService>();
             services.AddScoped<IRouteServices, RouteServices>();
-            services.AddScoped<IOnboardingService, OnboardingService>();
+            services.AddScoped<ICustomerService, CustomerService>();
         }
     }
 }

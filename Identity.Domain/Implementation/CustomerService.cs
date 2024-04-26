@@ -13,11 +13,11 @@ using RedBook.Core.UnitOfWork;
 
 namespace Identity.Domain.Implementation
 {
-    public class OnboardingService: ServiceBase, IOnboardingService
+    public class CustomerService: ServiceBase, ICustomerService
     {
         private IRepositoryFactory _repositoryFactory;
-        public OnboardingService(
-            ILogger<OnboardingService> logger,
+        public CustomerService(
+            ILogger<CustomerService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor,
