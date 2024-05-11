@@ -27,8 +27,7 @@ namespace Identity.WebAPI.Configurations
                     {
                         context.Database.EnsureCreated();
 
-                        Application? redbookFrontend = null;
-
+                        #region User Insert
                         if (!context.UserRoleMappings.Any())
                             context.UserRoleMappings.Add(new UserRoleMapping
                             {
@@ -63,39 +62,45 @@ namespace Identity.WebAPI.Configurations
                                     }
                                 }
                             });
+                        #endregion
 
-                        if (context.Applications.Any())
+                        #region Applications
+                        Application? redBookFrontEnd = context.Applications.FirstOrDefault(x => x.ApplicationName == GenericConstants.RedBookFrontEnd.ApplicationName);
+                        if (redBookFrontEnd == null)
                         {
-                            redbookFrontend = context.Applications.FirstOrDefault(x =>
-                                    x.ApplicationName == "Redbook Angular"
-                                    && x.ApplicationUrl == "http://localhost:4200");
-                        }
-
-                        if (redbookFrontend == null)
-                        {
-                            redbookFrontend = context.Applications.Add(new Application
+                            redBookFrontEnd = context.Applications.Add(new Application
                             {
-                                ApplicationName = "Redbook Angular",
-                                ApplicationUrl = "http://localhost:4200",
+                                ApplicationName = GenericConstants.RedBookFrontEnd.ApplicationName,
+                                ApplicationUrl = GenericConstants.RedBookFrontEnd.ApplicationUrl,
                             }).Entity;
-
-                            context.SaveChanges();
-
-                            var blumeIdentity = new Application
-                            {
-                                ApplicationName = "Blume Identity",
-                                ApplicationUrl = "http://localhost:5062"
-                            };
-                            var redbookAPI = new Application
-                            {
-                                ApplicationName = "Redbook API",
-                                ApplicationUrl = "http://localhost:7238"
-                            };
-
-                            context.Applications.AddRange(blumeIdentity, redbookAPI);
-
                             context.SaveChanges();
                         }
+                        GenericConstants.RedBookFrontEnd.ApplicationId = redBookFrontEnd.ApplicationId;
+
+                        Application? blumeIdentity = context.Applications.FirstOrDefault(x => x.ApplicationName == GenericConstants.BlumeIdentity.ApplicationName);
+                        if (blumeIdentity == null)
+                        {
+                            blumeIdentity = context.Applications.Add(new Application
+                            {
+                                ApplicationName = GenericConstants.BlumeIdentity.ApplicationName,
+                                ApplicationUrl = GenericConstants.BlumeIdentity.ApplicationUrl,
+                            }).Entity;
+                            context.SaveChanges();
+                        }
+                        GenericConstants.BlumeIdentity.ApplicationId = blumeIdentity.ApplicationId;
+
+                        Application? redbookAPI = context.Applications.FirstOrDefault(x => x.ApplicationName == GenericConstants.RedbookAPI.ApplicationName);
+                        if (redbookAPI == null)
+                        {
+                            redbookAPI = context.Applications.Add(new Application
+                            {
+                                ApplicationName = GenericConstants.RedbookAPI.ApplicationName,
+                                ApplicationUrl = GenericConstants.RedbookAPI.ApplicationUrl,
+                            }).Entity;
+                            context.SaveChanges();
+                        }
+                        GenericConstants.RedbookAPI.ApplicationId = redbookAPI.ApplicationId;
+                        #endregion
 
                         // Route types
                         if (!context.RouteTypes.Any())
@@ -130,7 +135,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "Dashboards",
                                     Route1 = "/dashboard/home",
                                     Description = "keypad",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = null,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId
                                 });
@@ -143,7 +148,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "Business Operations",
                                     Route1 = "",
                                     Description = "layers",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = null,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId
                                 });
@@ -155,7 +160,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "Invoice - Purchase",
                                     Route1 = "/dashboard/purchase",
                                     Description = "shopping-bag",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = operationsRoute.Entity.RouteId,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId
                                 },
@@ -163,7 +168,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "Invoice - Sales",
                                     Route1 = "/dashboard/sales",
                                     Description = "shopping-cart",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = operationsRoute.Entity.RouteId,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId
                                 }
@@ -177,7 +182,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "CRM",
                                     Route1 = "",
                                     Description = "people",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = null,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId
                                 });
@@ -189,7 +194,7 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "Customers",
                                 Route1 = "/dashboard/customers",
                                 Description = "person",
-                                ApplicationId = redbookFrontend.ApplicationId,
+                                ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                 ParentRouteId = crmRoute.Entity.RouteId,
                                 RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId
                             });
@@ -201,7 +206,7 @@ namespace Identity.WebAPI.Configurations
                                 RouteName = "Settings",
                                 Route1 = "",
                                 Description = "settings",
-                                ApplicationId = redbookFrontend.ApplicationId,
+                                ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                 ParentRouteId = null,
                                 RouteTypeId = RouteTypeConsts.AdminRoute.RouteTypeId
                             });
@@ -213,7 +218,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "General Settings",
                                     Route1 = "/dashboard/settings",
                                     Description = "briefcase",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = settingsRoute.Entity.RouteId,
                                     RouteTypeId = RouteTypeConsts.AdminRoute.RouteTypeId
                                 },
@@ -221,7 +226,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "Product List",
                                     Route1 = "/dashboard/products",
                                     Description = "cube",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = settingsRoute.Entity.RouteId,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId
                                 },
@@ -229,7 +234,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "Product Settings",
                                     Route1 = "/dashboard/product-settings",
                                     Description = "options-2",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = settingsRoute.Entity.RouteId,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId
                                 }
@@ -242,7 +247,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "Onboarding",
                                     Route1 = "/dashboard/onboarding",
                                     Description = "person-add",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = null,
                                     RouteTypeId = RouteTypeConsts.RetailerRoute.RouteTypeId
                                 },
@@ -250,7 +255,7 @@ namespace Identity.WebAPI.Configurations
                                     RouteName = "Platform Settings",
                                     Route1 = "/dashboard/platform-settings",
                                     Description = "settings-2",
-                                    ApplicationId = redbookFrontend.ApplicationId,
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = null,
                                     RouteTypeId = RouteTypeConsts.SysAdminRoute.RouteTypeId
                                 },

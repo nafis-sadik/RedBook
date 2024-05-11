@@ -33,7 +33,7 @@ namespace Inventory.Domain.Implementation
                 {
                     CatagoryName = categoryModel.CatagoryName,
                     CreatedBy = User.UserId,
-                    CreateDate = DateTime.Now,
+                    CreateDate = DateTime.UtcNow,
                     OrganizationId = categoryModel.OrganizationId
                 });
 

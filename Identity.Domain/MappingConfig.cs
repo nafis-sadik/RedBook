@@ -19,10 +19,10 @@ namespace Inventory.Domain
             CreateMap<OrganizationModel, Organization>()
                 .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.OrganizationAddress))
                 .ForMember(dest => dest.LogoUrl, opt => opt.MapFrom(src => src.BusinessLogo))
-                .ForMember(dest => dest.CreatedBy, opt => opt.MapFrom(src => ""))
-                .ForMember(dest => dest.UpdatededBy, opt => opt.MapFrom(src => ""))
+                .ForMember(dest => dest.CreatedBy, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatededBy, opt => opt.Ignore())
                 .ForMember(dest => dest.CreateDate, opt => opt.Ignore())
-                .ForMember(dest => dest.UpdateDate, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
                 .ReverseMap();
 
             CreateMap<Role, RoleModel>()

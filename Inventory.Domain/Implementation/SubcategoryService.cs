@@ -33,7 +33,7 @@ namespace Inventory.Domain.Implementation
             {
                 _categoryRepo = _repositoryFactory.GetRepository<Category>();
                 Category category = Mapper.Map<Category>(categoryModel);
-                category.CreateDate = DateTime.Now;
+                category.CreateDate = DateTime.UtcNow;
                 category.CreatedBy = User.UserId;
 
                 category = await _categoryRepo.InsertAsync(category);

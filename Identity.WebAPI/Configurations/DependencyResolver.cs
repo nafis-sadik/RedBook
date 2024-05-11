@@ -1,9 +1,7 @@
 ﻿using Identity.Data.Entities;
 using Identity.Domain.Abstraction;
 using Identity.Domain.Implementation;
-using Microsoft.EntityFrameworkCore;
 using RedBook.Core;
-using RedBook.Core.Repositories;
 
 namespace Identity.WebAPI.Configurations
 {
@@ -28,7 +26,7 @@ namespace Identity.WebAPI.Configurations
             services.AddScoped<IOrganizationService, OrganizationService>();
             services.AddScoped<IApplicationService, ApplicationService>();
             services.AddScoped<IRouteServices, RouteServices>();
-            services.AddScoped<ICustomerService, CustomerService>();
+            services.AddScoped<IOnboardingService, OnboardingService>();
         }
     }
 }

@@ -20,7 +20,7 @@
 
 //        public IEnumerable<SubscribedService> GetActiveSubscriptions(string userId)
 //        {
-//            IQueryable<SubscriptionLog> subscriptionLogs = _subscriptionLogRepo.AsQueryable().Where(x => x.SubscriptionDate > DateTime.Now);
+//            IQueryable<SubscriptionLog> subscriptionLogs = _subscriptionLogRepo.AsQueryable().Where(x => x.SubscriptionDate > DateTime.UtcNow);
 //            List<SubscribedService> subscriptions = new List<SubscribedService>();
 //            foreach(SubscriptionLog subscriptionHistory in subscriptionLogs)
 //            {
@@ -62,15 +62,15 @@
 //                    _subscriptionLogRepo.Add(new SubscriptionLog
 //                    {
 //                        SubscriptionId = SubscriptionId,
-//                        SubscriptionDate = DateTime.Now,
-//                        ExpirationDate = DateTime.Now.AddMonths((int)_subscriptionRepo.Get(SubscriptionId).DurationMonths),
+//                        SubscriptionDate = DateTime.UtcNow,
+//                        ExpirationDate = DateTime.UtcNow.AddMonths((int)_subscriptionRepo.Get(SubscriptionId).DurationMonths),
 //                        UserId = UserId
 //                    });
 //                else
 //                {
 //                    foreach (SubscriptionLog subscription in subscriptionLogs)
 //                    {
-//                        subscription.ExpirationDate = DateTime.Now.AddMonths((int)_subscriptionRepo.Get(SubscriptionId).DurationMonths);
+//                        subscription.ExpirationDate = DateTime.UtcNow.AddMonths((int)_subscriptionRepo.Get(SubscriptionId).DurationMonths);
 //                        _subscriptionLogRepo.Update(subscription);
 //                    }
 //                }
@@ -83,7 +83,7 @@
 //                    ErrorInner = ex.InnerException != null ? ex.InnerException.Message : "",
 //                    ErrorMessage = ex.Message,
 //                    MethodName = "Subscribe",
-//                    TimeStamp = DateTime.Now
+//                    TimeStamp = DateTime.UtcNow
 //                });
 //                return false;
 //            }

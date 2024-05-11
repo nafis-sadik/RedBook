@@ -12,18 +12,9 @@ namespace Identity.WebAPI.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class OrganizationController : ControllerBase
+    public class OrganizationController(IOrganizationService organizationService) : ControllerBase
     {
-        private readonly IOrganizationService _organizationService;
-
-        /// <summary>
-        /// Organization Module Constructor
-        /// </summary>
-        /// <param name="organizationService">An implementation of IOrganizationService injected by IOC Controller</param>
-        public OrganizationController(IOrganizationService organizationService)
-        {
-            _organizationService = organizationService;
-        }
+        private readonly IOrganizationService _organizationService = organizationService;
 
         /// <summary>
         /// Get list of organizations that the user is tagged with
