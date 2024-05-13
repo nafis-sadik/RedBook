@@ -27,13 +27,19 @@ public partial class RedbookIdentityContext : DbContext
 
     public virtual DbSet<RouteType> RouteTypes { get; set; }
 
+    public virtual DbSet<Subscription> Subscriptions { get; set; }
+
+    public virtual DbSet<SubscriptionPackage> SubscriptionPackages { get; set; }
+
+    public virtual DbSet<SubscriptionTransaction> SubscriptionTransactions { get; set; }
+
     public virtual DbSet<User> Users { get; set; }
 
     public virtual DbSet<UserRoleMapping> UserRoleMappings { get; set; }
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=RedbookIdentity;User ID=sa;TrustServerCertificate=True;Encrypt=False;Trusted_Connection=True;");
+//    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+//#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
+//        => optionsBuilder.UseSqlServer("Data Source=localhost;Initial Catalog=RedbookIdentity;User ID=sa;TrustServerCertificate=True;Encrypt=False;Trusted_Connection=True;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -79,9 +85,12 @@ public partial class RedbookIdentityContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false);
 
+            entity.HasOne(d => d.Application).WithMany(p => p.Roles)
+                .HasForeignKey(d => d.ApplicationId)
+                .HasConstraintName("FK_Roles_Applications");
+
             entity.HasOne(d => d.Organization).WithMany(p => p.Roles)
                 .HasForeignKey(d => d.OrganizationId)
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_Roles_Organizations");
         });
 
@@ -112,6 +121,8 @@ public partial class RedbookIdentityContext : DbContext
 
             entity.HasIndex(e => e.ParentRouteId, "IX_Routes_ParentRouteId");
 
+            entity.HasIndex(e => e.RouteTypeId, "IX_Routes_RouteTypeId");
+
             entity.Property(e => e.Description)
                 .HasMaxLength(100)
                 .IsUnicode(false);
@@ -140,6 +151,60 @@ public partial class RedbookIdentityContext : DbContext
         modelBuilder.Entity<RouteType>(entity =>
         {
             entity.Property(e => e.RouteTypeName).IsRequired();
+        });
+
+        modelBuilder.Entity<Subscription>(entity =>
+        {
+            entity.ToTable("Subscription");
+
+            entity.Property(e => e.SubscriptionId).ValueGeneratedNever();
+            entity.Property(e => e.CurrentExpiryDate).HasColumnType("datetime");
+            entity.Property(e => e.SubscriptionFee).HasColumnType("decimal(18, 0)");
+            entity.Property(e => e.SubscriptionStartDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.Organization).WithMany(p => p.Subscriptions)
+                .HasForeignKey(d => d.OrganizationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Subscription_Organizations");
+
+            entity.HasOne(d => d.Package).WithMany(p => p.Subscriptions)
+                .HasForeignKey(d => d.PackageId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Subscription_SubscriptionPackages");
+        });
+
+        modelBuilder.Entity<SubscriptionPackage>(entity =>
+        {
+            entity.HasKey(e => e.PackageId);
+
+            entity.Property(e => e.PackageId).ValueGeneratedNever();
+            entity.Property(e => e.PackageName)
+                .IsRequired()
+                .HasMaxLength(50);
+            entity.Property(e => e.SubscriptionFee).HasColumnType("decimal(18, 0)");
+
+            entity.HasOne(d => d.Application).WithMany(p => p.SubscriptionPackages)
+                .HasForeignKey(d => d.ApplicationId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SubscriptionPackages_Applications");
+        });
+
+        modelBuilder.Entity<SubscriptionTransaction>(entity =>
+        {
+            entity.HasKey(e => e.TransactionId);
+
+            entity.Property(e => e.TransactionId).ValueGeneratedNever();
+            entity.Property(e => e.PaymentDate).HasColumnType("datetime");
+
+            entity.HasOne(d => d.PaidByNavigation).WithMany(p => p.SubscriptionTransactions)
+                .HasForeignKey(d => d.PaidBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SubscriptionTransactions_Users");
+
+            entity.HasOne(d => d.Subscription).WithMany(p => p.SubscriptionTransactions)
+                .HasForeignKey(d => d.SubscriptionId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SubscriptionTransactions_Subscription");
         });
 
         modelBuilder.Entity<User>(entity =>

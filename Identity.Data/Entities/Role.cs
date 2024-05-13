@@ -9,7 +9,7 @@ public partial class Role
 
     public string RoleName { get; set; }
 
-    public int OrganizationId { get; set; }
+    public int? OrganizationId { get; set; }
 
     public bool? IsAdmin { get; set; }
 
@@ -18,6 +18,10 @@ public partial class Role
     public bool? IsSystemAdmin { get; set; }
 
     public bool IsOwner { get; set; }
+
+    public int? ApplicationId { get; set; }
+
+    public virtual Application Application { get; set; }
 
     public virtual Organization Organization { get; set; }
 

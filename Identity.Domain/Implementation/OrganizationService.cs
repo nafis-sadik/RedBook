@@ -139,14 +139,14 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<IEnumerable<OrganizationModel>> GetUserOrganizationsAsync()
+        public async Task<IEnumerable<OrganizationModel>> GetOrganizationsOfUserAsync()
         {
             using(var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 return await _userRoleRepo.UnTrackableQuery()
-                    .Where(x => x.UserId == User.UserId)
+                    .Where(x => x.UserId == User.UserId && x.RoleId == RoleConstants.RedbookOwnerAdmin.RoleId)
                     .Select(mapping => new OrganizationModel
                     {
                         OrganizationId = mapping.Role.OrganizationId,

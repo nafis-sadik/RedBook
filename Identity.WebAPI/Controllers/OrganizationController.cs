@@ -17,10 +17,10 @@ namespace Identity.WebAPI.Controllers
         private readonly IOrganizationService _organizationService = organizationService;
 
         /// <summary>
-        /// Get list of organizations that the user is tagged with
+        /// Get list of organizations that the user owns
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetUserOrgs() => Ok(await _organizationService.GetUserOrganizationsAsync());
+        public async Task<IActionResult> GetUserOrgs() => Ok(await _organizationService.GetOrganizationsOfUserAsync());
 
         /// <summary>
         /// Get organization details by organization Id

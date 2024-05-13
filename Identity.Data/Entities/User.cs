@@ -25,5 +25,7 @@ public partial class User
 
     public string Address { get; set; }
 
+    public virtual ICollection<SubscriptionTransaction> SubscriptionTransactions { get; set; } = new List<SubscriptionTransaction>();
+
     public virtual ICollection<UserRoleMapping> UserRoleMappings { get; set; } = new List<UserRoleMapping>();
 }

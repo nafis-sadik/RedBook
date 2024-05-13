@@ -13,8 +13,6 @@ public partial class Organization
 
     public string LogoUrl { get; set; }
 
-    public float SubscriptionFee { get; set; } = 0;
-
     public DateTime CreateDate { get; set; }
 
     public int CreatedBy { get; set; }
@@ -24,4 +22,6 @@ public partial class Organization
     public string UpdatededBy { get; set; }
 
     public virtual ICollection<Role> Roles { get; set; } = new List<Role>();
+
+    public virtual ICollection<Subscription> Subscriptions { get; set; } = new List<Subscription>();
 }

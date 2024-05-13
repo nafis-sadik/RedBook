@@ -4,84 +4,64 @@ namespace Identity.Data.CommonConstant
 {
     public class RoleConstants
     {        
-        public static Role SystemAdmin
+        public static Role SystemAdmin = new Role
         {
-            private set { }
-            get
-            {
-                return new Role
-                {
-                    RoleName = "System Admin",
-                    IsAdmin = true,
-                    IsRetailer = true,
-                    IsSystemAdmin = true,
-                    IsOwner = true
-                };
-            }
-        }
-        
-        public static Role Admin
-        {
-            private set { }
-            get
-            {
-                return new Role
-                {
-                    RoleName = "Admin",
-                    IsAdmin = true,
-                    IsRetailer = false,
-                    IsSystemAdmin = false,
-                    IsOwner = false
-                };
-            }
-        }
+            RoleName = "System Admin",
+            IsAdmin = true,
+            IsRetailer = true,
+            IsSystemAdmin = true,
+            IsOwner = true,
+            OrganizationId = null,
+            ApplicationId = null,
+        };
 
-        public static Role OwnerAdmin
+        public static Role RedbookAdmin = new Role
         {
-            private set { }
-            get
-            {
-                return new Role
-                {
-                    RoleName = "Owner Admin",
-                    IsAdmin = true,
-                    IsRetailer = false,
-                    IsSystemAdmin = false,
-                    IsOwner = true
-                };
-            }
-        }
+            RoleName = "Redbook Admin",
+            IsAdmin = true,
+            IsRetailer = false,
+            IsSystemAdmin = false,
+            IsOwner = false,
+            OrganizationId = null,
+            ApplicationId = null,
+        };
 
-        public static Role Employee
+        public static Role RedbookOwnerAdmin = new Role
         {
-            private set { }
-            get
-            {
-                return new Role
-                {
-                    RoleName = "Employee",
-                    IsAdmin = false,
-                    IsRetailer = false,
-                    IsSystemAdmin = false,
-                    IsOwner = false
-                };
-            }
-        }
+            RoleName = "Redbook Owner Admin",
+            IsAdmin = true,
+            IsRetailer = false,
+            IsSystemAdmin = false,
+            IsOwner = true,
+            OrganizationId = null,
+            ApplicationId = null,
+        };
 
-        public static Role Retailer
+        //public static Role Employee
+        //{
+        //    private set { }
+        //    get
+        //    {
+        //        return new Role
+        //        {
+        //            RoleName = "Employee",
+        //            IsAdmin = false,
+        //            IsRetailer = false,
+        //            IsSystemAdmin = false,
+        //            IsOwner = false
+        //        };
+        //    }
+        //}
+
+        public static Role Retailer = new Role
         {
-            private set { }
-            get
-            {
-                return new Role
-                {
-                    RoleName = "Retailer",
-                    IsAdmin = false,
-                    IsRetailer = true,
-                    IsSystemAdmin = false,
-                    IsOwner = false
-                };
-            }
-        }
+            RoleName = "Retailer",
+            IsAdmin = false,
+            IsRetailer = true,
+            IsSystemAdmin = false,
+            IsOwner = false,
+            OrganizationId = null,
+            ApplicationId = null,
+        };
     }
 }
