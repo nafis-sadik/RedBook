@@ -37,22 +37,6 @@ namespace Identity.Data.CommonConstant
             ApplicationId = null,
         };
 
-        //public static Role Employee
-        //{
-        //    private set { }
-        //    get
-        //    {
-        //        return new Role
-        //        {
-        //            RoleName = "Employee",
-        //            IsAdmin = false,
-        //            IsRetailer = false,
-        //            IsSystemAdmin = false,
-        //            IsOwner = false
-        //        };
-        //    }
-        //}
-
         public static Role Retailer = new Role
         {
             RoleName = "Retailer",

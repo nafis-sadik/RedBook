@@ -102,7 +102,7 @@ namespace Identity.WebAPI.Configurations
                         GenericConstants.RedbookAPI.ApplicationId = redbookAPI.ApplicationId;
                         #endregion
 
-                        // Route types
+                        #region Route types
                         if (!context.RouteTypes.Any())
                         {
                             RouteTypeConsts.GenericRoute = context.RouteTypes.Add(RouteTypeConsts.GenericRoute).Entity;
@@ -124,7 +124,9 @@ namespace Identity.WebAPI.Configurations
                             RouteTypeConsts.SysAdminRoute = context.RouteTypes.FirstOrDefault(x => x.RouteTypeName == RouteTypeConsts.SysAdminRoute.RouteTypeName)!;
                             RouteTypeConsts.OrganizationOwner = context.RouteTypes.FirstOrDefault(x => x.RouteTypeName == RouteTypeConsts.OrganizationOwner.RouteTypeName)!;
                         }
+                        #endregion
 
+                        #region Routes
                         if (!context.Routes.Any())
                         {
                             context.Routes.RemoveRange(context.Routes);
@@ -263,6 +265,40 @@ namespace Identity.WebAPI.Configurations
 
                             await context.SaveChangesAsync();
                         }
+                        #endregion
+
+                        #region Roles
+                        Role? sysAdmin = await context.Roles.FirstOrDefaultAsync(x => x.RoleName == RoleConstants.SystemAdmin.RoleName);
+                        if(sysAdmin == null) {
+                            sysAdmin = (await context.Roles.AddAsync(RoleConstants.SystemAdmin)).Entity;
+                            await context.SaveChangesAsync();
+                        }
+                        RoleConstants.SystemAdmin.RoleId = sysAdmin.RoleId;
+
+                        Role? redbookAdmin = await context.Roles.FirstOrDefaultAsync(x => x.RoleName == RoleConstants.RedbookAdmin.RoleName);
+                        if (redbookAdmin == null)
+                        {
+                            redbookAdmin = (await context.Roles.AddAsync(RoleConstants.RedbookAdmin)).Entity;
+                            await context.SaveChangesAsync();
+                        }
+                        RoleConstants.RedbookAdmin.RoleId = redbookAdmin.RoleId;
+
+                        Role? redbookOwnerAdmin = await context.Roles.FirstOrDefaultAsync(x => x.RoleName == RoleConstants.RedbookOwnerAdmin.RoleName);
+                        if (redbookOwnerAdmin == null)
+                        {
+                            redbookOwnerAdmin = (await context.Roles.AddAsync(RoleConstants.RedbookAdmin)).Entity;
+                            await context.SaveChangesAsync();
+                        }
+                        RoleConstants.RedbookOwnerAdmin.RoleId = redbookOwnerAdmin.RoleId;
+
+                        Role? retailer = await context.Roles.FirstOrDefaultAsync(x => x.RoleName == RoleConstants.Retailer.RoleName);
+                        if (retailer == null)
+                        {
+                            retailer = (await context.Roles.AddAsync(RoleConstants.Retailer)).Entity;
+                            await context.SaveChangesAsync();
+                        }
+                        RoleConstants.Retailer.RoleId = retailer.RoleId;
+                        #endregion
 
                         await context.DisposeAsync();
                     }

@@ -46,23 +46,12 @@ namespace Identity.Domain.Implementation
                 orgEntity = await _orgRepo.InsertAsync(orgEntity);
                 await factory.SaveChangesAsync();
 
-                // Creating admin role for the organization
-                Role? adminRoleForNewOrg = await _roleRepo.InsertAsync(new Role
-                {
-                    IsAdmin = RoleConstants.OwnerAdmin.IsAdmin,
-                    IsRetailer = RoleConstants.OwnerAdmin.IsRetailer,
-                    IsOwner = RoleConstants.OwnerAdmin.IsOwner,
-                    IsSystemAdmin = RoleConstants.OwnerAdmin.IsSystemAdmin,
-                    RoleName = RoleConstants.OwnerAdmin.RoleName,
-                    OrganizationId = orgEntity.OrganizationId,
-                });
-                await factory.SaveChangesAsync();
-
-                // User role mapping, onboarding api shall take care of the retail user scinerio
+                // Assigning the admin role to the user who created tje organization, 
                 await _userRoleRepo.InsertAsync(new UserRoleMapping
                 {
-                    RoleId = adminRoleForNewOrg.RoleId,
+                    RoleId = RoleConstants.RedbookOwnerAdmin.RoleId,
                     UserId = User.UserId,
+                    OrganizationId = orgEntity.OrganizationId,
                 });
                 await factory.SaveChangesAsync();
 
@@ -139,17 +128,17 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<IEnumerable<OrganizationModel>> GetOrganizationsOfUserAsync()
+        public async Task<IEnumerable<OrganizationModel>> GetUserOrganizationsAsync()
         {
             using(var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 return await _userRoleRepo.UnTrackableQuery()
-                    .Where(x => x.UserId == User.UserId && x.RoleId == RoleConstants.RedbookOwnerAdmin.RoleId)
+                    .Where(x => x.UserId == User.UserId)
                     .Select(mapping => new OrganizationModel
                     {
-                        OrganizationId = mapping.Role.OrganizationId,
+                        OrganizationId = mapping.OrganizationId,
                         OrganizationName = mapping.Role.Organization.OrganizationName
                     })
                     .ToListAsync();

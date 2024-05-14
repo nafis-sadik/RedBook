@@ -60,13 +60,23 @@ namespace Identity.Domain.Implementation
                 _roleRepo = factory.GetRepository<Role>();
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                Role role = await _roleRepo.GetAsync(roleId);
-                if (role == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
-                
-                if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-                
-                _roleRepo.Delete(role);
-                await factory.SaveChangesAsync();
+                Role role = await _roleRepo.UnTrackableQuery()
+                    .Where(x => x.RoleId == roleId)
+                    .Select(r => new Role
+                    {
+                        RoleId = r.RoleId,
+                        OrganizationId=r.OrganizationId
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (role == null || role.OrganizationId == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
+                else
+                {
+                    if (!await this.HasAdminPriviledge(_userRoleRepo, (int)role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                    _roleRepo.Delete(role);
+                    await factory.SaveChangesAsync();
+                }
             }
         }
 
@@ -85,7 +95,7 @@ namespace Identity.Domain.Implementation
                             .Select(x => new RoleModel
                             {
                                 RoleId = x.RoleId,
-                                OrganizationId = x.OrganizationId,
+                                OrganizationId = (int)x.OrganizationId,
                                 IsAdmin = x.IsAdmin == true,
                                 RoleName = x.RoleName,
                             })

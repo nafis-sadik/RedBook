@@ -52,17 +52,12 @@ namespace Identity.Domain.Implementation
                 orgEntity = await orgRepo.InsertAsync(orgEntity);
                 await _repositoryFactory.SaveChangesAsync();
 
-                // Creating admin role for the organization
-                Role userRole = RoleConstants.OwnerAdmin;
-                userRole.OrganizationId = orgEntity.OrganizationId;
-                userRole = await roleRepo.InsertAsync(userRole);
-                await _repositoryFactory.SaveChangesAsync();
-
                 // Assign the role to the user by mapping
                 await userRoleRepo.InsertAsync(new UserRoleMapping
                 {
-                    RoleId = userRole.RoleId,
+                    RoleId = RoleConstants.RedbookOwnerAdmin.RoleId,
                     UserId = newUser.UserId,
+                    OrganizationId = orgEntity.OrganizationId,
                 });
                 await _repositoryFactory.SaveChangesAsync();
             }
