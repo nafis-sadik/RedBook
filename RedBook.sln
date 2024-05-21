@@ -5,7 +5,7 @@ VisualStudioVersion = 17.3.32901.215
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "InventoryService", "InventoryService", "{37085E07-08C0-47E1-AD32-FA42A79FF4B5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inventory.WebAPI", "WebAPI\Inventory.WebAPI.csproj", "{0D1C465B-7066-4417-8788-14025B262E6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inventory.WebAPI", "Inventory.WebAPI\Inventory.WebAPI.csproj", "{0D1C465B-7066-4417-8788-14025B262E6E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Inventory.Data", "DataAccessLayer\Inventory.Data.csproj", "{822A41F2-E1FA-4326-90E5-5F3019677E18}"
 EndProject

@@ -1,0 +1,26 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "dotnet",
+			"task": "build",
+			"group": "build",
+			"problemMatcher": [],
+			"label": "dotnet: build"
+		},
+		{
+			"type": "dotnet",
+			"task": "watch Identity.WebAPI",
+			"file": "E:\\Projects\\Redbook\\RedBook\\Identity.WebAPI\\Identity.WebAPI.csproj",
+			"problemMatcher": [],
+			"label": "dotnet: watch Identity.WebAPI"
+		},
+		{
+			"type": "dotnet",
+			"task": "watch Inventory.WebAPI",
+			"file": "E:\\Projects\\Redbook\\RedBook\\Inventory.WebAPI\\Inventory.WebAPI.csproj",
+			"problemMatcher": [],
+			"label": "dotnet: watch Inventory.WebAPI"
+		}
+	]
+}

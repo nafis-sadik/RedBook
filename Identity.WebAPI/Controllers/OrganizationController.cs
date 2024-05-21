@@ -17,12 +17,6 @@ namespace Identity.WebAPI.Controllers
         private readonly IOrganizationService _organizationService = organizationService;
 
         /// <summary>
-        /// Get list of organizations that the user owns
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetUserOrgs() => Ok(await _organizationService.GetOrganizationsOfUserAsync());
-
-        /// <summary>
         /// Get organization details by organization Id
         /// </summary>
         /// <param name="orgId">Organization Id or unique identifier which is the primary key of organization table</param>
@@ -31,11 +25,11 @@ namespace Identity.WebAPI.Controllers
         public async Task<IActionResult> Get(int orgId) => Ok(await _organizationService.GetOrganizationAsync(orgId));
 
         /// <summary>
-        /// Get all organizations
+        /// Get all organizations owned by user
         /// </summary>
         [HttpGet]
-        [Route("GetAll")]
-        public async Task<IActionResult> GetAll() => Ok(await _organizationService.GetOrganizationsAsync());
+        [Route("Owned")]
+        public async Task<IActionResult> GetAll() => Ok(await _organizationService.GetUserOwnedOrgsAsync());
 
         /// <summary>
         /// Add new organization with details

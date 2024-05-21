@@ -15,10 +15,6 @@ namespace Identity.Domain.Implementation
 {
     public class RoleService : ServiceBase, IRoleService
     {
-        private IRepositoryBase<Role> _roleRepo;
-        private IRepositoryBase<UserRoleMapping> _userRoleRepo;
-        private IRepositoryBase<RoleRouteMapping> _roleRouteMappingRepo;
-
         public RoleService(
             ILogger<RoleService> logger,
             IObjectMapper mapper,
@@ -34,8 +30,8 @@ namespace Identity.Domain.Implementation
 
             using(var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = factory.GetRepository<Role>();
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                var _roleRepo = factory.GetRepository<Role>();
+                var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
@@ -57,8 +53,8 @@ namespace Identity.Domain.Implementation
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = factory.GetRepository<Role>();
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                var _roleRepo = factory.GetRepository<Role>();
+                var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 Role role = await _roleRepo.UnTrackableQuery()
                     .Where(x => x.RoleId == roleId)
@@ -85,8 +81,8 @@ namespace Identity.Domain.Implementation
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = factory.GetRepository<Role>();
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                var _roleRepo = factory.GetRepository<Role>();
+                var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
@@ -107,7 +103,7 @@ namespace Identity.Domain.Implementation
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
+                var _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
                 RoleRouteMapping? existingPermission = await _roleRouteMappingRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RouteId == routeId && x.RoleId == roleId);
                 
@@ -130,8 +126,8 @@ namespace Identity.Domain.Implementation
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _roleRepo = factory.GetRepository<Role>();
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                var _roleRepo = factory.GetRepository<Role>();
+                var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
@@ -144,39 +140,52 @@ namespace Identity.Domain.Implementation
                 return Mapper.Map<RoleModel>(roleEntity);
             }
         }
+        
 
+        /// <summary>
+        /// Gets the organizations that the user is allowed to access for the specified route.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="routeId">The ID of the route.</param>
+        /// <returns>An array of organization IDs that the user is allowed to access for the specified route.</returns>
         public async Task<int[]> GetOrganizationsAllowedToUserByRoute(int userId, int routeId)
         {
+            throw new NotImplementedException();
             using(var unitOfWord = UnitOfWorkManager.GetRepositoryFactory())
             {
-                var _userRepo = unitOfWord.GetRepository<User>();
-                _userRoleRepo = unitOfWord.GetRepository<UserRoleMapping>();
-                _roleRouteMappingRepo = unitOfWord.GetRepository<RoleRouteMapping>();
+                // var _userRepo = unitOfWord.GetRepository<User>();
+                // var _userRoleRepo = unitOfWord.GetRepository<UserRoleMapping>();
+                // var _roleRouteMappingRepo = unitOfWord.GetRepository<RoleRouteMapping>();
+                // var _userRoleMappings = unitOfWord.GetRepository<UserRoleMapping>();
 
-                User usr = await _userRepo.GetAsync(userId);
-                if (usr == null) throw new ArgumentException("Resource not found");
+                // User usr = await _userRepo.GetAsync(userId);
+                // if (usr == null) throw new ArgumentException("Resource not found");
 
-                // Need to check if is admin
-                int[] roleOrfids = await _roleRouteMappingRepo
-                    .UnTrackableQuery()
-                    .Where(x => x.RouteId == routeId)
-                    .Select(x => x.Role.OrganizationId)
-                    .ToArrayAsync();
+                // var data = _userRoleMappings
+                //     .UnTrackableQuery()
+                //     .Where(x => x.UserId == userId);
 
-                int[] userOrgIds = await _userRoleRepo
-                    .UnTrackableQuery()
-                    .Where(x => x.UserId == userId && x.RoleId == routeId)
-                    .Select(x => x.Role.OrganizationId)
-                    .ToArrayAsync();
+                // // Get list of organization ids that have access to the route
+                // int?[] orgIds = await _roleRouteMappingRepo
+                //     .UnTrackableQuery()
+                //     .Where(x => x.RouteId == routeId)
+                //     .Select(x => x.Role.OrganizationId)
+                //     .ToArrayAsync();
 
-                List<int> responseIds = new List<int>();
-                foreach(var userOrgId in userOrgIds)
-                {
-                    if(roleOrfids.Contains(userOrgId))
-                        responseIds.Add(userOrgId);
-                }
+                // int[] userOrgIds = await _userRoleRepo
+                //     .UnTrackableQuery()
+                //     .Where(x => x.UserId == userId && x.RoleId == routeId)
+                //     .Select(x => x.Role.OrganizationId)
+                //     .ToArrayAsync();
 
-                return responseIds.ToArray();
+                // List<int> responseIds = new List<int>();
+                // foreach(var userOrgId in userOrgIds)
+                // {
+                //     if(roleOrfids.Contains(userOrgId))
+                //         responseIds.Add(userOrgId);
+                // }
+
+                // return responseIds.ToArray();
             }
         }
     }

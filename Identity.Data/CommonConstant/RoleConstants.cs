@@ -12,7 +12,7 @@ namespace Identity.Data.CommonConstant
             IsSystemAdmin = true,
             IsOwner = true,
             OrganizationId = null,
-            ApplicationId = null,
+            ApplicationId = 1,
         };
 
         public static Role RedbookAdmin = new Role
@@ -23,7 +23,7 @@ namespace Identity.Data.CommonConstant
             IsSystemAdmin = false,
             IsOwner = false,
             OrganizationId = null,
-            ApplicationId = null,
+            ApplicationId = 1,
         };
 
         public static Role RedbookOwnerAdmin = new Role
@@ -34,7 +34,7 @@ namespace Identity.Data.CommonConstant
             IsSystemAdmin = false,
             IsOwner = true,
             OrganizationId = null,
-            ApplicationId = null,
+            ApplicationId = 1,
         };
 
         public static Role Retailer = new Role
@@ -45,7 +45,7 @@ namespace Identity.Data.CommonConstant
             IsSystemAdmin = false,
             IsOwner = false,
             OrganizationId = null,
-            ApplicationId = null,
+            ApplicationId = 1,
         };
     }
 }

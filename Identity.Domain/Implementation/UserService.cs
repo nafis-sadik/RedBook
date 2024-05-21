@@ -35,7 +35,7 @@ namespace Identity.Domain.Implementation
         { }
 
         // Public API
-        public async Task<string?> LogInAsync(UserModel userModel)
+        public async Task<string> LogInAsync(UserModel userModel)
         {
             User? userEntity;
             int[] userRolesIds;
@@ -137,7 +137,7 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<UserModel?> GetById(int userId)
+        public async Task<UserModel> GetById(int userId)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
@@ -196,6 +196,24 @@ namespace Identity.Domain.Implementation
             }
         }
 
+        public async Task<List<OrganizationModel>> GetUserOrganizationsAsync(){
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+
+                List<OrganizationModel> orgList = await _userRoleRepo.UnTrackableQuery()
+                    .Where(x => x.UserId == User.UserId)
+                    .Select(mapping => new OrganizationModel{
+                        OrganizationId = mapping.OrganizationId,
+                        OrganizationName = mapping.Role.Organization.OrganizationName,
+                        OrganizationAddress = mapping.Role.Organization.Address,
+                    })
+                    .ToListAsync();
+
+                IDictionary<int, OrganizationModel> orgDict = orgList.ToDictionary(x => x.OrganizationId);
+                return orgDict.Values.ToList();
+            }
+        }
         // SysAdmin Only API
         public async Task<UserModel> RegisterNewUser(UserModel userModel)
         {
@@ -208,7 +226,7 @@ namespace Identity.Domain.Implementation
                 if (string.IsNullOrEmpty(userModel.Email))
                     throw new ArgumentException("Email not provided");
 
-                User? newUser = await _userRepo.TrackableQuery().FirstOrDefaultAsync(x => userModel.Email.Equals(x.Email));
+                User newUser = await _userRepo.TrackableQuery().FirstOrDefaultAsync(x => userModel.Email.Equals(x.Email));
                 if(newUser == null)
                 {
                     newUser = Mapper.Map<User>(userModel);
@@ -218,7 +236,7 @@ namespace Identity.Domain.Implementation
                     await factory.SaveChangesAsync();
                 }
 
-                Role? orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId && x.IsAdmin == true);
+                Role orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId && x.IsAdmin == true);
                 if (orgAdminRole == null)
                 {
                     orgAdminRole = await _roleRepo.InsertAsync(new Role
@@ -285,7 +303,7 @@ namespace Identity.Domain.Implementation
                 if (!await this.HasSystemAdminPriviledge(_userRoleRepo))
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                User? userEntity = await _userRepo.GetAsync(userId);
+                User userEntity = await _userRepo.GetAsync(userId);
                 if (userEntity == null)
                     throw new ArgumentException($"User with identifier {userId} was not found");
 
@@ -342,7 +360,7 @@ namespace Identity.Domain.Implementation
 
                 if (!await this.HasOwnerAdminPriviledge(_userRoleRepo, userModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                User? userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Email == userModel.Email);
+                User userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Email == userModel.Email);
                 if (userEntity == null)
                 {
                     userEntity = await _userRepo.InsertAsync(new User

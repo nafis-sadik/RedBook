@@ -29,6 +29,7 @@ namespace Identity.WebAPI.Configurations
 
                         #region User Insert
                         if (!context.UserRoleMappings.Any())
+                        {
                             context.UserRoleMappings.Add(new UserRoleMapping
                             {
                                 User = new User
@@ -60,8 +61,12 @@ namespace Identity.WebAPI.Configurations
                                         UpdateDate = null,
                                         UpdatededBy = string.Empty,
                                     }
-                                }
+                                },
+                                OrganizationId = 1,
                             });
+
+                            context.SaveChanges();
+                        }
                         #endregion
 
                         #region Applications
@@ -286,7 +291,7 @@ namespace Identity.WebAPI.Configurations
                         Role? redbookOwnerAdmin = await context.Roles.FirstOrDefaultAsync(x => x.RoleName == RoleConstants.RedbookOwnerAdmin.RoleName);
                         if (redbookOwnerAdmin == null)
                         {
-                            redbookOwnerAdmin = (await context.Roles.AddAsync(RoleConstants.RedbookAdmin)).Entity;
+                            redbookOwnerAdmin = (await context.Roles.AddAsync(RoleConstants.RedbookOwnerAdmin)).Entity;
                             await context.SaveChangesAsync();
                         }
                         RoleConstants.RedbookOwnerAdmin.RoleId = redbookOwnerAdmin.RoleId;

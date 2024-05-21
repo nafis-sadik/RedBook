@@ -11,11 +11,11 @@ public partial class Role
 
     public int? OrganizationId { get; set; }
 
-    public bool? IsAdmin { get; set; }
+    public bool IsAdmin { get; set; }
 
-    public bool? IsRetailer { get; set; }
+    public bool IsRetailer { get; set; }
 
-    public bool? IsSystemAdmin { get; set; }
+    public bool IsSystemAdmin { get; set; }
 
     public bool IsOwner { get; set; }
 

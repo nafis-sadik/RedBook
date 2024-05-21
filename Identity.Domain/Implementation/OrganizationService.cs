@@ -29,6 +29,17 @@ namespace Identity.Domain.Implementation
             IClaimsPrincipalAccessor claimsPrincipalAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
         { }
+        public async Task<OrganizationModel> GetOrganizationAsync(int OrganizationId)
+        {
+            Organization? orgEntity;
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                _orgRepo = factory.GetRepository<Organization>();
+                orgEntity = await _orgRepo.GetAsync(OrganizationId);
+            }
+            if (orgEntity == null) throw new ArgumentException($"Organization with identifier {OrganizationId} was not found");
+            return Mapper.Map<OrganizationModel>(orgEntity);
+        }
 
         public async Task<OrganizationModel> AddOrganizationAsync(OrganizationModel organizationModel)
         {
@@ -59,6 +70,27 @@ namespace Identity.Domain.Implementation
             }
         }
 
+        public async Task<OrganizationModel> UpdateOrganizationAsync(OrganizationModel organizationModel)
+        {
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                _orgRepo = factory.GetRepository<Organization>();
+
+                if (!await this.HasAdminPriviledge(_userRoleRepo, organizationModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+
+                Organization? orgEntity = await _orgRepo.GetAsync(organizationModel.OrganizationId);
+                if (orgEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
+
+                orgEntity = Mapper.Map(organizationModel, orgEntity);
+
+                orgEntity = _orgRepo.Update(orgEntity);
+                await factory.SaveChangesAsync();
+    
+                return Mapper.Map<OrganizationModel>(orgEntity);
+            }
+        }
+    
         public async Task DeleteOrganizationAsync(int OrganizationId)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
@@ -100,42 +132,14 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<OrganizationModel> GetOrganizationAsync(int OrganizationId)
-        {
-            Organization? orgEntity;
-            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
-            {
-                _orgRepo = factory.GetRepository<Organization>();
-                orgEntity = await _orgRepo.GetAsync(OrganizationId);
-            }
-            if (orgEntity == null) throw new ArgumentException($"Organization with identifier {OrganizationId} was not found");
-            return Mapper.Map<OrganizationModel>(orgEntity);
-        }
-
-        public async Task<IEnumerable<OrganizationModel>> GetOrganizationsAsync()
-        {
-            List<OrganizationModel> organizationModels = new List<OrganizationModel>();
-
-            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
-            {
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
-
-                return await _userRoleRepo.UnTrackableQuery().Where(x => (x.Role.IsAdmin == true || x.Role.IsOwner) && x.UserId == User.UserId)
-                    .Select(x => new OrganizationModel {
-                        OrganizationId = x.Role.Organization.OrganizationId,
-                        OrganizationName = x.Role.Organization.OrganizationName
-                    }).ToListAsync();
-            }
-        }
-
-        public async Task<IEnumerable<OrganizationModel>> GetUserOrganizationsAsync()
+        public async Task<IEnumerable<OrganizationModel>> GetUserOwnedOrgsAsync()
         {
             using(var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 return await _userRoleRepo.UnTrackableQuery()
-                    .Where(x => x.UserId == User.UserId)
+                    .Where(x => x.UserId == User.UserId && x.Role.IsOwner)
                     .Select(mapping => new OrganizationModel
                     {
                         OrganizationId = mapping.OrganizationId,
@@ -147,6 +151,7 @@ namespace Identity.Domain.Implementation
 
         public async Task<PagedModel<OrganizationModel>> GetPagedOrganizationsAsync(PagedModel<OrganizationModel> pagedOrganizationModel)
         {
+            throw new NotImplementedException();
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 _orgRepo = factory.GetRepository<Organization>();
@@ -163,26 +168,5 @@ namespace Identity.Domain.Implementation
 
             return pagedOrganizationModel;
         }
-
-        public async Task<OrganizationModel> UpdateOrganizationAsync(OrganizationModel organizationModel)
-        {
-            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
-            {
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
-                _orgRepo = factory.GetRepository<Organization>();
-
-                if (!await this.HasAdminPriviledge(_userRoleRepo, organizationModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-
-                Organization? orgEntity = await _orgRepo.GetAsync(organizationModel.OrganizationId);
-                if (orgEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
-
-                orgEntity = Mapper.Map(organizationModel, orgEntity);
-
-                orgEntity = _orgRepo.Update(orgEntity);
-                await factory.SaveChangesAsync();
-    
-                return Mapper.Map<OrganizationModel>(orgEntity);
-            }
-        }
-    }
+}
 }

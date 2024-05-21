@@ -127,10 +127,17 @@ namespace Identity.WebAPI.Controllers
         public async Task RemoveUserFromBusiness(int userId, int orgId) => await _userServices.RemoveUserFromOrganization(userId, orgId);
 
         /// <summary>
-        /// Get user list under organization (organization admin access only)
+        /// Get list of organizations that the user owns
         /// </summary>
-        /// <param name="orgId">Organization Id <see cref="int"/></param>
-        /// <param name="pagedModel">Organization Id <see cref="PagedModel<UserModel>"/></param>
+        [HttpGet]
+        public async Task<IActionResult> GetUserOrgs() => Ok(await _userServices.GetUserOrganizationsAsync());
+        
+        /// <summary>
+        /// Retrieves a paged list of users associated with the specified organization. (Organization admin access only)
+        /// </summary>
+        /// <param name="pagedModel">The paged model containing the requested page size and page number.</param>
+        /// <param name="orgId">The ID of the organization to retrieve users for.</param>
+        /// <returns>An <see cref="IActionResult"/> containing the paged list of users.</returns>
         [HttpGet]
         [Authorize]
         [Route("{orgId}")]
