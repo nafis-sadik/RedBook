@@ -59,7 +59,7 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         /// <param name="roleId">User unique identifier<see cref="int"/>.</param>
         [HttpGet]
-        [Route("GetRoutesByRoleId/{roleId}")]
+        [Route("Role/{roleId}")]
         public async Task<IActionResult> GetRoutesByRoleId(int roleId) => Ok(await _routeServices.GetRoutesByRoleId(roleId));
 
         /// <summary>

@@ -226,6 +226,12 @@ namespace Identity.Domain.Implementation
                 if (string.IsNullOrEmpty(userModel.Email))
                     throw new ArgumentException("Email not provided");
 
+                if (userModel.OrganizationId <= 0)
+                    throw new ArgumentException("No organization selected");
+
+                if (userModel.ApplicationId <= 0)
+                    throw new ArgumentException("Unknown application");
+
                 User newUser = await _userRepo.TrackableQuery().FirstOrDefaultAsync(x => userModel.Email.Equals(x.Email));
                 if(newUser == null)
                 {
@@ -254,6 +260,7 @@ namespace Identity.Domain.Implementation
                 UserRoleMapping userRole = await _userRoleRepo.InsertAsync(new UserRoleMapping {
                     RoleId = orgAdminRole.RoleId,
                     UserId = newUser.UserId,
+                    OrganizationId = userModel.OrganizationId,
                 });
 
                 await factory.SaveChangesAsync();

@@ -44,7 +44,7 @@ namespace Identity.WebAPI.Controllers
         /// Returns roles by Organization Id
         /// </summary>
         [HttpGet]
-        [Route("OrganizationRoles/{orgId}")]
+        [Route("Organization/{orgId}")]
         public async Task<IActionResult> GetByOrg(int orgId) => Ok(await _roleServices.GetOrganizationRoles(orgId));
 
         /// <summary>

@@ -39,7 +39,10 @@ namespace Identity.Domain.Implementation
                 {
                     RoleName = role.RoleName,
                     IsAdmin = role.IsAdmin,
-                    OrganizationId = role.OrganizationId
+                    OrganizationId = role.OrganizationId,
+                    IsRetailer = false,
+                    IsSystemAdmin = false,
+                    IsOwner = false
                 });
 
                 await factory.SaveChangesAsync();
