@@ -15,6 +15,7 @@ using Identity.Domain.Abstraction;
 using RedBook.Core.Security;
 using Microsoft.AspNetCore.Http;
 using RedBook.Core.Models;
+using Identity.Data.CommonConstant;
 
 namespace Identity.Domain.Implementation
 {
@@ -103,7 +104,7 @@ namespace Identity.Domain.Implementation
                     userEntity.LastName = userModel.LastName;
                     userEntity.UserName = userModel.UserName;
 
-                    int[] userModelRoleIds = userModel.Roles.Select(x => x.RoleId).ToArray();
+                    int[] userModelRoleIds = userModel.UserRoles.Select(x => x.RoleId).ToArray();
                     UserRoleMapping[] roleMappingRecords = await _userRoleRepo.UnTrackableQuery()
                         .Where(x => x.UserId == userModel.UserId && userModel.OrganizationId == x.Role.OrganizationId)
                         .Select(x => new UserRoleMapping {
@@ -215,75 +216,59 @@ namespace Identity.Domain.Implementation
             }
         }
         // SysAdmin Only API
-        public async Task<UserModel> RegisterNewUser(UserModel userModel)
-        {
-            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
-            {
-                _userRepo = factory.GetRepository<User>();
-                _roleRepo = factory.GetRepository<Role>();
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+        //public async Task<UserModel> RegisterNewOwner(UserModel userModel)
+        //{
+        //    using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+        //    {
+        //        _userRepo = factory.GetRepository<User>();
+        //        _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (string.IsNullOrEmpty(userModel.Email))
-                    throw new ArgumentException("Email not provided");
+        //        if (string.IsNullOrEmpty(userModel.Email))
+        //            throw new ArgumentException("Email not provided");
 
-                if (userModel.OrganizationId <= 0)
-                    throw new ArgumentException("No organization selected");
+        //        if (userModel.OrganizationId <= 0)
+        //            throw new ArgumentException("No organization selected");
 
-                if (userModel.ApplicationId <= 0)
-                    throw new ArgumentException("Unknown application");
+        //        if (userModel.ApplicationId <= 0)
+        //            throw new ArgumentException("Unknown application");
 
-                User newUser = await _userRepo.TrackableQuery().FirstOrDefaultAsync(x => userModel.Email.Equals(x.Email));
-                if(newUser == null)
-                {
-                    newUser = Mapper.Map<User>(userModel);
-                    newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword);
-                    newUser.Status = true;
-                    newUser = await _userRepo.InsertAsync(newUser);
-                    await factory.SaveChangesAsync();
-                }
+        //        User newUser = await _userRepo.TrackableQuery().FirstOrDefaultAsync(x => userModel.Email.Equals(x.Email));
+        //        if(newUser == null)
+        //        {
+        //            newUser = Mapper.Map<User>(userModel);
+        //            newUser.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword);
+        //            newUser.Status = true;
+        //            newUser = await _userRepo.InsertAsync(newUser);
+        //            await factory.SaveChangesAsync();
+        //        }
 
-                Role orgAdminRole = await _roleRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.OrganizationId == userModel.OrganizationId && x.IsAdmin == true);
-                if (orgAdminRole == null)
-                {
-                    orgAdminRole = await _roleRepo.InsertAsync(new Role
-                    {
-                        IsAdmin = true,
-                        IsRetailer = false,
-                        RoleName = "Admin",
-                        IsSystemAdmin = false,
-                        OrganizationId = userModel.OrganizationId,
-                    });
+        //        UserRoleMapping userRole = await _userRoleRepo.InsertAsync(new UserRoleMapping {
+        //            RoleId = RoleConstants.RedbookOwnerAdmin.RoleId,
+        //            UserId = newUser.UserId,
+        //            OrganizationId = userModel.OrganizationId,
+        //        });
 
-                    await _roleRepo.SaveChangesAsync();
-                }
+        //        await factory.SaveChangesAsync();
 
-                UserRoleMapping userRole = await _userRoleRepo.InsertAsync(new UserRoleMapping {
-                    RoleId = orgAdminRole.RoleId,
-                    UserId = newUser.UserId,
-                    OrganizationId = userModel.OrganizationId,
-                });
+        //        // Allow Org admin Routes
+        //        var _routeRepo = factory.GetRepository<Route>();
+        //        var _roleRouteRepo = factory.GetRepository<RoleRouteMapping>();
+        //        var allRoutesOfApp = _routeRepo.UnTrackableQuery().Where(x => x.ApplicationId == userModel.ApplicationId);
 
-                await factory.SaveChangesAsync();
+        //        foreach (var route in allRoutesOfApp)
+        //        {
+        //            await _roleRouteRepo.InsertAsync(new RoleRouteMapping
+        //            {
+        //                RoleId = orgAdminRole.RoleId,
+        //                RouteId = route.RouteId,
+        //            });
+        //        }
 
-                // Allow Org admin Routes
-                var _routeRepo = factory.GetRepository<Route>();
-                var _roleRouteRepo = factory.GetRepository<RoleRouteMapping>();
-                var allRoutesOfApp = _routeRepo.UnTrackableQuery().Where(x => x.ApplicationId == userModel.ApplicationId);
+        //        await factory.SaveChangesAsync();
 
-                foreach (var route in allRoutesOfApp)
-                {
-                    await _roleRouteRepo.InsertAsync(new RoleRouteMapping
-                    {
-                        RoleId = orgAdminRole.RoleId,
-                        RouteId = route.RouteId,
-                    });
-                }
-
-                await factory.SaveChangesAsync();
-
-                return Mapper.Map<UserModel>(newUser);
-            }
-        }
+        //        return Mapper.Map<UserModel>(newUser);
+        //    }
+        //}
 
         public async Task DeleteAccount(int userId)
         {
@@ -386,7 +371,7 @@ namespace Identity.Domain.Implementation
                 }
 
                 // Assigned role selectef from the front end dropdown
-                foreach (RoleModel role in userModel.Roles)
+                foreach (RoleModel role in userModel.UserRoles)
                 {
                     await _userRoleRepo.InsertAsync(new UserRoleMapping
                     {
@@ -434,15 +419,15 @@ namespace Identity.Domain.Implementation
                         UserName = u.User.UserName,
                         Email = u.User.Email,
                         PhoneNumber = u.User.PhoneNumber,
-                        Roles = _userRoleRepo
-                                    .UnTrackableQuery()
-                                    .Where(x => x.UserId == u.UserId && x.Role.OrganizationId == orgId)
-                                    .Select(x => new RoleModel
-                                    {
-                                        RoleId = x.RoleId,
-                                        RoleName = x.Role.RoleName
-                                    })
-                                    .ToArray()
+                        UserRoles = _userRoleRepo
+                            .UnTrackableQuery()
+                            .Where(x => x.UserId == u.UserId && x.Role.OrganizationId == orgId)
+                            .Select(x => new RoleModel
+                            {
+                                RoleId = x.RoleId,
+                                RoleName = x.Role.RoleName
+                            })
+                            .ToArray()
                     })
                     .ToListAsync();
 

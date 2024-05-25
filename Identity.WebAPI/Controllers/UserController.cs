@@ -32,10 +32,11 @@ namespace Identity.WebAPI.Controllers
         /// Register new users to organization
         /// </summary>
         /// <param name="user">Application Id or unique identifier which is the primary key of the application</param>
-        [HttpPost]
-        [SwaggerResponse(statusCode: 200, type: typeof(string), description: "Return JWT token")]
-        [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> RegisterUser(UserModel user) => Ok(await _userServices.RegisterNewUser(user));
+        //[HttpPost]
+        //[Route("Owner")]
+        //[SwaggerResponse(statusCode: 200, type: typeof(string), description: "Return JWT token")]
+        //[SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
+        //public async Task<IActionResult> RegisterNewOwner(UserModel user) => Ok(await _userServices.RegisterNewOwner(user));
 
         /// <summary>
         /// Archive own account only. User may join a different organization under redbook, thus organization admins should not hold the right to archive an user.

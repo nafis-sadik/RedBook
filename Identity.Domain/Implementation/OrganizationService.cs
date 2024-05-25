@@ -138,6 +138,9 @@ namespace Identity.Domain.Implementation
             {
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
+                Console.WriteLine(_userRoleRepo.UnTrackableQuery()
+                    .Where(x => x.UserId == User.UserId && x.Role.IsOwner).ToQueryString());
+
                 return await _userRoleRepo.UnTrackableQuery()
                     .Where(x => x.UserId == User.UserId && x.Role.IsOwner)
                     .Select(mapping => new OrganizationModel

@@ -18,7 +18,7 @@ namespace Identity.Domain.Abstraction
         Task DeleteAccount(int userId);
         Task<bool> ArchiveAccount(int userId);
         Task UnArchiveAccount(int userId);
-        Task<UserModel> RegisterNewUser(UserModel userModel);
+        //Task<UserModel> RegisterNewOwner(UserModel userModel);
         Task<UserModel> AddUserToBusiness(UserModel userModel);
         Task RemoveUserFromOrganization(int userId, int orgId);
         Task<PagedModel<UserModel>> GetUserByOrganizationId(PagedModel<UserModel> pagedModel, int orgId);

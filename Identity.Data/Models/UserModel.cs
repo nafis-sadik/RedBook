@@ -10,7 +10,7 @@
         public string ProfilePicLoc { get; set; }
         public string Address { get; set; }
         public string PhoneNumber { get; set; }
-        public RoleModel[] Roles { get; set; }
+        public RoleModel[] UserRoles { get; set; }
         public string Status { get; set; }
         public string Password { get; set; }
         public decimal? AccountBalance { get; set; }
