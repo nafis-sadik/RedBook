@@ -30,6 +30,7 @@ namespace RedBook.Core.Domain
             }
             private set { _unitOfWorkManager = value; }
         }
+
         public ILogger _logger;
         public ILogger Logger { get { return _logger; } private set { _logger = value; } }
 

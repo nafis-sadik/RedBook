@@ -10,6 +10,7 @@ using RedBook.Core.AutoMapper;
 using RedBook.Core.Constants;
 using RedBook.Core.Domain;
 using System.Data;
+using Microsoft.AspNetCore.Http;
 
 namespace Identity.Domain.Implementation
 {
@@ -19,19 +20,33 @@ namespace Identity.Domain.Implementation
             ILogger<RoleService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
-            IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
+            IClaimsPrincipalAccessor claimsPrincipalAccessor,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor)
         { }
         
         // Org admin only
         public async Task<RoleModel> AddRoleAsync(RoleModel role)
         {
+            if (!HttpContextAccessor.Request.Headers.TryGetValue("Origin", out var originStrPrimitives))
+                throw new ArgumentException("Invalid Origin");
+
             if (role.OrganizationId <= 0) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
 
             using(var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _roleRepo = factory.GetRepository<Role>();
+                var _appRepo = factory.GetRepository<Application>();
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+
+                string originUrl = originStrPrimitives.ToString();
+
+                int appId = await _appRepo.UnTrackableQuery()
+                    .Where(x => x.ApplicationUrl.ToLower().Equals(originUrl.ToLower()))
+                    .Select(x => x.ApplicationId)
+                    .FirstOrDefaultAsync();
+
+                if (appId <= 0) throw new ArgumentException("Unknown Origin");
 
                 if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
@@ -40,6 +55,7 @@ namespace Identity.Domain.Implementation
                     RoleName = role.RoleName,
                     IsAdmin = role.IsAdmin,
                     OrganizationId = role.OrganizationId,
+                    ApplicationId = appId,
                     IsRetailer = false,
                     IsSystemAdmin = false,
                     IsOwner = false

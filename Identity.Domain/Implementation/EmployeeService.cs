@@ -31,7 +31,7 @@ namespace Identity.Domain.Implementation
                 if (!await this.HasOwnerAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 var query = _userRoleRepo.UnTrackableQuery()
-                    .Where(x => x.Role.OrganizationId == orgId);
+                    .Where(x => x.OrganizationId == orgId);
 
                 if (!string.IsNullOrEmpty(pagedEmployeeList.SearchString))
                 {
