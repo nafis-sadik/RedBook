@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace Inventory.Data.Entities;
 
 public partial class SalesInvoice
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int InvoiceId { get; set; }
 
     public DateTime SalesDate { get; set; }
@@ -14,6 +18,8 @@ public partial class SalesInvoice
     public decimal TotalAmount { get; set; }
 
     public int OrganizationId { get; set; }
+
+    public string ChalanNo { get; set; }
 
     public virtual ICollection<Sale> Sales { get; set; } = new List<Sale>();
 

@@ -1,14 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace Inventory.Data.Entities;
 
 public partial class Category
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int CategoryId { get; set; }
 
     public string CatagoryName { get; set; }
 
+    [ForeignKey("ParentCategory")]
     public int? ParentCategoryId { get; set; }
 
     public DateTime CreateDate { get; set; }

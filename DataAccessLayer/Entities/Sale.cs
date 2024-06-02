@@ -1,17 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
 namespace Inventory.Data.Entities;
 
 public partial class Sale
 {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int SalesId { get; set; }
 
+    [ForeignKey("Invoice")]
     public int InvoiceId { get; set; }
 
+    [ForeignKey("Product")]
     public int ProductId { get; set; }
 
-    public string ChalanNo { get; set; }
+    [ForeignKey("PurchaseInvoice")]
+    public int PurchaseId { get; set; }
 
     public decimal Quantity { get; set; }
 
@@ -22,6 +29,8 @@ public partial class Sale
     public DateTime CreateDate { get; set; }
 
     public virtual SalesInvoice Invoice { get; set; }
+
+    public virtual PurchaseInvoice PurchaseInvoice { get; set; }
 
     public virtual Product Product { get; set; }
 }

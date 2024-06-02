@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Data.Migrations
 {
     [DbContext(typeof(RedbookInventoryContext))]
-    [Migration("20240410073345_init")]
+    [Migration("20240602123412_init")]
     partial class init
     {
         /// <inheritdoc />
@@ -35,13 +35,11 @@ namespace Inventory.Data.Migrations
 
                     b.Property<string>("BankName")
                         .IsRequired()
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(max)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("BankId")
-                        .HasName("PK__Bank__3214EC07A30FEA48");
+                    b.HasKey("BankId");
 
-                    b.ToTable("Bank", (string)null);
+                    b.ToTable("Banks");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.BankAccount", b =>
@@ -54,16 +52,17 @@ namespace Inventory.Data.Migrations
 
                     b.Property<string>("AccountName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("BranchId")
                         .HasColumnType("int");
 
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int");
+
                     b.HasKey("AccountId");
 
-                    b.HasIndex(new[] { "BranchId" }, "IX_BankAccounts_BranchId");
+                    b.HasIndex("BranchId");
 
                     b.ToTable("BankAccounts");
                 });
@@ -81,14 +80,13 @@ namespace Inventory.Data.Migrations
 
                     b.Property<string>("BranchName")
                         .IsRequired()
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(max)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("BranchId");
 
-                    b.HasIndex(new[] { "BankId" }, "IX_BankBranch_BankId");
+                    b.HasIndex("BankId");
 
-                    b.ToTable("BankBranch", (string)null);
+                    b.ToTable("BankBranches");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.Category", b =>
@@ -101,13 +99,10 @@ namespace Inventory.Data.Migrations
 
                     b.Property<string>("CatagoryName")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreateDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int");
@@ -116,19 +111,17 @@ namespace Inventory.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("ParentCategoryId")
-                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdateDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("UpdatedBy")
                         .HasColumnType("int");
 
                     b.HasKey("CategoryId");
 
-                    b.HasIndex(new[] { "ParentCategoryId" }, "IX_Categories_ParentCategoryId");
+                    b.HasIndex("ParentCategoryId");
 
                     b.ToTable("Categories");
                 });
@@ -143,19 +136,14 @@ namespace Inventory.Data.Migrations
 
                     b.Property<string>("AttributeName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("AttributeType")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreateDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("CreatedBy")
                         .HasColumnType("int");
@@ -164,15 +152,11 @@ namespace Inventory.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdateDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("AttributeId");
 
-                    b.HasIndex(new[] { "AttributeId" }, "PK__CommonAt__3214EC0712D1E7C6")
-                        .IsUnique();
-
-                    b.ToTable("CommonAttribute", (string)null);
+                    b.ToTable("CommonAttributes");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.Product", b =>
@@ -190,19 +174,17 @@ namespace Inventory.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreateDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(max)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Quantity")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("QuantityAttributeId")
                         .HasColumnType("int");
@@ -211,14 +193,13 @@ namespace Inventory.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdateDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("ProductId");
 
-                    b.HasIndex(new[] { "CategoryId" }, "IX_Products_CategoryId");
+                    b.HasIndex("CategoryId");
 
-                    b.HasIndex(new[] { "QuantityAttributeId" }, "IX_Products_QuantityAttributeId");
+                    b.HasIndex("QuantityAttributeId");
 
                     b.ToTable("Products");
                 });
@@ -237,20 +218,28 @@ namespace Inventory.Data.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
+                    b.Property<int>("ProductName")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Quantity")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("PurchaseId")
-                        .HasName("PK_PurchaseDetails");
+                    b.Property<int?>("UpdateBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PurchaseId");
 
                     b.HasIndex("InvoiceId");
 
-                    b.HasIndex(new[] { "ProductId" }, "IX_PurchaseDetails_ProductId");
+                    b.HasIndex("ProductId");
 
-                    b.ToTable("Purchase", (string)null);
+                    b.ToTable("Purchases");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.PurchaseInvoice", b =>
@@ -263,63 +252,70 @@ namespace Inventory.Data.Migrations
 
                     b.Property<string>("ChalanNumber")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("CheckNumber")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("CreateBy")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("CreateDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("PurchaseDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
-                    b.Property<int>("PurchaseId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("PurchasedBy")
-                        .HasColumnType("int");
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalPurchasePrice")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("InvoiceId")
-                        .HasName("PK_Purchase");
+                    b.Property<int>("VendorId")
+                        .HasColumnType("int");
 
-                    b.ToTable("PurchaseInvoice", (string)null);
+                    b.HasKey("InvoiceId");
+
+                    b.HasIndex("VendorId");
+
+                    b.ToTable("PurchaseInvoices");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.PurchasePaymentRecord", b =>
                 {
                     b.Property<int>("PurchasePaymentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PurchasePaymentId"));
+
+                    b.Property<int?>("AccountId")
                         .HasColumnType("int");
 
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("PaymentAmount")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("PaymentDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
-                    b.HasKey("PurchasePaymentId")
-                        .HasName("PK_PurchasePayments");
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex(new[] { "InvoiceId" }, "IX_PurchasePayments_PurchaseId");
+                    b.Property<string>("TransactionReference")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("PurchasePaymentId");
+
+                    b.HasIndex("AccountId");
+
+                    b.HasIndex("InvoiceId");
 
                     b.ToTable("PurchasePaymentRecords");
                 });
@@ -332,18 +328,11 @@ namespace Inventory.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesId"));
 
-                    b.Property<string>("ChalanNo")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
-
                     b.Property<int>("CreateBy")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreateDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int");
@@ -351,18 +340,22 @@ namespace Inventory.Data.Migrations
                     b.Property<int>("ProductId")
                         .HasColumnType("int");
 
+                    b.Property<int>("PurchaseId")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("Quantity")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("SalesId")
-                        .HasName("PK_SalesDetails");
+                    b.HasKey("SalesId");
 
-                    b.HasIndex(new[] { "ProductId" }, "IX_SalesDetails_ProductId");
+                    b.HasIndex("InvoiceId");
 
-                    b.HasIndex(new[] { "InvoiceId" }, "IX_SalesDetails_SalesId");
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("PurchaseId");
 
                     b.ToTable("Sales");
                 });
@@ -375,26 +368,26 @@ namespace Inventory.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InvoiceId"));
 
+                    b.Property<string>("ChalanNo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("SalesDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SoldBy")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
-                    b.HasKey("InvoiceId")
-                        .HasName("PK_Sales");
+                    b.HasKey("InvoiceId");
 
-                    b.ToTable("SalesInvoice", (string)null);
+                    b.ToTable("SalesInvoices");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.SalesPaymentRecord", b =>
@@ -412,17 +405,63 @@ namespace Inventory.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("PaymentAmount")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("PaymentDate")
-                        .HasPrecision(0)
-                        .HasColumnType("datetime2(0)");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("SalesPaymentId");
 
-                    b.HasIndex(new[] { "InvoiceId" }, "IX_SalesPaymentRecords_SalesId");
+                    b.HasIndex("InvoiceId");
 
                     b.ToTable("SalesPaymentRecords");
+                });
+
+            modelBuilder.Entity("Inventory.Data.Entities.Vendor", b =>
+                {
+                    b.Property<int>("VendorId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VendorId"));
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ApplicationId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CreateBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UpdateBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VendorName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("VendorId");
+
+                    b.ToTable("Vendors");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.BankAccount", b =>
@@ -430,8 +469,8 @@ namespace Inventory.Data.Migrations
                     b.HasOne("Inventory.Data.Entities.BankBranch", "Branch")
                         .WithMany("BankAccounts")
                         .HasForeignKey("BranchId")
-                        .IsRequired()
-                        .HasConstraintName("FK_BankAccounts_BankBranch");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Branch");
                 });
@@ -441,8 +480,8 @@ namespace Inventory.Data.Migrations
                     b.HasOne("Inventory.Data.Entities.Bank", "Bank")
                         .WithMany("BankBranches")
                         .HasForeignKey("BankId")
-                        .IsRequired()
-                        .HasConstraintName("FK_BankBranches_Banks");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Bank");
                 });
@@ -451,9 +490,7 @@ namespace Inventory.Data.Migrations
                 {
                     b.HasOne("Inventory.Data.Entities.Category", "ParentCategory")
                         .WithMany("InverseParentCategory")
-                        .HasForeignKey("ParentCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ParentCategoryId");
 
                     b.Navigation("ParentCategory");
                 });
@@ -463,15 +500,14 @@ namespace Inventory.Data.Migrations
                     b.HasOne("Inventory.Data.Entities.Category", "Category")
                         .WithMany("Products")
                         .HasForeignKey("CategoryId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Products_Categories");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Inventory.Data.Entities.CommonAttribute", "QuantityAttribute")
                         .WithMany("Products")
                         .HasForeignKey("QuantityAttributeId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_Products_CommonAttribute");
+                        .IsRequired();
 
                     b.Navigation("Category");
 
@@ -483,27 +519,44 @@ namespace Inventory.Data.Migrations
                     b.HasOne("Inventory.Data.Entities.PurchaseInvoice", "Invoice")
                         .WithMany("Purchases")
                         .HasForeignKey("InvoiceId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Purchase_PurchaseInvoice");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Inventory.Data.Entities.Product", "Product")
                         .WithMany("Purchases")
                         .HasForeignKey("ProductId")
-                        .IsRequired()
-                        .HasConstraintName("FK_PurchaseDetails_Products");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Invoice");
 
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Inventory.Data.Entities.PurchaseInvoice", b =>
+                {
+                    b.HasOne("Inventory.Data.Entities.Vendor", "Vendor")
+                        .WithMany("PurchaseInvoices")
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Vendor");
+                });
+
             modelBuilder.Entity("Inventory.Data.Entities.PurchasePaymentRecord", b =>
                 {
+                    b.HasOne("Inventory.Data.Entities.BankAccount", "BankAccount")
+                        .WithMany()
+                        .HasForeignKey("AccountId");
+
                     b.HasOne("Inventory.Data.Entities.PurchaseInvoice", "Invoice")
                         .WithMany("PurchasePaymentRecords")
                         .HasForeignKey("InvoiceId")
-                        .IsRequired()
-                        .HasConstraintName("FK_PurchasePayments_Purchase");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("BankAccount");
 
                     b.Navigation("Invoice");
                 });
@@ -513,18 +566,26 @@ namespace Inventory.Data.Migrations
                     b.HasOne("Inventory.Data.Entities.SalesInvoice", "Invoice")
                         .WithMany("Sales")
                         .HasForeignKey("InvoiceId")
-                        .IsRequired()
-                        .HasConstraintName("FK_SalesDetails_Sales");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Inventory.Data.Entities.Product", "Product")
                         .WithMany("Sales")
                         .HasForeignKey("ProductId")
-                        .IsRequired()
-                        .HasConstraintName("FK_SalesDetails_Products");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Inventory.Data.Entities.PurchaseInvoice", "PurchaseInvoice")
+                        .WithMany()
+                        .HasForeignKey("PurchaseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Invoice");
 
                     b.Navigation("Product");
+
+                    b.Navigation("PurchaseInvoice");
                 });
 
             modelBuilder.Entity("Inventory.Data.Entities.SalesPaymentRecord", b =>
@@ -532,8 +593,8 @@ namespace Inventory.Data.Migrations
                     b.HasOne("Inventory.Data.Entities.SalesInvoice", "Invoice")
                         .WithMany("SalesPaymentRecords")
                         .HasForeignKey("InvoiceId")
-                        .IsRequired()
-                        .HasConstraintName("FK_SalesPaymentRecords_Sales");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Invoice");
                 });
@@ -579,6 +640,11 @@ namespace Inventory.Data.Migrations
                     b.Navigation("Sales");
 
                     b.Navigation("SalesPaymentRecords");
+                });
+
+            modelBuilder.Entity("Inventory.Data.Entities.Vendor", b =>
+                {
+                    b.Navigation("PurchaseInvoices");
                 });
 #pragma warning restore 612, 618
         }
