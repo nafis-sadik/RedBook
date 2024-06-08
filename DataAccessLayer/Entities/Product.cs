@@ -32,7 +32,7 @@ public partial class Product
     [ForeignKey("CategoryId")]
     public virtual Category Category { get; set; }
 
-    public virtual ICollection<Purchase> Purchases { get; set; } = new List<Purchase>();
+    public virtual ICollection<PurchaseRecords> Purchases { get; set; } = new List<PurchaseRecords>();
 
     [ForeignKey("QuantityAttributeId")]
     public virtual CommonAttribute QuantityAttribute { get; set; }

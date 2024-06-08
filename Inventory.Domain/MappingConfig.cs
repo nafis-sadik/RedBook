@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using Inventory.Data.Entities;
 using Inventory.Data.Models;
+using Inventory.Data.Models.Product;
+using Inventory.Data.Models.Purchase;
 
 namespace Inventory.Domain
 {
@@ -8,7 +10,7 @@ namespace Inventory.Domain
     {
         public MappingConfig()
         {
-            CreateMap<Purchase, PurchaseModel>().ReverseMap();
+            CreateMap<PurchaseRecords, RecordModel>().ReverseMap();
 
             CreateMap<Category, CategoryModel>()
                 .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.OrganizationId))

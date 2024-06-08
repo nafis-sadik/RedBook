@@ -1,6 +1,6 @@
-﻿using Inventory.Data.Models;
+﻿using Inventory.Data.Models.Product;
 
-namespace Inventory.Domain.Abstraction
+namespace Inventory.Domain.Abstraction.Product
 {
     public interface ICategoryService
     {

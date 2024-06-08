@@ -1,22 +1,17 @@
-﻿using Inventory.Data.Entities;
-using Inventory.Data.Models;
-using Inventory.Domain.Abstraction;
+﻿using Inventory.Data.Models.Product;
+using Inventory.Domain.Abstraction.Product;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Domain;
 using RedBook.Core.Models;
-using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
 
-namespace Inventory.Domain.Implementation
+namespace Inventory.Domain.Implementation.Product
 {
     public class ProductService : ServiceBase, IProductService
     {
-        private IRepositoryFactory _repositoryFactory;
-        private IRepositoryBase<Product> _productRepo;
-
         public ProductService(
             ILogger<ProductService> logger,
             IObjectMapper mapper,
@@ -24,13 +19,13 @@ namespace Inventory.Domain.Implementation
             IUnitOfWorkManager unitOfWork
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork) { }
 
-        public async Task<ProductModel> AddNewProductAsync(ProductModel productModel)
+        public async Task<ProductModel> AddNewAsync(ProductModel productModel)
         {
-            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
+            using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _productRepo = _repositoryFactory.GetRepository<Product>();
+                var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
 
-                Product product = Mapper.Map<Product>(productModel);
+                Data.Entities.Product product = Mapper.Map<Data.Entities.Product>(productModel);
                 product.CreateBy = User.UserId;
                 product.CreateDate = DateTime.UtcNow;
                 product = await _productRepo.InsertAsync(product);
@@ -43,9 +38,9 @@ namespace Inventory.Domain.Implementation
 
         public async Task DeleteProductAsync(int categoryId)
         {
-            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
+            using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _productRepo = _repositoryFactory.GetRepository<Product>();
+                var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
 
                 await _productRepo.DeleteAsync(categoryId);
 
@@ -53,11 +48,11 @@ namespace Inventory.Domain.Implementation
             }
         }
 
-        public async Task<PagedModel<ProductModel>> GetProductsUnderOrganizationAsync(PagedModel<ProductModel> pagedModel, int orgId)
+        public async Task<PagedModel<ProductModel>> GetPagedAsync(PagedModel<ProductModel> pagedModel, int orgId)
         {
-            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
+            using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _productRepo = _repositoryFactory.GetRepository<Product>();
+                var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
 
                 var query = _productRepo.UnTrackableQuery();
 
@@ -95,13 +90,13 @@ namespace Inventory.Domain.Implementation
             }
         }
 
-        public async Task<ProductModel> UpdateProductAsync(ProductModel productModel)
+        public async Task<ProductModel> UpdateAsync(ProductModel productModel)
         {
-            using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
+            using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                _productRepo = _repositoryFactory.GetRepository<Product>();
+                var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
 
-                Product? product = await _productRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ProductId == productModel.ProductId);
+                Data.Entities.Product? product = await _productRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ProductId == productModel.ProductId);
 
                 if (product == null) throw new ArgumentException("Resource not found");
 

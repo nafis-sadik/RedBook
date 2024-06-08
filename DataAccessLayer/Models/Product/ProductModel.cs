@@ -1,4 +1,4 @@
-﻿namespace Inventory.Data.Models
+﻿namespace Inventory.Data.Models.Product
 {
     public class ProductModel
     {

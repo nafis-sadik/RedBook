@@ -12,11 +12,16 @@ public partial class SalesPaymentRecord
     [ForeignKey("SalesInvoice")]
     public int InvoiceId { get; set; }
 
+    [ForeignKey("Customer")]
     public int? PaidBy { get; set; }
+
+    public int? RecievedBy { get; set; }
 
     public DateTime PaymentDate { get; set; }
 
     public decimal PaymentAmount { get; set; }
 
     public virtual SalesInvoice Invoice { get; set; }
+
+    public virtual Customer Customer { get; set; }
 }

@@ -15,4 +15,9 @@
     <ProjectReference Include="..\Inventory.Clients\Inventory.Clients.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Abstraction\Sales\" />
+    <Folder Include="Implementation\Sales\" />
+  </ItemGroup>
+
 </Project>

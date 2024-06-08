@@ -1,5 +1,5 @@
-﻿using Inventory.Data.Models;
-using Inventory.Domain.Abstraction;
+﻿using Inventory.Data.Models.Product;
+using Inventory.Domain.Abstraction.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;

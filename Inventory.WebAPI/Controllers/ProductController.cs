@@ -1,5 +1,5 @@
-﻿using Inventory.Data.Models;
-using Inventory.Domain.Abstraction;
+﻿using Inventory.Data.Models.Product;
+using Inventory.Domain.Abstraction.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;
@@ -35,7 +35,7 @@ namespace Inventory.WebAPI.Controllers
         [SwaggerResponse(statusCode: 200, type: typeof(ProductModel), description: "Retrieves paged list of products under organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> GetAsync([FromQuery] PagedModel<ProductModel> pagedModel, int orgId) => Ok(await _productService.GetProductsUnderOrganizationAsync(pagedModel, orgId));
+        public async Task<IActionResult> GetAsync([FromQuery] PagedModel<ProductModel> pagedModel, int orgId) => Ok(await _productService.GetPagedAsync(pagedModel, orgId));
 
         /// <summary>
         /// Add new product under organization
@@ -45,7 +45,7 @@ namespace Inventory.WebAPI.Controllers
         [SwaggerResponse(statusCode: 200, type: typeof(ProductModel), description: "Add new product under organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> AddAsync(ProductModel productModel) => Ok(await _productService.AddNewProductAsync(productModel));
+        public async Task<IActionResult> AddAsync(ProductModel productModel) => Ok(await _productService.AddNewAsync(productModel));
 
         /// <summary>
         /// Update an existing product subcategory under organization
@@ -55,7 +55,7 @@ namespace Inventory.WebAPI.Controllers
         [SwaggerResponse(statusCode: 200, type: typeof(ProductModel), description: "Update an existing product subcategory under organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> UpdateAsync(ProductModel productModel) => Ok(await _productService.UpdateProductAsync(productModel));
+        public async Task<IActionResult> UpdateAsync(ProductModel productModel) => Ok(await _productService.UpdateAsync(productModel));
 
         /// <summary>
         /// Remove an existing product by product id

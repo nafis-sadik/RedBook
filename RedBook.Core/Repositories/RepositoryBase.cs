@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text.Json;
 
 namespace RedBook.Core.Repositories
 {
@@ -40,31 +41,67 @@ namespace RedBook.Core.Repositories
         public async Task<TEntity?> GetAsync(object id) => await _dbSet.FindAsync(id);
         public async Task<IEnumerable<TEntity>> GetAsync(Expression<Func<TEntity, bool>> query) => await UnTrackableQuery().Where(query).ToListAsync();
 
+        // Helper method
+        private object ParseJsonElement(JsonElement element)
+        {
+            switch (element.ValueKind)
+            {
+                case JsonValueKind.String:
+                    return element.GetString();
+                case JsonValueKind.Number:
+                    return element.GetDecimal(); // Adjust based on your needs
+                case JsonValueKind.True:
+                    return true;
+                case JsonValueKind.False:
+                    return false;
+                case JsonValueKind.Object:
+                    var nestedDictionary = new Dictionary<string, object>();
+                    foreach (var nestedProperty in element.EnumerateObject())
+                    {
+                        nestedDictionary[nestedProperty.Name] = ParseJsonElement(nestedProperty.Value);
+                    }
+                    return nestedDictionary;
+                default:
+                    return null; // Handle other value kinds as needed
+            }
+        }
         // Update
         public virtual TEntity Update(TEntity entity) => _dbSet.Update(entity).Entity;
-        public void Patch(object pk, IDictionary<string, object> newEntries)
+
+        public void ColumnUpdate(object pk, Dictionary<string, object> keyValuePairs)
         {
+            // Generate entity object
             TEntity? entity = Activator.CreateInstance(typeof(TEntity)) as TEntity;
-            if(entity == null) throw new ArgumentNullException($"Unable to create entity of type {nameof(entity)}");
+            if (entity == null) throw new ArgumentNullException($"Unable to create entity of type {nameof(entity)}");
 
-            PropertyInfo? primaryKeyColumn = _dbContext.Model.FindEntityType(typeof(TEntity))?.FindPrimaryKey()?.Properties.Single().PropertyInfo;
-            if (primaryKeyColumn == null) throw new ArgumentException($"Unable to locate primary key for type {nameof(entity)}");
+            // Get primary key column
+            PropertyInfo? primaryKeyColumnInfo = _dbContext.Model.FindEntityType(typeof(TEntity))?.FindPrimaryKey()?.Properties.Single().PropertyInfo;
+            if (primaryKeyColumnInfo == null) throw new ArgumentException($"Unable to locate primary key for type {nameof(entity)}");
 
-            if (primaryKeyColumn.PropertyType == pk.GetType())
-                primaryKeyColumn.SetValue(entity, pk);
+            // Set primary key value
+            if (primaryKeyColumnInfo.PropertyType == pk.GetType())
+                primaryKeyColumnInfo.SetValue(entity, pk);
             else
-                throw new ArgumentException($"Cannot set value of type {pk.GetType()} for the primary key {primaryKeyColumn.Name} of type {primaryKeyColumn.PropertyType}");
-            
-            foreach (KeyValuePair<string, object> property in newEntries)
+                throw new ArgumentException($"Cannot set value of type {pk.GetType()} for the primary key {primaryKeyColumnInfo.Name} of type {primaryKeyColumnInfo.PropertyType}");
+
+            // Update entity entries and mark as modified for update operation
+            foreach (var property in keyValuePairs)
             {
                 PropertyEntry targetProperty = _dbContext.Entry(entity).Property(property.Key);
-                if (targetProperty.GetType() == property.Value.GetType())
+                PropertyInfo? targetPropertyInfo = targetProperty.Metadata.PropertyInfo;
+                if (targetPropertyInfo == null) throw new ArgumentException($"Unable to locate property {property.Key} in type {typeof(TEntity)}");
+
+                if (targetPropertyInfo.Name == property.Key && targetPropertyInfo.Name != primaryKeyColumnInfo.Name)
                 {
-                    targetProperty.CurrentValue = property.Value;
+                    if (targetPropertyInfo.PropertyType.IsAssignableFrom(property.Value?.GetType()))
+                        targetProperty.CurrentValue = property.Value;
+                    else if (property.Value != null && property.Value.GetType() == typeof(JsonElement))
+                        targetProperty.CurrentValue = ParseJsonElement((JsonElement)property.Value);
+                    else
+                        throw new ArgumentException($"The type of the provided value does not match the type of the property. Property: {property.Key.ToString()}, Provided Type: {property.GetType().ToString()}, Expected Type: {targetProperty.CurrentValue?.GetType()}");
+
                     targetProperty.IsModified = true;
                 }
-                else
-                    throw new ArgumentException($"The type of the provided value does not match the type of the property. Property: {property.Key}, Provided Type: {property.Value.GetType()}, Expected Type: {targetProperty.CurrentValue?.GetType()}");
             }
         }
 

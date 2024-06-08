@@ -1,6 +1,10 @@
 ﻿using Inventory.Data.Entities;
 using Inventory.Domain.Abstraction;
+using Inventory.Domain.Abstraction.Product;
+using Inventory.Domain.Abstraction.Purchase;
 using Inventory.Domain.Implementation;
+using Inventory.Domain.Implementation.Product;
+using Inventory.Domain.Implementation.Purchase;
 using RedBook.Core;
 using RedBook.Core.Security;
 
@@ -19,7 +23,7 @@ namespace Inventory.WebAPI.Configurations
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ISubcategoryService, SubcategoryService>();
             services.AddScoped<ICommonAttributeService, CommonAttributeService>();
-            services.AddScoped<IProductPurchaseInvoice, ProductPurchaseInvoice>();
+            services.AddScoped<IPurchaseInvoiceService, ProductPurchaseInvoice>();
         }
     }
 }

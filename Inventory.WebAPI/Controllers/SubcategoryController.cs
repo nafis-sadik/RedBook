@@ -1,5 +1,5 @@
-﻿using Inventory.Data.Models;
-using Inventory.Domain.Abstraction;
+﻿using Inventory.Data.Models.Product;
+using Inventory.Domain.Abstraction.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -12,18 +12,9 @@ namespace Inventory.WebAPI.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class SubcategoryController : ControllerBase
+    public class SubcategoryController(ISubcategoryService subcategoryService) : ControllerBase
     {
-        private readonly ISubcategoryService _subcategoryService;
-
-        /// <summary>
-        /// Product Subcategory Module Constructor
-        /// </summary>
-        /// <param name="subcategoryService">An implementation of ISubcategoryService injected by IOC Controller</param>
-        public SubcategoryController(ISubcategoryService subcategoryService)
-        {
-            _subcategoryService = subcategoryService;
-        }
+        private readonly ISubcategoryService _subcategoryService = subcategoryService;
 
         /// <summary>
         /// Retrieves all categories and subcategories under category

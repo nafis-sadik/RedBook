@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Inventory.Data.Entities;
 
-public partial class Purchase
+public partial class PurchaseRecords
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -19,9 +19,9 @@ public partial class Purchase
 
     public int InvoiceId { get; set; }
 
-    public int? UpdateBy { get; set; }
+    public int? CreateBy { get; set; }
 
-    public DateTime? UpdateDate { get; set; }
+    public DateTime? CreateDate { get; set; }
 
     [ForeignKey("InvoiceId")]
     public virtual PurchaseInvoice Invoice { get; set; }

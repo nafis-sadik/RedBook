@@ -12,18 +12,9 @@ namespace Inventory.WebAPI.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class CommonAttributesController : ControllerBase
+    public class CommonAttributesController(ICommonAttributeService commonAttrService) : ControllerBase
     {
-        private readonly ICommonAttributeService _commonAttrService;
-
-        /// <summary>
-        /// Common Attribute Module Constructor
-        /// </summary>
-        /// <param name="commonAttrService">An implementation of ICommonAttributeService injected by IOC Controller</param>
-        public CommonAttributesController(ICommonAttributeService commonAttrService)
-        {
-            _commonAttrService = commonAttrService;
-        }
+        private readonly ICommonAttributeService _commonAttrService = commonAttrService;
 
         /// <summary>
         /// Retrieves all common attributes of a particular type

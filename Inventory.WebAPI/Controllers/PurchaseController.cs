@@ -1,8 +1,9 @@
 ﻿using Inventory.Data.Models;
-using Inventory.Domain.Abstraction;
+using Inventory.Domain.Abstraction.Purchase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using RedBook.Core.Models;
 
 namespace Inventory.WebAPI.Controllers
@@ -15,17 +16,14 @@ namespace Inventory.WebAPI.Controllers
     [Route("api/[controller]")]
     public class PurchaseController : ControllerBase
     {
-        private readonly IProductPurchaseInvoice _productPurchaseInvoice;
+        private readonly IPurchaseInvoiceService _productPurchaseInvoice;
 
         /// <summary>
         ///  Product Purchase Module Constructor
         /// </summary>
-        public PurchaseController(IProductPurchaseInvoice productPurchaseInvoice)
+        public PurchaseController(IPurchaseInvoiceService productPurchaseInvoice)
         {
             _productPurchaseInvoice = productPurchaseInvoice;
         }
-
-        [HttpGet]
-        public async Task<IActionResult> PurchaseProduct([FromQuery] PagedPurchaseInvoiceModel pagedModel) => Ok(await _productPurchaseInvoice.GetPagedInvoiceAsync(pagedModel));
     }
 }

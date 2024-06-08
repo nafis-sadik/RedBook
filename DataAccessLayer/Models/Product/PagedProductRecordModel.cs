@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Inventory.Data.Models
+namespace Inventory.Data.Models.Product
 {
-    public class PagedPurchaseInvoiceModel: PagedModel<PurchaseInvoiceModel>
+    public class PagedProductRecordModel : PagedModel<ProductModel>
     {
         public int OrganizationId { get; set; }
     }
