@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Inventory.WebAPI.Controllers
+namespace Inventory.WebAPI.Controllers.Product
 {
     /// <summary>
     /// Product Module

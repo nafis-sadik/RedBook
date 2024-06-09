@@ -1,5 +1,4 @@
 ﻿using Inventory.Data.Entities;
-using Inventory.Data.Models;
 using Inventory.Data.Models.Purchase;
 using Inventory.Domain.Abstraction.Purchase;
 using Microsoft.EntityFrameworkCore;
@@ -7,17 +6,15 @@ using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Constants;
 using RedBook.Core.Domain;
-using RedBook.Core.Models;
-using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
 
 namespace Inventory.Domain.Implementation.Purchase
 {
-    public class ProductPurchaseInvoice : ServiceBase, IPurchaseInvoiceService
+    public class InvoiceService : ServiceBase, IInvoiceService
     {
-        public ProductPurchaseInvoice(
-            ILogger<ProductPurchaseInvoice> logger,
+        public InvoiceService(
+            ILogger<InvoiceService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
             IClaimsPrincipalAccessor claimsPrincipalAccessor

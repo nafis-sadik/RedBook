@@ -1,9 +1,8 @@
 ﻿using Inventory.Data.Models.Purchase;
-using RedBook.Core.Models;
 
 namespace Inventory.Domain.Abstraction.Purchase
 {
-    public interface IPurchaseInvoiceService
+    public interface IInvoiceService
     {
         public Task<InvoiceModel> GetByIdAsync(int id);
         public Task<PagedInvoiceModel> GetPagedAsync(PagedInvoiceModel pagedModel);

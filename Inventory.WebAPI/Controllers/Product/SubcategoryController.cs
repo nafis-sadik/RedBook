@@ -4,60 +4,51 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
-namespace Inventory.WebAPI.Controllers
+namespace Inventory.WebAPI.Controllers.Product
 {
     /// <summary>
-    /// Product Category Module
+    /// Product Subcategory Module
     /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class CategoryController : ControllerBase
+    public class SubcategoryController(ISubcategoryService subcategoryService) : ControllerBase
     {
-        private readonly ICategoryService _categoryService;
+        private readonly ISubcategoryService _subcategoryService = subcategoryService;
 
         /// <summary>
-        /// Product Category Module Constructor
+        /// Retrieves all categories and subcategories under category
         /// </summary>
-        /// <param name="categoryService">An implementation of ICategoryService injected by IOC Controller</param>
-        public CategoryController(ICategoryService categoryService)
-        {
-            _categoryService = categoryService;
-        }
-
-        /// <summary>
-        /// Retrieves all categories and subcategories under organization
-        /// </summary>
-        /// <param name="orgId">Organization Id or unique identifier which is the primary key of the organization</param>
+        /// <param name="categoryId">Category Id or unique identifier which is the primary key of the organization</param>
         [HttpGet]
-        [Route("{orgId}")]
+        [Route("{categoryId}")]
         [SwaggerResponse(statusCode: 200, type: typeof(CategoryModel), description: "Retrieves Category List Under Organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> GetAsync(int orgId) => Ok(await _categoryService.GetByOrganizationAsync(orgId));
+        public async Task<IActionResult> GetAsync(int categoryId) => Ok(await _subcategoryService.GetSubcategoriesUnderCategory(categoryId));
 
         /// <summary>
-        /// Add new product catagory under organization
+        /// Add new product subcategory under category
         /// </summary>
         /// <param name="category"><see cref="CategoryModel"/></param>
         [HttpPost]
         [SwaggerResponse(statusCode: 200, type: typeof(CategoryModel), description: "Retrieves Category List Under Organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> AddAsync(CategoryModel category) => Ok(await _categoryService.AddCategoryAsync(category));
+        public async Task<IActionResult> AddAsync(CategoryModel category) => Ok(await _subcategoryService.AddSubcategoryAsync(category));
 
         /// <summary>
-        /// Update an existing product catagory under organization
+        /// Update an existing product subcategory under category
         /// </summary>
         /// <param name="category"><see cref="CategoryModel"/></param>
         [HttpPatch]
         [SwaggerResponse(statusCode: 200, type: typeof(CategoryModel), description: "Retrieves Category List Under Organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> UpdateAsync(CategoryModel category) => Ok(await _categoryService.UpdateCategoryAsync(category));
+        public async Task<IActionResult> UpdateAsync(CategoryModel category) => Ok(await _subcategoryService.UpdateSubcategoryAsync(category));
 
         /// <summary>
-        /// Remove an existing category by category id
+        /// Remove an existing category/subcategory by category id
         /// </summary>
         /// <param name="categoryId"><see cref="int"/></param>
         [HttpDelete]
@@ -67,7 +58,7 @@ namespace Inventory.WebAPI.Controllers
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
         public async Task<IActionResult> RemoveAsync(int categoryId)
         {
-            await _categoryService.DeleteCategoryAsync(categoryId);
+            await _subcategoryService.DeleteSubcategoryAsync(categoryId);
             return Ok();
         }
     }

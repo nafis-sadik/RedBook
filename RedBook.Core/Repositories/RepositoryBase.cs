@@ -29,6 +29,8 @@ namespace RedBook.Core.Repositories
             else throw new InvalidOperationException($"Failed to insert {entity}");
         }
 
+        public async Task BulkInsertAsync(IEnumerable<TEntity> entities) => await _dbSet.AddRangeAsync(entities);
+
         // Read Async
         public TEntity? Get(int id) => _dbSet.Find(id);
         public TEntity? Get(string id) => _dbSet.Find(id);

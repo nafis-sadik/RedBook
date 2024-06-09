@@ -10,7 +10,9 @@ namespace Inventory.Domain
     {
         public MappingConfig()
         {
-            CreateMap<PurchaseRecords, RecordModel>().ReverseMap();
+            CreateMap<PurchaseRecords, InvoiceDetailsModel>()
+                .ForMember(dest => dest.DetailId, src => src.MapFrom(opt => opt.PurchaseId))
+                .ReverseMap();
 
             CreateMap<Category, CategoryModel>()
                 .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.OrganizationId))

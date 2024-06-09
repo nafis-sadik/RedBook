@@ -2,7 +2,7 @@
 
 namespace Inventory.Data.Models.Purchase
 {
-    public class PagedRecordsModel : PagedModel<RecordModel>
+    public class PagedRecordsModel : PagedModel<InvoiceDetailsModel>
     {
         public int InvoiceId { get; set; }
     }
