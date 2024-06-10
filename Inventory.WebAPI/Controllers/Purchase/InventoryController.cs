@@ -10,7 +10,7 @@ namespace Inventory.WebAPI.Controllers.Purchase
     /// </summary>
     [Authorize]
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/Purchase")]
     public class InventoryController(IInvoiceService purchaseInvoiceService) : ControllerBase
     {
         private readonly IInvoiceService _productPurchaseInvoice = purchaseInvoiceService;
@@ -19,6 +19,7 @@ namespace Inventory.WebAPI.Controllers.Purchase
         public async Task<IActionResult> AddPurchaseInvoice(InvoiceModel model) => Ok(await _productPurchaseInvoice.AddNewAsync(model));
 
         [HttpGet]
+        [Route("PagedAsync")]
         public async Task<IActionResult> PagedInvoice([FromQuery] PagedInvoiceModel pagedModel) => Ok(await _productPurchaseInvoice.GetPagedAsync(pagedModel));
     }
 }
