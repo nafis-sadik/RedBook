@@ -1,6 +1,7 @@
 ﻿using Inventory.Data.Entities;
 using Inventory.Data.Models.Purchase;
 using Inventory.Domain.Abstraction.Purchase;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
@@ -17,8 +18,9 @@ namespace Inventory.Domain.Implementation.Purchase
             ILogger<InvoiceService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
-            IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork) { }
+            IClaimsPrincipalAccessor claimsPrincipalAccessor,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) { }
 
         public async Task<InvoiceModel> GetByIdAsync(int id)
         {
@@ -69,7 +71,7 @@ namespace Inventory.Domain.Implementation.Purchase
 
                 var entity = Mapper.Map<PurchaseInvoice>(model);
 
-                entity = await _purchaseInvoiceRepo.InsertAsync( entity );
+                entity = await _purchaseInvoiceRepo.InsertAsync(entity);
 
                 return Mapper.Map<InvoiceModel>(entity);
             }
@@ -90,7 +92,7 @@ namespace Inventory.Domain.Implementation.Purchase
                 return Mapper.Map<InvoiceModel>(entity);
             }
         }
-        
+
         public async Task DeleteAsync(int id)
         {
             await UpdateAsync(id, new Dictionary<string, object>

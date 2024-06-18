@@ -1,6 +1,4 @@
-﻿using Inventory.Data.Entities;
-
-namespace Inventory.Data.Models.Purchase
+﻿namespace Inventory.Data.Models.Purchase
 {
     public class InvoiceDetailsModel
     {

@@ -1,13 +1,17 @@
-﻿using RedBook.Core.Constants;
+﻿using Microsoft.AspNetCore.Http;
+using RedBook.Core.Constants;
 using System.Security.Claims;
 
 namespace RedBook.Core.Models
 {
     public class RequestingUser
     {
-        internal ClaimsPrincipal _contextReference;
-        internal RequestingUser(ClaimsPrincipal contextReference)
+        private readonly HttpContext _httpContext;
+        private readonly ClaimsPrincipal _contextReference;
+
+        internal RequestingUser(ClaimsPrincipal contextReference, HttpContext httpContext)
         {
+            _httpContext = httpContext;
             _contextReference = contextReference;
         }
 
@@ -21,22 +25,29 @@ namespace RedBook.Core.Models
                 else
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
             }
-
         }
 
-        public int[] RoleIds
+        public string RequestOrigin
         {
             get
             {
-                string? roleIds = _contextReference.Claims.FirstOrDefault(x => x.Type.Equals("UserRoleIds", StringComparison.InvariantCultureIgnoreCase))?.Value;
-                if (!string.IsNullOrEmpty(roleIds))
-                {
-                    string[] strArray = roleIds.Split(',');
-                    return Array.ConvertAll(strArray, int.Parse);
-                }
-                else
-                    throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+                return _httpContext.Request.Headers["Origin"].ToString();
             }
         }
+
+        //public int[] RoleIds
+        //{
+        //    get
+        //    {
+        //        string? roleIds = _contextReference.Claims.FirstOrDefault(x => x.Type.Equals("UserRoleIds", StringComparison.InvariantCultureIgnoreCase))?.Value;
+        //        if (!string.IsNullOrEmpty(roleIds))
+        //        {
+        //            string[] strArray = roleIds.Split(',');
+        //            return Array.ConvertAll(strArray, int.Parse);
+        //        }
+        //        else
+        //            throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
+        //    }
+        //}
     }
 }

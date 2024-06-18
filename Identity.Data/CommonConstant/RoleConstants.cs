@@ -3,7 +3,7 @@
 namespace Identity.Data.CommonConstant
 {
     public class RoleConstants
-    {        
+    {
         public static Role SystemAdmin = new Role
         {
             RoleName = "System Admin",
@@ -26,9 +26,9 @@ namespace Identity.Data.CommonConstant
             ApplicationId = 1,
         };
 
-        public static Role RedbookOwnerAdmin = new Role
+        public static Role OwnerAdmin = new Role
         {
-            RoleName = "Redbook Owner Admin",
+            RoleName = "Owner Admin",
             IsAdmin = true,
             IsRetailer = false,
             IsSystemAdmin = false,

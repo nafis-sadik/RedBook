@@ -3,13 +3,13 @@ using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using RedBook.Core.AutoMapper;
+using RedBook.Core.Constants;
 using RedBook.Core.Domain;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using RedBook.Core.AutoMapper;
-using RedBook.Core.Constants;
-using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Domain.Implementation
 {
@@ -55,7 +55,7 @@ namespace Identity.Domain.Implementation
                 // Assign the role to the user by mapping
                 await userRoleRepo.InsertAsync(new UserRoleMapping
                 {
-                    RoleId = RoleConstants.RedbookOwnerAdmin.RoleId,
+                    RoleId = RoleConstants.OwnerAdmin.RoleId,
                     UserId = newUser.UserId,
                     OrganizationId = orgEntity.OrganizationId,
                 });

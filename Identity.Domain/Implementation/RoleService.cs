@@ -1,16 +1,15 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
-using RedBook.Core.Security;
-using RedBook.Core.UnitOfWork;
-using RedBook.Core.Repositories;
 using Identity.Domain.Abstraction;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Constants;
 using RedBook.Core.Domain;
+using RedBook.Core.Security;
+using RedBook.Core.UnitOfWork;
 using System.Data;
-using Microsoft.AspNetCore.Http;
 
 namespace Identity.Domain.Implementation
 {
@@ -24,7 +23,7 @@ namespace Identity.Domain.Implementation
             IHttpContextAccessor httpContextAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor)
         { }
-        
+
         // Org admin only
         public async Task<RoleModel> AddRoleAsync(RoleModel role)
         {
@@ -33,7 +32,7 @@ namespace Identity.Domain.Implementation
 
             if (role.OrganizationId <= 0) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
 
-            using(var factory = UnitOfWorkManager.GetRepositoryFactory())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _roleRepo = factory.GetRepository<Role>();
                 var _appRepo = factory.GetRepository<Application>();
@@ -80,7 +79,7 @@ namespace Identity.Domain.Implementation
                     .Select(r => new Role
                     {
                         RoleId = r.RoleId,
-                        OrganizationId=r.OrganizationId
+                        OrganizationId = r.OrganizationId
                     })
                     .FirstOrDefaultAsync();
 
@@ -125,10 +124,13 @@ namespace Identity.Domain.Implementation
                 var _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
                 RoleRouteMapping? existingPermission = await _roleRouteMappingRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RouteId == routeId && x.RoleId == roleId);
-                
-                if (existingPermission != null) {
+
+                if (existingPermission != null)
+                {
                     _roleRouteMappingRepo.Delete(existingPermission);
-                } else {
+                }
+                else
+                {
                     await _roleRouteMappingRepo.InsertAsync(new RoleRouteMapping
                     {
                         RoleId = roleId,
@@ -159,7 +161,7 @@ namespace Identity.Domain.Implementation
                 return Mapper.Map<RoleModel>(roleEntity);
             }
         }
-        
+
 
         /// <summary>
         /// Gets the organizations that the user is allowed to access for the specified route.
@@ -170,7 +172,7 @@ namespace Identity.Domain.Implementation
         public async Task<int[]> GetOrganizationsAllowedToUserByRoute(int userId, int routeId)
         {
             throw new NotImplementedException();
-            using(var unitOfWord = UnitOfWorkManager.GetRepositoryFactory())
+            using (var unitOfWord = UnitOfWorkManager.GetRepositoryFactory())
             {
                 // var _userRepo = unitOfWord.GetRepository<User>();
                 // var _userRoleRepo = unitOfWord.GetRepository<UserRoleMapping>();

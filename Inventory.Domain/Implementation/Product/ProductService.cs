@@ -1,5 +1,6 @@
 ﻿using Inventory.Data.Models.Product;
 using Inventory.Domain.Abstraction.Product;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
@@ -16,8 +17,9 @@ namespace Inventory.Domain.Implementation.Product
             ILogger<ProductService> logger,
             IObjectMapper mapper,
             IClaimsPrincipalAccessor claimsPrincipalAccessor,
-            IUnitOfWorkManager unitOfWork
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork) { }
+            IUnitOfWorkManager unitOfWork,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) { }
 
         public async Task<ProductModel> AddNewAsync(ProductModel productModel)
         {

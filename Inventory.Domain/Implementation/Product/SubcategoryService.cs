@@ -1,6 +1,7 @@
 ﻿using Inventory.Data.Entities;
 using Inventory.Data.Models.Product;
 using Inventory.Domain.Abstraction.Product;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
@@ -19,8 +20,9 @@ namespace Inventory.Domain.Implementation.Product
             ILogger<SubcategoryService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
-            IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork) { }
+            IClaimsPrincipalAccessor claimsPrincipalAccessor,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) { }
 
         public async Task<CategoryModel> AddSubcategoryAsync(CategoryModel categoryModel)
         {

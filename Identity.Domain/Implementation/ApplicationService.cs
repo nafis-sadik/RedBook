@@ -1,6 +1,7 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
@@ -19,8 +20,9 @@ namespace Identity.Domain.Implementation
             ILogger<ApplicationService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
-            IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
+            IClaimsPrincipalAccessor claimsPrincipalAccessor,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor)
         { }
 
         public async Task<ApplicationInfoModel> AddApplicationAsync(ApplicationInfoModel applicationModel)
@@ -69,7 +71,7 @@ namespace Identity.Domain.Implementation
                 // Update Operation
                 var _appRepo = _repositoryFactory.GetRepository<Application>();
                 Application? applicationEntity = await _appRepo.GetAsync(applicationModel.Id);
-                if(applicationEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
+                if (applicationEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
 
                 applicationEntity = Mapper.Map(applicationModel, applicationEntity);
                 applicationEntity = _appRepo.Update(applicationEntity);

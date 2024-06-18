@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Identity.Data.Migrations
 {
     [DbContext(typeof(RedbookIdentityContext))]
-    [Migration("20240521195540_Init")]
-    partial class Init
+    [Migration("20240618094402_InitMigration")]
+    partial class InitMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,19 +34,12 @@ namespace Identity.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ApplicationId"));
 
                     b.Property<string>("ApplicationName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ApplicationUrl")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValueSql("(N'')");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("ApplicationId")
-                        .HasName("PK__Applicat__3214EC07D6504A6D");
+                    b.HasKey("ApplicationId");
 
                     b.ToTable("Applications");
                 });
@@ -60,8 +53,7 @@ namespace Identity.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrganizationId"));
 
                     b.Property<string>("Address")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreateDate")
                         .HasColumnType("datetime2");
@@ -70,19 +62,13 @@ namespace Identity.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("LogoUrl")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("OrganizationName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdateDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("('0001-01-01T00:00:00.0000000')");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatededBy")
                         .HasColumnType("nvarchar(max)");
@@ -104,37 +90,28 @@ namespace Identity.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("IsAdmin")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValueSql("(CONVERT([bit],(0)))");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsOwner")
                         .HasColumnType("bit");
 
                     b.Property<bool>("IsRetailer")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValueSql("(CONVERT([bit],(0)))");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsSystemAdmin")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValueSql("(CONVERT([bit],(0)))");
+                        .HasColumnType("bit");
 
                     b.Property<int?>("OrganizationId")
                         .HasColumnType("int");
 
                     b.Property<string>("RoleName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RoleId");
 
                     b.HasIndex("ApplicationId");
 
-                    b.HasIndex(new[] { "OrganizationId" }, "IX_Roles_OrganizationId");
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("Roles");
                 });
@@ -155,11 +132,11 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("MappingId");
 
-                    b.HasIndex(new[] { "RoleId" }, "IX_RoleRouteMapping_RoleId");
+                    b.HasIndex("RoleId");
 
-                    b.HasIndex(new[] { "RouteId" }, "IX_RoleRouteMapping_RouteId");
+                    b.HasIndex("RouteId");
 
-                    b.ToTable("RoleRouteMapping", (string)null);
+                    b.ToTable("RoleRouteMappings");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Route", b =>
@@ -174,9 +151,7 @@ namespace Identity.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Description")
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsMenuRoute")
                         .HasColumnType("bit");
@@ -184,28 +159,22 @@ namespace Identity.Data.Migrations
                     b.Property<int?>("ParentRouteId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Route1")
-                        .IsRequired()
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(max)")
-                        .HasColumnName("Route");
-
                     b.Property<string>("RouteName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoutePath")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("RouteTypeId")
                         .HasColumnType("int");
 
                     b.HasKey("RouteId");
 
-                    b.HasIndex(new[] { "ApplicationId" }, "IX_Routes_ApplicationId");
+                    b.HasIndex("ApplicationId");
 
-                    b.HasIndex(new[] { "ParentRouteId" }, "IX_Routes_ParentRouteId");
+                    b.HasIndex("ParentRouteId");
 
-                    b.HasIndex(new[] { "RouteTypeId" }, "IX_Routes_RouteTypeId");
+                    b.HasIndex("RouteTypeId");
 
                     b.ToTable("Routes");
                 });
@@ -219,7 +188,6 @@ namespace Identity.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RouteTypeId"));
 
                     b.Property<string>("RouteTypeName")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("RouteTypeId");
@@ -230,10 +198,13 @@ namespace Identity.Data.Migrations
             modelBuilder.Entity("Identity.Data.Entities.Subscription", b =>
                 {
                     b.Property<int>("SubscriptionId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubscriptionId"));
+
                     b.Property<DateTime>("CurrentExpiryDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
@@ -242,10 +213,10 @@ namespace Identity.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("SubscriptionFee")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("SubscriptionStartDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("SubscriptionId");
 
@@ -253,13 +224,16 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex("PackageId");
 
-                    b.ToTable("Subscription", (string)null);
+                    b.ToTable("Subscriptions");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.SubscriptionPackage", b =>
                 {
                     b.Property<int>("PackageId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PackageId"));
 
                     b.Property<int>("ApplicationId")
                         .HasColumnType("int");
@@ -268,12 +242,10 @@ namespace Identity.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PackageName")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal?>("SubscriptionFee")
-                        .HasColumnType("decimal(18, 0)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("PackageId");
 
@@ -285,7 +257,10 @@ namespace Identity.Data.Migrations
             modelBuilder.Entity("Identity.Data.Entities.SubscriptionTransaction", b =>
                 {
                     b.Property<int>("TransactionId")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionId"));
 
                     b.Property<int>("PaidAmount")
                         .HasColumnType("int");
@@ -294,7 +269,7 @@ namespace Identity.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime");
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("SubscriptionId")
                         .HasColumnType("int");
@@ -323,38 +298,25 @@ namespace Identity.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValueSql("(N'')");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("FirstName")
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
-                        .HasMaxLength(50)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Password")
-                        .IsRequired()
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(max)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("Status")
                         .HasColumnType("bit");
 
                     b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
 
@@ -378,27 +340,26 @@ namespace Identity.Data.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("UserRoleId")
-                        .HasName("PK_UserRoles");
+                    b.HasKey("UserRoleId");
 
-                    b.HasIndex(new[] { "RoleId" }, "IX_UserRoles_RoleId");
+                    b.HasIndex("OrganizationId");
 
-                    b.HasIndex(new[] { "UserId" }, "IX_UserRoles_UserId");
+                    b.HasIndex("RoleId");
 
-                    b.ToTable("UserRoleMapping", (string)null);
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserRoleMappings");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Role", b =>
                 {
                     b.HasOne("Identity.Data.Entities.Application", "Application")
                         .WithMany("Roles")
-                        .HasForeignKey("ApplicationId")
-                        .HasConstraintName("FK_Roles_Applications");
+                        .HasForeignKey("ApplicationId");
 
                     b.HasOne("Identity.Data.Entities.Organization", "Organization")
                         .WithMany("Roles")
-                        .HasForeignKey("OrganizationId")
-                        .HasConstraintName("FK_Roles_Organizations");
+                        .HasForeignKey("OrganizationId");
 
                     b.Navigation("Application");
 
@@ -410,14 +371,14 @@ namespace Identity.Data.Migrations
                     b.HasOne("Identity.Data.Entities.Role", "Role")
                         .WithMany("RoleRouteMappings")
                         .HasForeignKey("RoleId")
-                        .IsRequired()
-                        .HasConstraintName("FK_RoleRouteMapping_Roles");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Identity.Data.Entities.Route", "Route")
                         .WithMany("RoleRouteMappings")
                         .HasForeignKey("RouteId")
-                        .IsRequired()
-                        .HasConstraintName("FK_RoleRouteMapping_Routes");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Role");
 
@@ -429,8 +390,8 @@ namespace Identity.Data.Migrations
                     b.HasOne("Identity.Data.Entities.Application", "Application")
                         .WithMany("Routes")
                         .HasForeignKey("ApplicationId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Routes_Applications");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Identity.Data.Entities.Route", "ParentRoute")
                         .WithMany("InverseParentRoute")
@@ -439,8 +400,8 @@ namespace Identity.Data.Migrations
                     b.HasOne("Identity.Data.Entities.RouteType", "RouteType")
                         .WithMany("Routes")
                         .HasForeignKey("RouteTypeId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Routes_RouteTypes");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Application");
 
@@ -454,14 +415,14 @@ namespace Identity.Data.Migrations
                     b.HasOne("Identity.Data.Entities.Organization", "Organization")
                         .WithMany("Subscriptions")
                         .HasForeignKey("OrganizationId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Subscription_Organizations");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Identity.Data.Entities.SubscriptionPackage", "Package")
                         .WithMany("Subscriptions")
                         .HasForeignKey("PackageId")
-                        .IsRequired()
-                        .HasConstraintName("FK_Subscription_SubscriptionPackages");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Organization");
 
@@ -473,8 +434,8 @@ namespace Identity.Data.Migrations
                     b.HasOne("Identity.Data.Entities.Application", "Application")
                         .WithMany("SubscriptionPackages")
                         .HasForeignKey("ApplicationId")
-                        .IsRequired()
-                        .HasConstraintName("FK_SubscriptionPackages_Applications");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Application");
                 });
@@ -484,14 +445,14 @@ namespace Identity.Data.Migrations
                     b.HasOne("Identity.Data.Entities.User", "PaidByNavigation")
                         .WithMany("SubscriptionTransactions")
                         .HasForeignKey("PaidBy")
-                        .IsRequired()
-                        .HasConstraintName("FK_SubscriptionTransactions_Users");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Identity.Data.Entities.Subscription", "Subscription")
                         .WithMany("SubscriptionTransactions")
                         .HasForeignKey("SubscriptionId")
-                        .IsRequired()
-                        .HasConstraintName("FK_SubscriptionTransactions_Subscription");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("PaidByNavigation");
 
@@ -500,19 +461,25 @@ namespace Identity.Data.Migrations
 
             modelBuilder.Entity("Identity.Data.Entities.UserRoleMapping", b =>
                 {
+                    b.HasOne("Identity.Data.Entities.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Identity.Data.Entities.Role", "Role")
                         .WithMany("UserRoleMappings")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_UserRoles_Roles_RoleId");
+                        .IsRequired();
 
                     b.HasOne("Identity.Data.Entities.User", "User")
                         .WithMany("UserRoleMappings")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_UserRoles_Users_UserId");
+                        .IsRequired();
+
+                    b.Navigation("Organization");
 
                     b.Navigation("Role");
 

@@ -1,6 +1,7 @@
 ﻿using Inventory.Data.Entities;
 using Inventory.Data.Models;
 using Inventory.Domain.Abstraction;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
@@ -20,8 +21,9 @@ namespace Inventory.Domain.Implementation
             ILogger<CommonAttributeService> logger,
             IObjectMapper mapper,
             IClaimsPrincipalAccessor claimsPrincipalAccessor,
-            IUnitOfWorkManager unitOfWork
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork) { }
+            IUnitOfWorkManager unitOfWork,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) { }
 
         public async Task<CommonAttributeModel> AddCommonAttributeAsync(CommonAttributeModel commonAttrModel)
         {

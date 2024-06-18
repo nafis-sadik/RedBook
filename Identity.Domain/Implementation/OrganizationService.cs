@@ -2,6 +2,7 @@
 using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
@@ -26,8 +27,9 @@ namespace Identity.Domain.Implementation
             ILogger<ApplicationService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
-            IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
+            IClaimsPrincipalAccessor claimsPrincipalAccessor,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor)
         { }
         public async Task<OrganizationModel> GetOrganizationAsync(int OrganizationId)
         {
@@ -60,7 +62,7 @@ namespace Identity.Domain.Implementation
                 // Assigning the admin role to the user who created tje organization, 
                 await _userRoleRepo.InsertAsync(new UserRoleMapping
                 {
-                    RoleId = RoleConstants.RedbookOwnerAdmin.RoleId,
+                    RoleId = RoleConstants.OwnerAdmin.RoleId,
                     UserId = User.UserId,
                     OrganizationId = orgEntity.OrganizationId,
                 });
@@ -86,11 +88,11 @@ namespace Identity.Domain.Implementation
 
                 orgEntity = _orgRepo.Update(orgEntity);
                 await factory.SaveChangesAsync();
-    
+
                 return Mapper.Map<OrganizationModel>(orgEntity);
             }
         }
-    
+
         public async Task DeleteOrganizationAsync(int OrganizationId)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
@@ -105,11 +107,11 @@ namespace Identity.Domain.Implementation
 
                 // Delete child data records first
                 int[]? orgRolesIds = await _roleRepo.UnTrackableQuery().Where(x => x.OrganizationId == OrganizationId).Select(x => x.RoleId).ToArrayAsync();
-                foreach(int orgRoleId in orgRolesIds)
+                foreach (int orgRoleId in orgRolesIds)
                 {
                     // Delete User Role Mapping Records
                     int[]? userRoleMappingIds = await _userRoleRepo.UnTrackableQuery().Where(x => x.RoleId == orgRoleId).Select(x => x.UserRoleId).ToArrayAsync();
-                    foreach(int mappingId in userRoleMappingIds)
+                    foreach (int mappingId in userRoleMappingIds)
                     {
                         await _userRoleRepo.DeleteAsync(mappingId);
                     }
@@ -134,7 +136,7 @@ namespace Identity.Domain.Implementation
 
         public async Task<IEnumerable<OrganizationModel>> GetUserOwnedOrgsAsync()
         {
-            using(var factory = UnitOfWorkManager.GetRepositoryFactory())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
@@ -146,7 +148,7 @@ namespace Identity.Domain.Implementation
                     .Select(mapping => new OrganizationModel
                     {
                         OrganizationId = mapping.OrganizationId,
-                        OrganizationName = mapping.Role.Organization.OrganizationName
+                        OrganizationName = mapping.Organization.OrganizationName
                     })
                     .ToListAsync();
             }
@@ -163,7 +165,8 @@ namespace Identity.Domain.Implementation
                     .Where(x => x.OrganizationId > 0)
                     .Skip(pagedOrganizationModel.Skip)
                     .Take(pagedOrganizationModel.PageLength)
-                    .Select(x => new OrganizationModel {
+                    .Select(x => new OrganizationModel
+                    {
                         OrganizationId = x.OrganizationId,
                         OrganizationName = x.OrganizationName
                     }).ToListAsync();
@@ -171,5 +174,5 @@ namespace Identity.Domain.Implementation
 
             return pagedOrganizationModel;
         }
-}
+    }
 }

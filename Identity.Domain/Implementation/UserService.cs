@@ -1,21 +1,20 @@
-﻿using System.Text;
-using System.Security.Claims;
+﻿using Identity.Data.Entities;
 using Identity.Data.Models;
-using RedBook.Core.Repositories;
-using Identity.Data.Entities;
-using RedBook.Core.Constants;
-using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.IdentityModel.Tokens;
-using RedBook.Core.Domain;
-using RedBook.Core.AutoMapper;
-using Microsoft.Extensions.Logging;
-using RedBook.Core.UnitOfWork;
 using Identity.Domain.Abstraction;
-using RedBook.Core.Security;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using RedBook.Core.AutoMapper;
+using RedBook.Core.Constants;
+using RedBook.Core.Domain;
 using RedBook.Core.Models;
-using Identity.Data.CommonConstant;
+using RedBook.Core.Repositories;
+using RedBook.Core.Security;
+using RedBook.Core.UnitOfWork;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace Identity.Domain.Implementation
 {
@@ -39,8 +38,6 @@ namespace Identity.Domain.Implementation
         public async Task<string> LogInAsync(UserModel userModel)
         {
             User? userEntity;
-            int[] userRolesIds;
-            string[] userRoleNames;
             using (_repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 _userRepo = _repositoryFactory.GetRepository<User>();
@@ -49,21 +46,21 @@ namespace Identity.Domain.Implementation
                 // Find user
                 userEntity = await _userRepo
                     .UnTrackableQuery()
-                    .FirstOrDefaultAsync(x => 
+                    .FirstOrDefaultAsync(x =>
                         x.UserName == userModel.UserName
                         || x.UserId == userModel.UserId
                         || x.Email == userModel.Email
                     );
 
-                if(userEntity == null) throw new ArgumentException("User not found");
+                if (userEntity == null) throw new ArgumentException("User not found");
 
-                IList<RoleModel> userRoles = await _userRoleRepo.UnTrackableQuery()
-                                .Where(x => x.UserId == userEntity.UserId)
-                                .Select(x => new RoleModel { RoleId = x.RoleId , RoleName = x.Role.RoleName})
-                                .ToListAsync();
+                //IList<RoleModel> userRoles = await _userRoleRepo.UnTrackableQuery()
+                //                .Where(x => x.UserId == userEntity.UserId)
+                //                .Select(x => new RoleModel { RoleId = x.RoleId , RoleName = x.Role.RoleName})
+                //                .ToListAsync();
 
-                userRolesIds = userRoles.Select(x => x.RoleId).Distinct().ToArray();
-                userRoleNames = userRoles.Select(x => x.RoleName).Distinct().ToArray();
+                //userRolesIds = userRoles.Select(x => x.RoleId).Distinct().ToArray();
+                //userRoleNames = userRoles.Select(x => x.RoleName).Distinct().ToArray();
             }
 
             if (BCrypt.Net.BCrypt.EnhancedVerify(userModel.Password, userEntity.Password))
@@ -72,8 +69,9 @@ namespace Identity.Domain.Implementation
                 return GenerateJwtToken(new List<Claim> {
                     new Claim("UserId", userEntity.UserId.ToString()),
                     new Claim("UserName", userEntity.UserName),
-                    new Claim("UserRoles", string.Join(",", userRoleNames)),
-                    new Claim("UserRoleIds", string.Join(",", userRolesIds))
+                    //new Claim("ApplicationId", "1"),
+                    //new Claim("UserRoles", string.Join(",", userRoleNames)),
+                    //new Claim("UserRoleIds", string.Join(",", userRolesIds))
                 }, userModel.RememberMe);
             }
             else
@@ -107,15 +105,16 @@ namespace Identity.Domain.Implementation
                     int[] userModelRoleIds = userModel.UserRoles.Select(x => x.RoleId).ToArray();
                     UserRoleMapping[] roleMappingRecords = await _userRoleRepo.UnTrackableQuery()
                         .Where(x => x.UserId == userModel.UserId && userModel.OrganizationId == x.Role.OrganizationId)
-                        .Select(x => new UserRoleMapping {
+                        .Select(x => new UserRoleMapping
+                        {
                             RoleId = x.RoleId,
                             UserRoleId = x.UserRoleId,
                         })
                         .ToArrayAsync();
 
-                    foreach(int roleId in userModelRoleIds)
+                    foreach (int roleId in userModelRoleIds)
                     {
-                        if(roleMappingRecords.First(x => x.RoleId == roleId) == null)
+                        if (roleMappingRecords.First(x => x.RoleId == roleId) == null)
                             await _userRoleRepo.InsertAsync(new UserRoleMapping
                             {
                                 RoleId = roleId,
@@ -134,7 +133,7 @@ namespace Identity.Domain.Implementation
 
                 await factory.SaveChangesAsync();
 
-                return Mapper.Map<UserModel>(userEntity);    
+                return Mapper.Map<UserModel>(userEntity);
             }
         }
 
@@ -197,14 +196,16 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<List<OrganizationModel>> GetUserOrganizationsAsync(){
+        public async Task<List<OrganizationModel>> GetUserOrganizationsAsync()
+        {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 List<OrganizationModel> orgList = await _userRoleRepo.UnTrackableQuery()
                     .Where(x => x.UserId == User.UserId)
-                    .Select(mapping => new OrganizationModel{
+                    .Select(mapping => new OrganizationModel
+                    {
                         OrganizationId = mapping.OrganizationId,
                         OrganizationName = mapping.Role.Organization.OrganizationName,
                         OrganizationAddress = mapping.Role.Organization.Address,
@@ -277,7 +278,7 @@ namespace Identity.Domain.Implementation
                 _userRepo = factory.GetRepository<User>();
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (! await this.HasSystemAdminPriviledge(_userRoleRepo))
+                if (!await this.HasSystemAdminPriviledge(_userRoleRepo))
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 await _userRepo.DeleteAsync(userId);
@@ -325,7 +326,8 @@ namespace Identity.Domain.Implementation
                     ),
                     claims: claimList
                 );
-            }else
+            }
+            else
             {
                 token = new JwtSecurityToken
                 (

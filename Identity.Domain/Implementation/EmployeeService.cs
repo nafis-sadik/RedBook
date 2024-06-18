@@ -1,6 +1,7 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
@@ -18,8 +19,9 @@ namespace Identity.Domain.Implementation
             ILogger<EmployeeService> logger,
             IObjectMapper mapper,
             IUnitOfWorkManager unitOfWork,
-            IClaimsPrincipalAccessor claimsPrincipalAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork)
+            IClaimsPrincipalAccessor claimsPrincipalAccessor,
+            IHttpContextAccessor httpContextAccessor
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor)
         { }
 
         public async Task<PagedModel<UserModel>> PagedEmployeeList(PagedModel<UserModel> pagedEmployeeList, int orgId)
@@ -28,7 +30,7 @@ namespace Identity.Domain.Implementation
             {
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasOwnerAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 var query = _userRoleRepo.UnTrackableQuery()
                     .Where(x => x.OrganizationId == orgId);
@@ -57,7 +59,7 @@ namespace Identity.Domain.Implementation
                         PhoneNumber = u.First().User.PhoneNumber,
                         UserRoles = _userRoleRepo
                             .UnTrackableQuery()
-                            .Where(x => x.UserId == u.First().UserId && x.Role.OrganizationId == orgId)
+                            .Where(x => x.UserId == User.UserId && x.OrganizationId == orgId)
                             .Select(x => new RoleModel
                             {
                                 RoleId = x.RoleId,
@@ -68,7 +70,7 @@ namespace Identity.Domain.Implementation
                     .ToListAsync();
 
                 pagedEmployeeList.TotalItems = await query.GroupBy(x => x.UserId).CountAsync();
-                pagedEmployeeList.SearchString = string.IsNullOrEmpty(pagedEmployeeList.SearchString)? "" : pagedEmployeeList.SearchString;
+                pagedEmployeeList.SearchString = string.IsNullOrEmpty(pagedEmployeeList.SearchString) ? "" : pagedEmployeeList.SearchString;
                 return pagedEmployeeList;
             }
         }
@@ -95,7 +97,7 @@ namespace Identity.Domain.Implementation
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
                 userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.PhoneNumber == userModel.PhoneNumber);
-                if(userEntity == null)
+                if (userEntity == null)
                 {
                     userEntity = Mapper.Map<User>(userModel);
                     userEntity.Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword);
@@ -104,7 +106,7 @@ namespace Identity.Domain.Implementation
                     await factory.SaveChangesAsync();
                 }
 
-                foreach(var role in userModel.UserRoles)
+                foreach (var role in userModel.UserRoles)
                 {
                     await _userRoleRepo.InsertAsync(new UserRoleMapping
                     {
@@ -133,21 +135,22 @@ namespace Identity.Domain.Implementation
                 userEntity.LastName = userModel.LastName;
 
                 Dictionary<int, UserRoleMapping> dbRoleIdDict = await _userRoleRepo.UnTrackableQuery().Where(mapping => mapping.UserId == userModel.UserId).ToDictionaryAsync(x => x.RoleId);
-                
+
                 foreach (var userRole in userModel.UserRoles)
                 {
                     if (!dbRoleIdDict.ContainsKey(userRole.RoleId))
                     {
-                        await _userRoleRepo.InsertAsync(new UserRoleMapping { 
-                            RoleId = userRole.RoleId, 
-                            UserId = userModel.UserId, 
-                            OrganizationId = userModel.OrganizationId 
+                        await _userRoleRepo.InsertAsync(new UserRoleMapping
+                        {
+                            RoleId = userRole.RoleId,
+                            UserId = userModel.UserId,
+                            OrganizationId = userModel.OrganizationId
                         });
                     }
                 }
 
                 HashSet<int> frontEndRoleIdDict = userModel.UserRoles.Select(x => x.RoleId).ToHashSet();
-                foreach(KeyValuePair<int, UserRoleMapping> dbRole in dbRoleIdDict)
+                foreach (KeyValuePair<int, UserRoleMapping> dbRole in dbRoleIdDict)
                 {
                     if (!frontEndRoleIdDict.Contains(dbRole.Key))
                         await _userRoleRepo.DeleteAsync(dbRole.Value.UserRoleId);

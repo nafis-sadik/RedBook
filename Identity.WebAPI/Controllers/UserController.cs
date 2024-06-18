@@ -1,12 +1,10 @@
 ﻿using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
-using Identity.Domain.Implementation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Constants;
 using RedBook.Core.Models;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace Identity.WebAPI.Controllers
 {
@@ -132,7 +130,7 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetUserOrgs() => Ok(await _userServices.GetUserOrganizationsAsync());
-        
+
         /// <summary>
         /// Retrieves a paged list of users associated with the specified organization. (Organization admin access only)
         /// </summary>

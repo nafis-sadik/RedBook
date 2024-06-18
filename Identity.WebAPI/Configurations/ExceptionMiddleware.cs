@@ -36,7 +36,8 @@ namespace Identity.WebAPI.Configurations
         {
             context.Response.ContentType = "application/json";
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-            if(exception.InnerException != null) { 
+            if (exception.InnerException != null)
+            {
                 await context.Response.WriteAsync(exception.InnerException.Message);
             }
             await context.Response.WriteAsync(exception.Message);

@@ -14,12 +14,12 @@ namespace RedBook.Core.Security
 
         public virtual ClaimsPrincipal GetCurrentPrincipal()
         {
-            if(HttpContextAccessor == null)
+            if (HttpContextAccessor == null)
                 throw new ArgumentException("Error in HttpContextAccessor");
 
-            if(HttpContextAccessor.HttpContext == null)
+            if (HttpContextAccessor.HttpContext == null)
                 throw new ArgumentException("Error in HttpContextAccessor.HttpContext");
-            
+
             return HttpContextAccessor.HttpContext.User;
 
         }

@@ -10,9 +10,11 @@ namespace RedBook.Core.Domain
     public class ServiceBase
     {
         private IHttpContextAccessor? _httpContextAccessor;
-        public HttpContext? HttpContextAccessor {
-            get {
-                if(_httpContextAccessor != null)
+        public HttpContext? HttpContextAccessor
+        {
+            get
+            {
+                if (_httpContextAccessor != null)
                     return _httpContextAccessor.HttpContext;
                 return null;
             }
@@ -32,27 +34,21 @@ namespace RedBook.Core.Domain
         }
 
         public ILogger _logger;
-        public ILogger Logger { get { return _logger; } private set { _logger = value; } }
+        public ILogger Logger { get { return _logger; } }
 
         public IObjectMapper _mapper;
-        public IObjectMapper Mapper { get { return _mapper; } private set { _mapper = value; } }
+        public IObjectMapper Mapper { get { return _mapper; } }
 
         private RequestingUser _userInfo;
-        public RequestingUser User { get { return _userInfo; } private set { _userInfo = value; } }
-        public ServiceBase(ILogger<ServiceBase> logger, IObjectMapper mapper, IClaimsPrincipalAccessor accessor, IUnitOfWorkManager unitOfWork)
-        {
-            Logger = logger;
-            Mapper = mapper;
-            UnitOfWorkManager = unitOfWork;
-            User = new RequestingUser(accessor.GetCurrentPrincipal());
-        }
+        public RequestingUser User { get { return _userInfo; } }
+
         public ServiceBase(ILogger<ServiceBase> logger, IObjectMapper mapper, IClaimsPrincipalAccessor accessor, IUnitOfWorkManager unitOfWork, IHttpContextAccessor httpContextAccessor)
         {
-            Logger = logger;
-            Mapper = mapper;
-            UnitOfWorkManager = unitOfWork;
+            _logger = logger;
+            _mapper = mapper;
+            _unitOfWorkManager = unitOfWork;
             _httpContextAccessor = httpContextAccessor;
-            User = new RequestingUser(accessor.GetCurrentPrincipal());
+            _userInfo = new RequestingUser(accessor.GetCurrentPrincipal(), httpContextAccessor.HttpContext);
         }
     }
 }

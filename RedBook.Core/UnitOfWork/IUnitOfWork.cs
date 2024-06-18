@@ -2,7 +2,7 @@
 
 namespace RedBook.Core.UnitOfWork
 {
-    public interface IRepositoryFactory: IDisposable
+    public interface IRepositoryFactory : IDisposable
     {
 
         /// <summary>

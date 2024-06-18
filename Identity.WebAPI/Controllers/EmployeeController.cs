@@ -23,7 +23,7 @@ namespace Identity.WebAPI.Controllers
         [HttpGet("Paged/{orgId}")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
         public async Task<IActionResult> GetPaged([FromQuery] PagedModel<UserModel> pagedModel, int orgId) => Ok(await _employeeService.PagedEmployeeList(pagedModel, orgId));
-        
+
         [HttpPut]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
         public async Task<IActionResult> UpdateEmployee(UserModel user) => Ok(await _employeeService.UpdateEmployeeInfo(user));

@@ -5,7 +5,7 @@ using RedBook.Core.UnitOfWork;
 
 namespace RedBook.Core.EntityFramework
 {
-    public class EFRepositoryFactory : IRepositoryFactory
+    public class EFRepositoryFactory : IRepositoryFactory, IDisposable
     {
         public readonly DbContext _dbContext;
 

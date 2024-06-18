@@ -1,6 +1,4 @@
-﻿using RedBook.Core.EntityFramework;
-using RedBook.Core.Models;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace RedBook.Core.Repositories
 {
@@ -38,6 +36,6 @@ namespace RedBook.Core.Repositories
         // Utilities
         Task SaveChangesAsync();
 
-         void DetachAllEntities();
+        void DetachAllEntities();
     }
 }

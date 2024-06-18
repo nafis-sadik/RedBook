@@ -64,7 +64,8 @@ namespace Identity.WebAPI
             builder.Services.AddEndpointsApiExplorer();
 
             // Swagger Configurations
-            builder.Services.AddSwaggerGen(x => {
+            builder.Services.AddSwaggerGen(x =>
+            {
                 x.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Title = "Blume Digital Corp. - Identity API",

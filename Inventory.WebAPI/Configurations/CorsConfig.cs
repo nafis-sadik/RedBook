@@ -18,7 +18,7 @@
         public static IServiceCollection AddCors(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddCors(opts =>
-                opts.AddPolicy(Policy, 
+                opts.AddPolicy(Policy,
                     policy =>
                     {
                         var corsConfiguration = configuration.GetSection("CORS:AllowedHosts");

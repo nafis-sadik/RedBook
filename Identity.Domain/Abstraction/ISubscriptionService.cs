@@ -1,7 +1,4 @@
-﻿using Identity.Data.Models;
-using RedBook.Core.Models;
-
-namespace Identity.Domain.Abstraction
+﻿namespace Identity.Domain.Abstraction
 {
     public interface ISubscriptionService
     {

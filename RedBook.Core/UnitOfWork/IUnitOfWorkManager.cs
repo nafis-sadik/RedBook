@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
-using RedBook.Core.Repositories;
 
 namespace RedBook.Core.UnitOfWork
 {
@@ -13,7 +12,7 @@ namespace RedBook.Core.UnitOfWork
         /// <summary>
         /// Starts a unit of work.
         /// </summary>
-        public IDbContextTransaction Begin();
+        public IDbContextTransaction BeginTransaction();
 
         /// <summary>
         /// Commits operations to database asynchronously.

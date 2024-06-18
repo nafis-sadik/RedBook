@@ -25,7 +25,7 @@ namespace Inventory.WebAPI.Configurations
                         context.Database.Migrate();
                     }
                 }
-            } 
+            }
         }
     }
 }

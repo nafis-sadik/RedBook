@@ -1,6 +1,5 @@
 ﻿using Identity.Data.Models;
 using Identity.Domain.Abstraction;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Identity.WebAPI.Controllers

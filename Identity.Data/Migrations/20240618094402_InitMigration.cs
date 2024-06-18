@@ -1,12 +1,11 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Identity.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class InitMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -17,12 +16,12 @@ namespace Identity.Data.Migrations
                 {
                     ApplicationId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ApplicationName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
-                    ApplicationUrl = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValueSql: "(N'')")
+                    ApplicationName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ApplicationUrl = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Applicat__3214EC07D6504A6D", x => x.ApplicationId);
+                    table.PrimaryKey("PK_Applications", x => x.ApplicationId);
                 });
 
             migrationBuilder.CreateTable(
@@ -31,12 +30,12 @@ namespace Identity.Data.Migrations
                 {
                     OrganizationId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    OrganizationName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    LogoUrl = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    OrganizationName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LogoUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatedBy = table.Column<int>(type: "int", nullable: false),
-                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "('0001-01-01T00:00:00.0000000')"),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UpdatededBy = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -50,7 +49,7 @@ namespace Identity.Data.Migrations
                 {
                     RouteTypeId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RouteTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    RouteTypeName = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -63,14 +62,14 @@ namespace Identity.Data.Migrations
                 {
                     UserId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserName = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: false),
-                    FirstName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
-                    LastName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: true),
-                    Password = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<bool>(type: "bit", nullable: false),
                     AccountBalance = table.Column<int>(type: "int", nullable: false),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false, defaultValueSql: "(N'')"),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
@@ -82,20 +81,22 @@ namespace Identity.Data.Migrations
                 name: "SubscriptionPackages",
                 columns: table => new
                 {
-                    PackageId = table.Column<int>(type: "int", nullable: false),
-                    PackageName = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    PackageId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PackageName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ApplicationId = table.Column<int>(type: "int", nullable: false),
-                    SubscriptionFee = table.Column<decimal>(type: "decimal(18,0)", nullable: true),
+                    SubscriptionFee = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
                     PackageDescription = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SubscriptionPackages", x => x.PackageId);
                     table.ForeignKey(
-                        name: "FK_SubscriptionPackages_Applications",
+                        name: "FK_SubscriptionPackages_Applications_ApplicationId",
                         column: x => x.ApplicationId,
                         principalTable: "Applications",
-                        principalColumn: "ApplicationId");
+                        principalColumn: "ApplicationId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -104,11 +105,11 @@ namespace Identity.Data.Migrations
                 {
                     RoleId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RoleName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
+                    RoleName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OrganizationId = table.Column<int>(type: "int", nullable: true),
-                    IsAdmin = table.Column<bool>(type: "bit", nullable: false, defaultValueSql: "(CONVERT([bit],(0)))"),
-                    IsRetailer = table.Column<bool>(type: "bit", nullable: false, defaultValueSql: "(CONVERT([bit],(0)))"),
-                    IsSystemAdmin = table.Column<bool>(type: "bit", nullable: false, defaultValueSql: "(CONVERT([bit],(0)))"),
+                    IsAdmin = table.Column<bool>(type: "bit", nullable: false),
+                    IsRetailer = table.Column<bool>(type: "bit", nullable: false),
+                    IsSystemAdmin = table.Column<bool>(type: "bit", nullable: false),
                     IsOwner = table.Column<bool>(type: "bit", nullable: false),
                     ApplicationId = table.Column<int>(type: "int", nullable: true)
                 },
@@ -116,12 +117,12 @@ namespace Identity.Data.Migrations
                 {
                     table.PrimaryKey("PK_Roles", x => x.RoleId);
                     table.ForeignKey(
-                        name: "FK_Roles_Applications",
+                        name: "FK_Roles_Applications_ApplicationId",
                         column: x => x.ApplicationId,
                         principalTable: "Applications",
                         principalColumn: "ApplicationId");
                     table.ForeignKey(
-                        name: "FK_Roles_Organizations",
+                        name: "FK_Roles_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
                         principalColumn: "OrganizationId");
@@ -133,9 +134,9 @@ namespace Identity.Data.Migrations
                 {
                     RouteId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    RouteName = table.Column<string>(type: "varchar(50)", unicode: false, maxLength: 50, nullable: false),
-                    Route = table.Column<string>(type: "varchar(max)", unicode: false, nullable: false),
-                    Description = table.Column<string>(type: "varchar(100)", unicode: false, maxLength: 100, nullable: true),
+                    RouteName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RoutePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ApplicationId = table.Column<int>(type: "int", nullable: false),
                     ParentRouteId = table.Column<int>(type: "int", nullable: true),
                     RouteTypeId = table.Column<int>(type: "int", nullable: false),
@@ -145,15 +146,17 @@ namespace Identity.Data.Migrations
                 {
                     table.PrimaryKey("PK_Routes", x => x.RouteId);
                     table.ForeignKey(
-                        name: "FK_Routes_Applications",
+                        name: "FK_Routes_Applications_ApplicationId",
                         column: x => x.ApplicationId,
                         principalTable: "Applications",
-                        principalColumn: "ApplicationId");
+                        principalColumn: "ApplicationId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Routes_RouteTypes",
+                        name: "FK_Routes_RouteTypes_RouteTypeId",
                         column: x => x.RouteTypeId,
                         principalTable: "RouteTypes",
-                        principalColumn: "RouteTypeId");
+                        principalColumn: "RouteTypeId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Routes_Routes_ParentRouteId",
                         column: x => x.ParentRouteId,
@@ -162,33 +165,36 @@ namespace Identity.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Subscription",
+                name: "Subscriptions",
                 columns: table => new
                 {
-                    SubscriptionId = table.Column<int>(type: "int", nullable: false),
+                    SubscriptionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     PackageId = table.Column<int>(type: "int", nullable: false),
                     OrganizationId = table.Column<int>(type: "int", nullable: false),
-                    SubscriptionFee = table.Column<decimal>(type: "decimal(18,0)", nullable: false),
-                    SubscriptionStartDate = table.Column<DateTime>(type: "datetime", nullable: false),
-                    CurrentExpiryDate = table.Column<DateTime>(type: "datetime", nullable: false)
+                    SubscriptionFee = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    SubscriptionStartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CurrentExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Subscription", x => x.SubscriptionId);
+                    table.PrimaryKey("PK_Subscriptions", x => x.SubscriptionId);
                     table.ForeignKey(
-                        name: "FK_Subscription_Organizations",
+                        name: "FK_Subscriptions_Organizations_OrganizationId",
                         column: x => x.OrganizationId,
                         principalTable: "Organizations",
-                        principalColumn: "OrganizationId");
+                        principalColumn: "OrganizationId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_Subscription_SubscriptionPackages",
+                        name: "FK_Subscriptions_SubscriptionPackages_PackageId",
                         column: x => x.PackageId,
                         principalTable: "SubscriptionPackages",
-                        principalColumn: "PackageId");
+                        principalColumn: "PackageId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserRoleMapping",
+                name: "UserRoleMappings",
                 columns: table => new
                 {
                     UserRoleId = table.Column<int>(type: "int", nullable: false)
@@ -199,15 +205,21 @@ namespace Identity.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserRoles", x => x.UserRoleId);
+                    table.PrimaryKey("PK_UserRoleMappings", x => x.UserRoleId);
                     table.ForeignKey(
-                        name: "FK_UserRoles_Roles_RoleId",
+                        name: "FK_UserRoleMappings_Organizations_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organizations",
+                        principalColumn: "OrganizationId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_UserRoleMappings_Roles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "Roles",
                         principalColumn: "RoleId",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_UserRoles_Users_UserId",
+                        name: "FK_UserRoleMappings_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
@@ -215,7 +227,7 @@ namespace Identity.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoleRouteMapping",
+                name: "RoleRouteMappings",
                 columns: table => new
                 {
                     MappingId = table.Column<int>(type: "int", nullable: false)
@@ -225,52 +237,57 @@ namespace Identity.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_RoleRouteMapping", x => x.MappingId);
+                    table.PrimaryKey("PK_RoleRouteMappings", x => x.MappingId);
                     table.ForeignKey(
-                        name: "FK_RoleRouteMapping_Roles",
+                        name: "FK_RoleRouteMappings_Roles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "Roles",
-                        principalColumn: "RoleId");
+                        principalColumn: "RoleId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_RoleRouteMapping_Routes",
+                        name: "FK_RoleRouteMappings_Routes_RouteId",
                         column: x => x.RouteId,
                         principalTable: "Routes",
-                        principalColumn: "RouteId");
+                        principalColumn: "RouteId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
                 name: "SubscriptionTransactions",
                 columns: table => new
                 {
-                    TransactionId = table.Column<int>(type: "int", nullable: false),
+                    TransactionId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     SubscriptionId = table.Column<int>(type: "int", nullable: false),
                     PaidAmount = table.Column<int>(type: "int", nullable: false),
-                    PaymentDate = table.Column<DateTime>(type: "datetime", nullable: false),
+                    PaymentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     PaidBy = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_SubscriptionTransactions", x => x.TransactionId);
                     table.ForeignKey(
-                        name: "FK_SubscriptionTransactions_Subscription",
+                        name: "FK_SubscriptionTransactions_Subscriptions_SubscriptionId",
                         column: x => x.SubscriptionId,
-                        principalTable: "Subscription",
-                        principalColumn: "SubscriptionId");
+                        principalTable: "Subscriptions",
+                        principalColumn: "SubscriptionId",
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_SubscriptionTransactions_Users",
+                        name: "FK_SubscriptionTransactions_Users_PaidBy",
                         column: x => x.PaidBy,
                         principalTable: "Users",
-                        principalColumn: "UserId");
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleRouteMapping_RoleId",
-                table: "RoleRouteMapping",
+                name: "IX_RoleRouteMappings_RoleId",
+                table: "RoleRouteMappings",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_RoleRouteMapping_RouteId",
-                table: "RoleRouteMapping",
+                name: "IX_RoleRouteMappings_RouteId",
+                table: "RoleRouteMappings",
                 column: "RouteId");
 
             migrationBuilder.CreateIndex(
@@ -299,19 +316,19 @@ namespace Identity.Data.Migrations
                 column: "RouteTypeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Subscription_OrganizationId",
-                table: "Subscription",
-                column: "OrganizationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Subscription_PackageId",
-                table: "Subscription",
-                column: "PackageId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_SubscriptionPackages_ApplicationId",
                 table: "SubscriptionPackages",
                 column: "ApplicationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Subscriptions_OrganizationId",
+                table: "Subscriptions",
+                column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Subscriptions_PackageId",
+                table: "Subscriptions",
+                column: "PackageId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SubscriptionTransactions_PaidBy",
@@ -324,13 +341,18 @@ namespace Identity.Data.Migrations
                 column: "SubscriptionId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserRoles_RoleId",
-                table: "UserRoleMapping",
+                name: "IX_UserRoleMappings_OrganizationId",
+                table: "UserRoleMappings",
+                column: "OrganizationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserRoleMappings_RoleId",
+                table: "UserRoleMappings",
                 column: "RoleId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_UserRoles_UserId",
-                table: "UserRoleMapping",
+                name: "IX_UserRoleMappings_UserId",
+                table: "UserRoleMappings",
                 column: "UserId");
         }
 
@@ -338,19 +360,19 @@ namespace Identity.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "RoleRouteMapping");
+                name: "RoleRouteMappings");
 
             migrationBuilder.DropTable(
                 name: "SubscriptionTransactions");
 
             migrationBuilder.DropTable(
-                name: "UserRoleMapping");
+                name: "UserRoleMappings");
 
             migrationBuilder.DropTable(
                 name: "Routes");
 
             migrationBuilder.DropTable(
-                name: "Subscription");
+                name: "Subscriptions");
 
             migrationBuilder.DropTable(
                 name: "Roles");
