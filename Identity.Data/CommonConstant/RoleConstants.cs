@@ -28,7 +28,7 @@ namespace Identity.Data.CommonConstant
 
         public static Role OwnerAdmin = new Role
         {
-            RoleName = "Owner Admin",
+            RoleName = "Redbook Owner Admin",
             IsAdmin = true,
             IsRetailer = false,
             IsSystemAdmin = false,
