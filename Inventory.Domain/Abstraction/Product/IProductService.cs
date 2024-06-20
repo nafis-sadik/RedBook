@@ -6,6 +6,7 @@ namespace Inventory.Domain.Abstraction.Product
     public interface IProductService
     {
         public Task<PagedModel<ProductModel>> GetPagedAsync(PagedModel<ProductModel> pagedModel, int orgId);
+        public Task<IEnumerable<ProductModel>> GetListByOrgIdAsync(int orgId);
         public Task<ProductModel> AddNewAsync(ProductModel productModel);
         public Task<ProductModel> UpdateAsync(ProductModel productModel);
         public Task DeleteProductAsync(int categoryId);

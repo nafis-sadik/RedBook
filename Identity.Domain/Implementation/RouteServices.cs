@@ -12,7 +12,6 @@ using RedBook.Core.Models;
 using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System.Linq;
 
 namespace Identity.Domain.Implementation
 {
@@ -90,7 +89,7 @@ namespace Identity.Domain.Implementation
                         query = query.Where(x => x.RouteId == RouteTypeConsts.RetailerRoute.RouteTypeId);
                     else
                         throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-                } 
+                }
 
                 var data = await query.Select(x => new RouteModel
                 {
@@ -135,7 +134,8 @@ namespace Identity.Domain.Implementation
 
                 // If the user is a sys admin user, return all available routes
                 bool hasDefaultRouteFlag = false;
-                if (requesterRoles.Any(x => x.IsSystemAdmin)) { 
+                if (requesterRoles.Any(x => x.IsSystemAdmin))
+                {
                     routeQuery = routeQuery.Where(x => x.RouteId > 0);
                     hasDefaultRouteFlag = true;
                 }
@@ -143,8 +143,8 @@ namespace Identity.Domain.Implementation
                 {
                     if (requesterRoles.Any(x => x.IsOwner))
                     {
-                        routeQuery = routeQuery.Where(x => 
-                            x.RouteTypeId == RouteTypeConsts.OrganizationOwner.RouteTypeId 
+                        routeQuery = routeQuery.Where(x =>
+                            x.RouteTypeId == RouteTypeConsts.OrganizationOwner.RouteTypeId
                             || x.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId
                             || x.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId);
 
@@ -202,8 +202,9 @@ namespace Identity.Domain.Implementation
                 genericRoutes.Distinct();
 
                 IEnumerable<int?> parentRoutesId = genericRoutes.Where(x => x.ParentRouteId != null).Select(x => x.ParentRouteId).ToList().Distinct();
-                foreach (int parentId in parentRoutesId) {
-                    if(!genericRoutes.Any(x => x.RouteId == parentId))
+                foreach (int parentId in parentRoutesId)
+                {
+                    if (!genericRoutes.Any(x => x.RouteId == parentId))
                     {
                         RouteModel parentRoute = await _routeRepo.UnTrackableQuery()
                             .Where(x => x.RouteId == parentId)
@@ -221,7 +222,7 @@ namespace Identity.Domain.Implementation
                     }
                 }
 
-                return genericRoutes;
+                return genericRoutes.DistinctBy(x => x.RouteId);
             }
         }
 

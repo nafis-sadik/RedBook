@@ -32,10 +32,21 @@ namespace Inventory.WebAPI.Controllers.Product
         /// <param name="pagedModel">Pagination structure</param>
         [HttpGet]
         [Route("{orgId}")]
-        [SwaggerResponse(statusCode: 200, type: typeof(ProductModel), description: "Retrieves paged list of products under organization")]
+        [SwaggerResponse(statusCode: 200, type: typeof(PagedModel<ProductModel>), description: "Retrieves paged list of products under organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> GetAsync([FromQuery] PagedModel<ProductModel> pagedModel, int orgId) => Ok(await _productService.GetPagedAsync(pagedModel, orgId));
+        public async Task<IActionResult> GetPagedAsync([FromQuery] PagedModel<ProductModel> pagedModel, int orgId) => Ok(await _productService.GetPagedAsync(pagedModel, orgId));
+
+        /// <summary>
+        /// Retrieves list of products under organization for dropdown
+        /// </summary>
+        /// <param name="orgId">Unique identifier of Organization</param>
+        [HttpGet]
+        [Route("List/{orgId}")]
+        [SwaggerResponse(statusCode: 200, type: typeof(IEnumerable<ProductModel>), description: "Retrieves paged list of products under organization")]
+        [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
+        [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
+        public async Task<IActionResult> GetListByOrgIdAsync(int orgId) => Ok(await _productService.GetListByOrgIdAsync(orgId));
 
         /// <summary>
         /// Add new product under organization

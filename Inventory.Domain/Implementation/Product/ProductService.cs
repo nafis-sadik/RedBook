@@ -92,11 +92,27 @@ namespace Inventory.Domain.Implementation.Product
             }
         }
 
+        public async Task<IEnumerable<ProductModel>> GetListByOrgIdAsync(int orgId)
+        {
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                var _productRepo = factory.GetRepository<Data.Entities.Product>();
+
+                return await _productRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId)
+                    .Select(x => new ProductModel
+                    {
+                        ProductId= x.ProductId,
+                        ProductName = x.ProductName,
+                    })
+                    .ToListAsync();
+            }
+        }
+
         public async Task<ProductModel> UpdateAsync(ProductModel productModel)
         {
-            using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
+                var _productRepo = factory.GetRepository<Data.Entities.Product>();
 
                 Data.Entities.Product? product = await _productRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ProductId == productModel.ProductId);
 
@@ -109,7 +125,7 @@ namespace Inventory.Domain.Implementation.Product
 
                 _productRepo.Update(product);
 
-                await _repositoryFactory.SaveChangesAsync();
+                await factory.SaveChangesAsync();
 
                 return Mapper.Map<ProductModel>(productModel);
             }
