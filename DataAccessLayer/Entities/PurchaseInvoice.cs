@@ -18,6 +18,12 @@ public partial class PurchaseInvoice
 
     public string ChalanNumber { get; set; }
 
+    public DateTime ChalanDate { get; set; }
+
+    [Column(TypeName = "nvarchar(MAX)")]
+    public string Terms { get; set; }
+
+    [Column(TypeName = "nvarchar(MAX)")]
     public string Remarks { get; set; }
 
     [AllowNull]

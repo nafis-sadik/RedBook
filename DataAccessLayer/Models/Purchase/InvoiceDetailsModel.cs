@@ -2,7 +2,9 @@
 {
     public class InvoiceDetailsModel
     {
-        public int DetailId { get; set; }
+        public int RecordId { get; set; }
+
+        public int InvoiceId { get; set; }
 
         public int ProductId { get; set; }
 
@@ -11,8 +13,6 @@
         public decimal Quantity { get; set; }
 
         public decimal UnitPrice { get; set; }
-
-        public int InvoiceId { get; set; }
 
         public int? CreateBy { get; set; }
 

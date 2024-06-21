@@ -12,6 +12,10 @@
 
         public string ChalanNumber { get; set; }
 
+        public DateTime ChalanDate { get; set; }
+
+        public string Terms { get; set; }
+
         public string Remarks { get; set; }
 
         public int? VendorId { get; set; }

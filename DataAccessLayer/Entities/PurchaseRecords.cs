@@ -7,9 +7,10 @@ public partial class PurchaseRecords
 {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int PurchaseId { get; set; }
+    public int RecordId { get; set; }
 
-    public int ProductId { get; set; }
+    [AllowedValues(true)]
+    public int? ProductId { get; set; }
 
     public int ProductName { get; set; }
 
@@ -19,7 +20,8 @@ public partial class PurchaseRecords
 
     public int InvoiceId { get; set; }
 
-    public int? CreateBy { get; set; }
+    [Required]
+    public int CreateBy { get; set; }
 
     public DateTime? CreateDate { get; set; }
 
