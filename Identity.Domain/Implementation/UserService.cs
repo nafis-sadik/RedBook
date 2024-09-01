@@ -352,7 +352,7 @@ namespace Identity.Domain.Implementation
                 _userRepo = factory.GetRepository<User>();
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasOwnerAdminPriviledge(_userRoleRepo, userModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsOwnerOf(_userRoleRepo, userModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 User userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Email == userModel.Email);
                 if (userEntity == null)
@@ -394,7 +394,7 @@ namespace Identity.Domain.Implementation
             {
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 var query = _userRoleRepo.UnTrackableQuery()
                     .Where(x => x.Role.OrganizationId == orgId);
@@ -445,7 +445,7 @@ namespace Identity.Domain.Implementation
             {
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 await _userRoleRepo.TrackableQuery().Where(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin == true).ExecuteDeleteAsync();
 

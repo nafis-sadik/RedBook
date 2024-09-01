@@ -30,7 +30,7 @@ namespace Identity.Domain.Implementation
             {
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasOwnerAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsOwnerOf(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 var query = _userRoleRepo.UnTrackableQuery()
                     .Where(x => x.OrganizationId == orgId);

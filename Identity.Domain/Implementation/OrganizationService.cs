@@ -79,7 +79,7 @@ namespace Identity.Domain.Implementation
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
                 _orgRepo = factory.GetRepository<Organization>();
 
-                if (!await this.HasAdminPriviledge(_userRoleRepo, organizationModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, organizationModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Organization? orgEntity = await _orgRepo.GetAsync(organizationModel.OrganizationId);
                 if (orgEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
@@ -103,7 +103,7 @@ namespace Identity.Domain.Implementation
                 _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
                 // Admin priviledge check
-                if (!await this.HasOwnerAdminPriviledge(_userRoleRepo, OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsOwnerOf(_userRoleRepo, OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 // Delete child data records first
                 int[]? orgRolesIds = await _roleRepo.UnTrackableQuery().Where(x => x.OrganizationId == OrganizationId).Select(x => x.RoleId).ToArrayAsync();

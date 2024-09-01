@@ -2,6 +2,7 @@
 using Inventory.Domain.Abstraction.Purchase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RedBook.Core.Models;
 
 namespace Inventory.WebAPI.Controllers.Purchase
 {
@@ -17,5 +18,9 @@ namespace Inventory.WebAPI.Controllers.Purchase
 
         [HttpGet]
         public async Task<IActionResult> GetByOrgId(int orgId) => Ok(await _vendorService.GetByOrgId(orgId));
+
+        [HttpGet]
+        [Route("PagedAsync")]
+        public async Task<IActionResult> GetPaged([FromQuery]PagedModel<VendorModel> pagedModel, int orgId) => Ok(await _vendorService.GetPagedAsync(pagedModel));
     }
 }

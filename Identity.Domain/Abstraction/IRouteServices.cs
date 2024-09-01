@@ -1,4 +1,5 @@
-﻿using Identity.Data.Models;
+﻿using Identity.Data.Entities;
+using Identity.Data.Models;
 using RedBook.Core.Models;
 
 namespace Identity.Domain.Abstraction
@@ -9,8 +10,9 @@ namespace Identity.Domain.Abstraction
         Task<RouteModel> UpdateRoute(RouteModel routeModel);
         Task DeleteRoute(int routeId);
         Task<RouteModel?> GetRoute(int routeId);
+        Task<List<RouteType>> GetRouteTypes();
         Task<IEnumerable<RouteModel>> GetRoutesByRoleId(int roleId);
-        Task<IEnumerable<RouteModel>> GetAllAppRoutes(int appId);
+        Task<IEnumerable<RouteModel>> GetAppRoutes();
         Task<IEnumerable<RouteModel>> GetAppMenuRoutes();
         Task<PagedModel<RouteModel>> GetPagedRoutes(PagedModel<RouteModel> pagedRoutes);
     }

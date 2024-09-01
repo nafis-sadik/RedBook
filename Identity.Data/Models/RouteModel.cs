@@ -14,6 +14,10 @@
 
         public int? ParentRouteId { get; set; }
 
+        public int RouteTypeId { get; set; }
+
+        public bool IsMenuRoute { get; set; }
+
         public string ApplicationName { get; set; }
     }
 }

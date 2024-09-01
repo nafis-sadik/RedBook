@@ -37,6 +37,7 @@ namespace Inventory.Domain.Implementation.Purchase
                 return model;
             }
         }
+
         public async Task<VendorModel> GetByIdAsync(int id)
         {
             // Must check ownership
@@ -53,6 +54,7 @@ namespace Inventory.Domain.Implementation.Purchase
                 return model;
             }
         }
+
         public async Task<IEnumerable<VendorModel>> GetByOrgId(int orgId)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
@@ -69,8 +71,38 @@ namespace Inventory.Domain.Implementation.Purchase
                     .ToListAsync();
             }
         }
-        public Task<PagedModel<VendorModel>> GetPagedAsync(PagedModel<VendorModel> pagedModel) => throw new NotImplementedException();
+
+        public async Task<PagedModel<VendorModel>> GetPagedAsync(PagedModel<VendorModel> pagedModel)
+        {
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                var query = factory.GetRepository<Vendor>().UnTrackableQuery();
+
+                if (!string.IsNullOrEmpty(pagedModel.SearchString))
+                    query = query.Where(vendor => vendor.VendorName.Contains(pagedModel.SearchString)
+                    || vendor.PhoneNumber.Contains(pagedModel.SearchString)
+                    || vendor.Address.Contains(pagedModel.SearchString)
+                    || vendor.Remarks.Contains(pagedModel.SearchString));
+
+                pagedModel.SourceData = await query.Where(vendor => vendor.OrganizationId == pagedModel.OrganizationId)
+                    .Skip(pagedModel.Skip)
+                    .Take(pagedModel.PageLength)
+                    .Select(vendor => new VendorModel
+                    {
+                        VendorId = vendor.VendorId,
+                        VendorName = vendor.VendorName,
+                        PhoneNumber = vendor.PhoneNumber,
+                        Address = vendor.Address,
+                        Remarks = vendor.Remarks,
+                    })
+                    .ToListAsync();
+
+                return pagedModel;
+            }
+        }
+
         public Task<VendorModel> UpdateAsync(int id, Dictionary<string, object> updates) => throw new NotImplementedException();
+
         public Task DeleteAsync(int id) => throw new NotImplementedException();
     }
 }

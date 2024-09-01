@@ -47,7 +47,7 @@ namespace Identity.Domain.Implementation
 
                 if (appId <= 0) throw new ArgumentException("Unknown Origin");
 
-                if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Role roleEntity = await _roleRepo.InsertAsync(new Role
                 {
@@ -86,7 +86,7 @@ namespace Identity.Domain.Implementation
                 if (role == null || role.OrganizationId == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
                 else
                 {
-                    if (!await this.HasAdminPriviledge(_userRoleRepo, (int)role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                    if (!await this.HasOrgAdminPriviledge(_userRoleRepo, (int)role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                     _roleRepo.Delete(role);
                     await factory.SaveChangesAsync();
@@ -102,7 +102,7 @@ namespace Identity.Domain.Implementation
                 var _roleRepo = factory.GetRepository<Role>();
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 return await _roleRepo.UnTrackableQuery()
                             .Where(x => x.OrganizationId == orgId)
@@ -150,7 +150,7 @@ namespace Identity.Domain.Implementation
                 var _roleRepo = factory.GetRepository<Role>();
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Role? roleEntity = await _roleRepo.GetAsync(role.RoleId);
                 if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);

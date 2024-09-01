@@ -12,17 +12,9 @@ namespace Identity.WebAPI.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class RouteController : ControllerBase
+    public class RouteController(IRouteServices routeServices) : ControllerBase
     {
-        private readonly IRouteServices _routeServices;
-
-        /// <summary>
-        /// Constructor of Route Controller
-        /// </summary>
-        public RouteController(IRouteServices routeService)
-        {
-            _routeServices = routeService;
-        }
+        private readonly IRouteServices _routeServices = routeServices;
 
         /// <summary>
         /// Paginated list of application routes (System Admin User Only)
@@ -36,14 +28,14 @@ namespace Identity.WebAPI.Controllers
         /// Returns all routes of specified application
         /// </summary>
         [HttpGet]
-        [Route("GetAppRoutes/{appId}")]
-        public async Task<IActionResult> GetAll(int appId) => Ok(await _routeServices.GetAllAppRoutes(appId));
+        [Route("App")]
+        public async Task<IActionResult> GetAll() => Ok(await _routeServices.GetAppRoutes());
 
         /// <summary>
         /// Returns allowed menu routes of requesting user
         /// </summary>
         [HttpGet]
-        [Route("GetMenuRoutes")]
+        [Route("Menu")]
         public async Task<IActionResult> GetMenu() => Ok(await _routeServices.GetAppMenuRoutes());
 
         /// <summary>
@@ -75,6 +67,10 @@ namespace Identity.WebAPI.Controllers
         /// <param name="routeInfo">User unique identifier<see cref="RouteModel"/>.</param>
         [HttpPut]
         public async Task<IActionResult> Update(RouteModel routeInfo) => Ok(await _routeServices.UpdateRoute(routeInfo));
+
+        [HttpGet]
+        [Route("Types")]
+        public async Task<IActionResult> GetAllRouteTypes() => Ok(await _routeServices.GetRouteTypes());
 
         /// <summary>
         /// Permanantly deletes route specified

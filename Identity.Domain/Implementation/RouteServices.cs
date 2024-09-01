@@ -45,7 +45,8 @@ namespace Identity.Domain.Implementation
                 if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 // Add the route
-                Route routeEntity = await _routeRepo.InsertAsync(Mapper.Map<Route>(routeModel));
+                Route routeEntity = Mapper.Map<Route>(routeModel);
+                routeEntity = await _routeRepo.InsertAsync(routeEntity);
 
                 await factory.SaveChangesAsync();
 
@@ -71,7 +72,7 @@ namespace Identity.Domain.Implementation
         /// <summary>
         /// Return only the menu items allowed for requesting user that belongs to the request origin application
         /// </summary>
-        public async Task<IEnumerable<RouteModel>> GetAllAppRoutes(int appId)
+        public async Task<IEnumerable<RouteModel>> GetAppRoutes()
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
@@ -79,7 +80,7 @@ namespace Identity.Domain.Implementation
                 _routeRepo = factory.GetRepository<Route>();
                 _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
 
-                var query = _routeRepo.UnTrackableQuery().Where(x => x.ApplicationId == appId);
+                var query = _routeRepo.UnTrackableQuery().Where(x => x.Application.ApplicationUrl == User.RequestOrigin);
 
                 if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo))
                 {
@@ -97,7 +98,7 @@ namespace Identity.Domain.Implementation
                     RouteName = x.RouteName,
                     RouteValue = x.RoutePath,
                     Description = x.Description,
-                    ParentRouteId = x.ParentRouteId,
+                    ParentRouteId = x.ParentRouteId
                 }).ToArrayAsync();
 
                 return data;
@@ -128,44 +129,29 @@ namespace Identity.Domain.Implementation
                     })
                     .ToListAsync();
 
-                int appId = await _appRepo.UnTrackableQuery().Where(x => x.ApplicationUrl == User.RequestOrigin).Select(x => x.ApplicationId).FirstOrDefaultAsync();
-
-                var routeQuery = _routeRepo.UnTrackableQuery().Where(x => x.ApplicationId == appId && x.IsMenuRoute);
+                var routeQuery = _routeRepo.UnTrackableQuery()
+                    .Where(x => x.Application.ApplicationUrl == User.RequestOrigin && x.IsMenuRoute);
 
                 // If the user is a sys admin user, return all available routes
                 bool hasDefaultRouteFlag = false;
-                if (requesterRoles.Any(x => x.IsSystemAdmin))
+                if (await this.HasSystemAdminPriviledge(_userRoleMappingRepo))
                 {
                     routeQuery = routeQuery.Where(x => x.RouteId > 0);
                     hasDefaultRouteFlag = true;
                 }
                 else
                 {
-                    if (requesterRoles.Any(x => x.IsOwner))
-                    {
+                    if (await this.HasOwnerPriviledge(_userRoleMappingRepo)) {
                         routeQuery = routeQuery.Where(x =>
                             x.RouteTypeId == RouteTypeConsts.OrganizationOwner.RouteTypeId
-                            || x.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId
                             || x.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId);
-
                         hasDefaultRouteFlag = true;
                     }
-
-                    if (requesterRoles.Any(x => x.IsAdmin))
-                    {
-                        routeQuery = routeQuery.Where(x =>
-                            x.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId
-                            || x.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId);
-
-                        hasDefaultRouteFlag = true;
-                    }
-
-                    if (requesterRoles.Any(x => x.IsRetailer))
-                    {
+                    
+                    if (await this.HasRetailerPriviledge(_userRoleMappingRepo)) {
                         routeQuery = routeQuery.Where(x => x.RouteTypeId == RouteTypeConsts.RetailerRoute.RouteTypeId);
                         hasDefaultRouteFlag = true;
                     }
-
                 }
 
                 List<RouteModel> genericRoutes = await routeQuery.Select(x => new RouteModel
@@ -232,16 +218,23 @@ namespace Identity.Domain.Implementation
             {
                 _roleRepo = factory.GetRepository<Role>();
                 _routeRepo = factory.GetRepository<Route>();
-                var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
+                var query = _routeRepo.UnTrackableQuery().Where(x => x.RouteId > 0);
 
-                if (!await this.HasSystemAdminPriviledge(_userRoleRepo))
+                if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo))
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
-                if (string.IsNullOrEmpty(pagedRoutes.SearchString))
+                if (!string.IsNullOrEmpty(pagedRoutes.SearchString))
                 {
-                    pagedRoutes.SourceData = await _routeRepo
-                        .UnTrackableQuery()
-                        .Where(x => x.RouteId > 0)
+                    query = query
+                        .Where(x => x.RouteId > 0 &&
+                            (x.RouteName.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.RoutePath.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.Description.ToLower().Contains(pagedRoutes.SearchString.ToLower())
+                            || x.Application.ApplicationName.ToLower().Contains(pagedRoutes.SearchString.ToLower())));
+                }
+
+                pagedRoutes.SourceData = await query
                         .Skip(pagedRoutes.Skip)
                         .Take(pagedRoutes.PageLength)
                         .Select(x => new RouteModel
@@ -252,46 +245,13 @@ namespace Identity.Domain.Implementation
                             RouteName = x.RouteName,
                             RouteValue = x.RoutePath,
                             ParentRouteId = x.ParentRouteId,
-                            ApplicationName = x.Application.ApplicationName
+                            RouteTypeId = x.RouteTypeId,
+                            ApplicationName = x.Application.ApplicationName,
+                            IsMenuRoute = x.IsMenuRoute
                         })
                         .ToListAsync();
 
-                    pagedRoutes.TotalItems = await _routeRepo.UnTrackableQuery()
-                        .Where(x => x.RouteId > 0).CountAsync();
-                }
-                else
-                {
-                    pagedRoutes.SourceData = await _routeRepo
-                        .UnTrackableQuery()
-                        .Where(x =>
-                            x.RouteId > 0 &&
-                            (x.RouteName.ToLower().Contains(pagedRoutes.SearchString.ToLower())
-                            || x.RoutePath.ToLower().Contains(pagedRoutes.SearchString.ToLower())
-                            || x.Description.ToLower().Contains(pagedRoutes.SearchString.ToLower())
-                            || x.Application.ApplicationName.ToLower().Contains(pagedRoutes.SearchString.ToLower())))
-                        .Skip(pagedRoutes.Skip)
-                        .Take(pagedRoutes.PageLength)
-                        .Select(x => new RouteModel
-                        {
-                            RouteId = x.RouteId,
-                            ApplicationId = x.ApplicationId,
-                            Description = x.Description,
-                            RouteName = x.RouteName,
-                            RouteValue = x.RoutePath,
-                            ParentRouteId = x.ParentRouteId,
-                            ApplicationName = x.Application.ApplicationName
-                        })
-                        .ToListAsync();
-
-                    pagedRoutes.TotalItems = await _routeRepo.UnTrackableQuery()
-                        .Where(x =>
-                            x.RouteId > 0 &&
-                            (x.RouteName.ToLower().Contains(pagedRoutes.SearchString.ToLower())
-                            || x.RoutePath.ToLower().Contains(pagedRoutes.SearchString.ToLower())
-                            || x.Description.ToLower().Contains(pagedRoutes.SearchString.ToLower())
-                            || x.Application.ApplicationName.ToLower().Contains(pagedRoutes.SearchString.ToLower())))
-                        .CountAsync();
-                }
+                pagedRoutes.TotalItems = await query.CountAsync();
             }
 
             return pagedRoutes;
@@ -369,6 +329,23 @@ namespace Identity.Domain.Implementation
             }
         }
 
+        public async Task<List<RouteType>> GetRouteTypes()
+        {
+            using(var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                _routeTypeRepo = factory.GetRepository<RouteType>();
+
+                return await _routeTypeRepo.UnTrackableQuery()
+                    .Where(x => x.RouteTypeId > 0)
+                    .Select(x => new RouteType
+                    {
+                        RouteTypeId = x.RouteTypeId,
+                        RouteTypeName = x.RouteTypeName,
+                    })
+                    .ToListAsync();
+            }
+        }
+
         public async Task<RouteModel> UpdateRoute(RouteModel routeModel)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
@@ -382,12 +359,6 @@ namespace Identity.Domain.Implementation
                 Route? routeEntity = await _routeRepo.GetAsync(routeModel.RouteId);
                 if (routeEntity == null)
                     throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
-
-                //routeEntity.RouteName = routeModel.RouteName;
-                //routeEntity.Route1 = routeModel.RouteValue;
-                //routeEntity.ApplicationId = routeModel.ApplicationId;
-                //routeEntity.ParentRouteId = routeModel.ParentRouteId;
-                //routeEntity.Description = routeModel.Description;
 
                 Mapper.Map(routeModel, routeEntity);
 

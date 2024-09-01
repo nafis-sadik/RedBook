@@ -3,6 +3,7 @@
     public class PagedModel<T> where T : class
     {
         public string? SearchString { get; set; }
+        public int OrganizationId { get; set; } = 0;
         public string? SortBy { get; set; }
         public IEnumerable<T>? SourceData { get; set; }
 
