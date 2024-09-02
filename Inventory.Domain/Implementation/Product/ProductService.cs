@@ -82,7 +82,9 @@ namespace Inventory.Domain.Implementation.Product
                         CategoryId = (int)x.Category.ParentCategoryId,
                         CategoryName = x.Category.ParentCategory.CatagoryName.ToString(),
                         OrganizationId = x.OrganizationId,
-                        QuantityTypeId = x.QuantityAttributeId
+                        QuantityTypeId = x.QuantityAttributeId,
+                        BrandName = x.BrandAttribute.AttributeName,
+                        BrandAttributeId = x.BrandAttribute.AttributeId
                     })
                     .ToArrayAsync();
 
@@ -117,9 +119,10 @@ namespace Inventory.Domain.Implementation.Product
                 Data.Entities.Product? product = await _productRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ProductId == productModel.ProductId);
 
                 if (product == null) throw new ArgumentException("Resource not found");
-
+                
                 product.ProductName = productModel.ProductName;
                 product.CategoryId = productModel.SubcategoryId;
+                product.BrandId = productModel.BrandAttributeId;
                 product.UpdateBy = User.UserId;
                 product.UpdateDate = DateTime.UtcNow;
 

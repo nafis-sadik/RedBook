@@ -6,6 +6,8 @@
 
         public string ProductName { get; set; }
 
+        public string BrandName { get; set; }
+
         public int CategoryId { get; set; }
 
         public int SubcategoryId { get; set; }
@@ -24,5 +26,6 @@
 
         public int QuantityTypeId { get; set; }
 
+        public int BrandAttributeId { get; set; }
     }
 }

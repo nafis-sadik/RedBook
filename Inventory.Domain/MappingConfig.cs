@@ -24,6 +24,7 @@ namespace Inventory.Domain
             CreateMap<ProductModel, Product>()
                 .ForMember(dest => dest.QuantityAttributeId, opt => opt.MapFrom(opt => opt.QuantityTypeId))
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(opt => opt.SubcategoryId))
+                .ForMember(dest => dest.BrandId, opt => opt.MapFrom(opt => opt.BrandAttributeId))
                 .ReverseMap()
                 .ForMember(dest => dest.QuantityTypeId, opt => opt.MapFrom(opt => opt.QuantityAttributeId))
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(opt => opt.Category.ParentCategory))
