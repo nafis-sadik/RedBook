@@ -17,6 +17,7 @@ namespace Inventory.WebAPI.Controllers.Purchase
         public async Task<IActionResult> AddAsync(VendorModel model) => Ok(await _vendorService.AddNewAsync(model));
 
         [HttpGet]
+        [Route("List/{orgId}")]
         public async Task<IActionResult> GetByOrgId(int orgId) => Ok(await _vendorService.GetByOrgId(orgId));
 
         [HttpGet]

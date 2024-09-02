@@ -15,6 +15,10 @@ namespace Identity.Domain
                 .AnyAsync(userRoleMapping => userRoleMapping.UserId == serviceBase.User.UserId
                     && userRoleMapping.Role.IsAdmin);
 
+        internal static async Task<bool> HasOwnerPriviledge(this ServiceBase serviceBase, IRepositoryBase<UserRoleMapping> userRoleMappingRepo)
+            => await userRoleMappingRepo.UnTrackableQuery()
+                .AnyAsync(userRoleMapping => userRoleMapping.UserId == serviceBase.User.UserId && userRoleMapping.Role.IsOwner);
+
         internal static async Task<bool> HasOrgAdminPriviledge(this ServiceBase serviceBase, IRepositoryBase<UserRoleMapping> userRoleMappingRepo, int orgId)
             => await userRoleMappingRepo.UnTrackableQuery().AnyAsync(m => m.UserId == serviceBase.User.UserId && m.OrganizationId == orgId && m.Role.IsAdmin);
 
@@ -23,10 +27,6 @@ namespace Identity.Domain
                 .AnyAsync(userRoleMapping => userRoleMapping.UserId == serviceBase.User.UserId
                     && userRoleMapping.OrganizationId == orgId
                     && userRoleMapping.Role.IsOwner);
-
-        internal static async Task<bool> HasOwnerPriviledge(this ServiceBase serviceBase, IRepositoryBase<UserRoleMapping> userRoleMappingRepo)
-            => await userRoleMappingRepo.UnTrackableQuery()
-                .AnyAsync(userRoleMapping => userRoleMapping.UserId == serviceBase.User.UserId && userRoleMapping.Role.IsOwner);
 
         internal static async Task<bool> HasRetailerPriviledge(this ServiceBase serviceBase, IRepositoryBase<UserRoleMapping> userRoleMappingRepo)
             => await userRoleMappingRepo.UnTrackableQuery().AnyAsync(m => m.UserId == serviceBase.User.UserId && m.Role.IsRetailer);

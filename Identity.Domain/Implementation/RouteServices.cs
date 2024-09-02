@@ -84,7 +84,7 @@ namespace Identity.Domain.Implementation
 
                 if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo))
                 {
-                    if (_userRoleMappingRepo.UnTrackableQuery().Where(x => x.UserId == User.UserId && x.Role.IsOwner).Any())
+                    if (await this.HasOwnerPriviledge(_userRoleMappingRepo))
                         query = query.Where(x => x.RouteId != RouteTypeConsts.OrganizationOwner.RouteTypeId);
                     else if (await this.HasRetailerPriviledge(_userRoleMappingRepo))
                         query = query.Where(x => x.RouteId == RouteTypeConsts.RetailerRoute.RouteTypeId);
