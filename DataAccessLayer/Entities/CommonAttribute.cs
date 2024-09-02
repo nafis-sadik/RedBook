@@ -21,5 +21,7 @@ public partial class CommonAttribute
 
     public int? UpdateBy { get; set; }
 
-    public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+    //public virtual ICollection<Product> Products { get; set; } = new List<Product>();
+
+    //public virtual ICollection<Product> ProductsBrand { get; set; } = new List<Product>();
 }

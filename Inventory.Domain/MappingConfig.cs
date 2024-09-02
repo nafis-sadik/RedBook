@@ -34,8 +34,8 @@ namespace Inventory.Domain
             CreateMap<Vendor, VendorModel>().ReverseMap();
 
             CreateMap<CommonAttribute, CommonAttributeModel>()
-                .ReverseMap()
-                .ForMember(dest => dest.Products, opt => opt.Ignore());
+                .ReverseMap();
+                //.ForMember(dest => dest.Products, opt => opt.Ignore());
         }
     }
 }

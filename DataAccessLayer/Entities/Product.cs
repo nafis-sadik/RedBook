@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Inventory.Data.Entities;
 
@@ -27,6 +28,8 @@ public partial class Product
 
     public int CategoryId { get; set; }
 
+    public int BrandId { get; set; }
+
     [ForeignKey("CategoryId")]
     public virtual Category Category { get; set; }
 
@@ -34,6 +37,9 @@ public partial class Product
 
     [ForeignKey("QuantityAttributeId")]
     public virtual CommonAttribute QuantityAttribute { get; set; }
+
+    [ForeignKey("BrandId")]
+    public virtual CommonAttribute BrandAttribute { get; set; }
 
     public virtual ICollection<Sale> Sales { get; set; } = new List<Sale>();
 }

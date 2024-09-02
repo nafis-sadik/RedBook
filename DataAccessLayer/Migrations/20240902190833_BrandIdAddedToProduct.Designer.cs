@@ -4,6 +4,7 @@ using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Inventory.Data.Migrations
 {
     [DbContext(typeof(RedbookInventoryContext))]
-    partial class RedbookInventoryContextModelSnapshot : ModelSnapshot
+    [Migration("20240902190833_BrandIdAddedToProduct")]
+    partial class BrandIdAddedToProduct
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -193,7 +196,7 @@ namespace Inventory.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
 
-                    b.Property<int>("BrandId")
+                    b.Property<int?>("BrandId")
                         .HasColumnType("int");
 
                     b.Property<int>("CategoryId")
@@ -545,9 +548,7 @@ namespace Inventory.Data.Migrations
                 {
                     b.HasOne("Inventory.Data.Entities.CommonAttribute", "BrandAttribute")
                         .WithMany()
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BrandId");
 
                     b.HasOne("Inventory.Data.Entities.Category", "Category")
                         .WithMany("Products")
