@@ -160,7 +160,8 @@ namespace Identity.Domain.Implementation
                     RouteValue = x.RoutePath,
                     RouteName = x.RouteName,
                     Description = x.Description,
-                    ParentRouteId = x.ParentRouteId
+                    ParentRouteId = x.ParentRouteId,
+                    Sequence = x.Sequence
                 }).ToListAsync();
 
                 if (!hasDefaultRouteFlag)
@@ -173,7 +174,9 @@ namespace Identity.Domain.Implementation
                     roleWiseRouteQuery = roleWiseRouteQuery.Where(x => x.Route.ApplicationId == requesterRole.ApplicationId);
                 }
 
-                List<RouteModel> customRoleRoutes = await roleWiseRouteQuery.Distinct()
+                List<RouteModel> customRoleRoutes = await roleWiseRouteQuery
+                    .Distinct()
+                    .OrderBy(x => x.Route.Sequence)
                     .Select(x => new RouteModel
                     {
                         RouteId = x.RouteId,

@@ -18,6 +18,8 @@ public partial class Route
 
     public int ApplicationId { get; set; }
 
+    public int Sequence {  get; set; } = 0;
+
     [AllowNull]
     public int? ParentRouteId { get; set; }
 

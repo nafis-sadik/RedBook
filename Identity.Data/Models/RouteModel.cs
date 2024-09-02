@@ -12,6 +12,8 @@
 
         public int ApplicationId { get; set; }
 
+        public int Sequence { get; set; }
+
         public int? ParentRouteId { get; set; }
 
         public int RouteTypeId { get; set; }
