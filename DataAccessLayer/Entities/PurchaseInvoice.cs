@@ -12,7 +12,9 @@ public partial class PurchaseInvoice
 
     public DateTime PurchaseDate { get; set; }
 
-    public decimal TotalPurchasePrice { get; set; }
+    public decimal GrossTotal { get; set; }
+
+    public decimal TotalDiscount { get; set; }
 
     public int OrganizationId { get; set; }
 
@@ -38,7 +40,7 @@ public partial class PurchaseInvoice
 
     public virtual ICollection<PurchasePaymentRecord> PurchasePaymentRecords { get; set; } = new List<PurchasePaymentRecord>();
 
-    public virtual ICollection<PurchaseRecords> Purchases { get; set; } = new List<PurchaseRecords>();
+    public virtual ICollection<PurchaseInvoiceDetails> Purchases { get; set; } = new List<PurchaseInvoiceDetails>();
 
     public virtual Vendor? Vendor { get; set; }
 }

@@ -8,13 +8,15 @@
 
         public int ProductId { get; set; }
 
-        public int ProductName { get; set; }
+        public string ProductName { get; set; }
 
-        public decimal Quantity { get; set; }
+        public decimal Quantity { get; set; } 
 
         public decimal UnitPrice { get; set; }
 
         public int? CreateBy { get; set; }
+
+        public decimal Discount { get; set; }
 
         public DateTime? CreateDate { get; set; }
     }

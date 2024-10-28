@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
+using RedBook.Core.Constants;
 using RedBook.Core.Domain;
 using RedBook.Core.Models;
 using RedBook.Core.Security;
@@ -74,7 +75,7 @@ namespace Inventory.Domain.Implementation.Purchase
 
         public async Task<PagedModel<VendorModel>> GetPagedAsync(PagedModel<VendorModel> pagedModel)
         {
-            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            using (IRepositoryFactory factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var query = factory.GetRepository<Vendor>().UnTrackableQuery();
 
@@ -92,8 +93,7 @@ namespace Inventory.Domain.Implementation.Purchase
                         VendorId = vendor.VendorId,
                         VendorName = vendor.VendorName,
                         PhoneNumber = vendor.PhoneNumber,
-                        Address = vendor.Address,
-                        Remarks = vendor.Remarks,
+                        Address = vendor.Address
                     })
                     .ToListAsync();
 
@@ -101,7 +101,16 @@ namespace Inventory.Domain.Implementation.Purchase
             }
         }
 
-        public Task<VendorModel> UpdateAsync(int id, Dictionary<string, object> updates) => throw new NotImplementedException();
+        public async Task<VendorModel> UpdateAsync(int id, Dictionary<string, object> updates)
+        {
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                var vendorRepo = factory.GetRepository<Vendor>();
+                vendorRepo.ColumnUpdate(id, updates);
+                await factory.SaveChangesAsync();
+                return new VendorModel();
+            }
+        }
 
         public Task DeleteAsync(int id) => throw new NotImplementedException();
     }

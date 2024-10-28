@@ -30,6 +30,7 @@
             public const string KeyExists = " Already Exists, Please try something a different";
             public const string Exception = "An error occurred while executing operation. Please contact support team.";
             public const string InvalidInput = "An invalid parameter was passed. Please contact support team.";
+            public const string ResourceNotFound = "Resource Not Found";
 
             // Login Specific
             public const string UserNotFound = "User Not Found";

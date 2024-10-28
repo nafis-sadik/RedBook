@@ -24,9 +24,9 @@ namespace Inventory.Domain.Implementation.Purchase
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                var _invoiceDetailsRepo = factory.GetRepository<PurchaseRecords>();
+                var _invoiceDetailsRepo = factory.GetRepository<PurchaseInvoiceDetails>();
 
-                IEnumerable<PurchaseRecords> entities = Mapper.Map<List<PurchaseRecords>>(purchaseModel);
+                IEnumerable<PurchaseInvoiceDetails> entities = Mapper.Map<List<PurchaseInvoiceDetails>>(purchaseModel);
 
                 await _invoiceDetailsRepo.BulkInsertAsync(entities);
 

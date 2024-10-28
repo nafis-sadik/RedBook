@@ -25,7 +25,7 @@ public partial class RedbookInventoryContext : DbContext
 
     public virtual DbSet<Product> Products { get; set; }
 
-    public virtual DbSet<PurchaseRecords> PurchaseRecords { get; set; }
+    public virtual DbSet<PurchaseInvoiceDetails> PurchaseRecords { get; set; }
 
     public virtual DbSet<PurchaseInvoice> PurchaseInvoices { get; set; }
 

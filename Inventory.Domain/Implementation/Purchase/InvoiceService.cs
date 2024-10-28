@@ -56,7 +56,7 @@ namespace Inventory.Domain.Implementation.Purchase
                 {
                     InvoiceId = i.InvoiceId,
                     ChalanNumber = i.ChalanNumber,
-                    TotalPurchasePrice = i.TotalPurchasePrice,
+                    GrossTotal = i.GrossTotal,
                 }).ToListAsync();
 
                 return pagedModel;
@@ -72,6 +72,8 @@ namespace Inventory.Domain.Implementation.Purchase
                 var entity = Mapper.Map<PurchaseInvoice>(model);
 
                 entity = await _purchaseInvoiceRepo.InsertAsync(entity);
+
+                await factory.SaveChangesAsync();
 
                 return Mapper.Map<InvoiceModel>(entity);
             }

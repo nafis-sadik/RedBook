@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
+using CaseExtensions;
 
 namespace RedBook.Core.Repositories
 {
@@ -51,7 +52,14 @@ namespace RedBook.Core.Repositories
                 case JsonValueKind.String:
                     return element.GetString();
                 case JsonValueKind.Number:
-                    return element.GetDecimal(); // Adjust based on your needs
+                    {
+                        // Adjust based on your needs
+                        string elementValue = element.ToString();
+                        if (elementValue.Contains("."))
+                            return element.GetDecimal();
+                        else
+                            return element.GetInt32();
+                    }
                 case JsonValueKind.True:
                     return true;
                 case JsonValueKind.False:
@@ -87,13 +95,15 @@ namespace RedBook.Core.Repositories
                 throw new ArgumentException($"Cannot set value of type {pk.GetType()} for the primary key {primaryKeyColumnInfo.Name} of type {primaryKeyColumnInfo.PropertyType}");
 
             // Update entity entries and mark as modified for update operation
-            foreach (var property in keyValuePairs)
+            foreach (KeyValuePair<string, object> property in keyValuePairs)
             {
-                PropertyEntry targetProperty = _dbContext.Entry(entity).Property(property.Key);
+                string propertyName = property.Key.ToPascalCase();
+                PropertyEntry? targetProperty = _dbContext.Entry(entity).Properties.FirstOrDefault(prop => prop.Metadata.Name == propertyName);
+                if (targetProperty == null) continue;
                 PropertyInfo? targetPropertyInfo = targetProperty.Metadata.PropertyInfo;
                 if (targetPropertyInfo == null) throw new ArgumentException($"Unable to locate property {property.Key} in type {typeof(TEntity)}");
 
-                if (targetPropertyInfo.Name == property.Key && targetPropertyInfo.Name != primaryKeyColumnInfo.Name)
+                if (targetPropertyInfo.Name != primaryKeyColumnInfo.Name)
                 {
                     if (targetPropertyInfo.PropertyType.IsAssignableFrom(property.Value?.GetType()))
                         targetProperty.CurrentValue = property.Value;
