@@ -92,6 +92,8 @@ namespace Inventory.Domain.Implementation.Purchase
                     {
                         VendorId = vendor.VendorId,
                         VendorName = vendor.VendorName,
+                        ContactPerson = vendor.ContactPerson,
+                        EmailAddress = vendor.EmailAddress,
                         PhoneNumber = vendor.PhoneNumber,
                         Address = vendor.Address
                     })
