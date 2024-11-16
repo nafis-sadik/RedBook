@@ -1,4 +1,5 @@
-﻿using Identity.Data.Entities;
+﻿using Identity.Data.CommonConstant;
+using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.AspNetCore.Http;
@@ -104,7 +105,8 @@ namespace Identity.Domain.Implementation
 
                     int[] userModelRoleIds = userModel.UserRoles.Select(x => x.RoleId).ToArray();
                     UserRoleMapping[] roleMappingRecords = await _userRoleRepo.UnTrackableQuery()
-                        .Where(x => x.UserId == userModel.UserId && userModel.OrganizationId == x.Role.OrganizationId)
+                        .Where(x => x.UserId == userModel.UserId)
+                        //.Where(x => x.UserId == userModel.UserId && userModel.OrganizationId == x.Role.OrganizationId)
                         .Select(x => new UserRoleMapping
                         {
                             RoleId = x.RoleId,
@@ -207,12 +209,17 @@ namespace Identity.Domain.Implementation
                     .Select(mapping => new OrganizationModel
                     {
                         OrganizationId = mapping.OrganizationId,
-                        OrganizationName = mapping.Role.Organization.OrganizationName,
-                        OrganizationAddress = mapping.Role.Organization.Address,
+                        OrganizationName = mapping.Organization.OrganizationName,
+                        OrganizationAddress = mapping.Organization.Address,
                     })
                     .ToListAsync();
 
-                IDictionary<int, OrganizationModel> orgDict = orgList.ToDictionary(x => x.OrganizationId);
+                IDictionary<int, OrganizationModel> orgDict = new Dictionary<int, OrganizationModel>();
+                foreach(OrganizationModel org in orgList)
+                {
+                    if (!orgDict.ContainsKey(org.OrganizationId))
+                        orgDict.Add(org.OrganizationId, org);
+                }
                 return orgDict.Values.ToList();
             }
         }
@@ -345,56 +352,13 @@ namespace Identity.Domain.Implementation
             return tokenHandler.WriteToken(token);
         }
 
-        public async Task<UserModel> AddUserToBusiness(UserModel userModel)
-        {
-            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
-            {
-                _userRepo = factory.GetRepository<User>();
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
-
-                if (!await this.IsOwnerOf(_userRoleRepo, userModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-
-                User userEntity = await _userRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.Email == userModel.Email);
-                if (userEntity == null)
-                {
-                    userEntity = await _userRepo.InsertAsync(new User
-                    {
-                        FirstName = userModel.FirstName,
-                        LastName = userModel.LastName,
-                        Email = userModel.Email,
-                        UserName = userModel.UserName,
-                        Address = userModel.Address,
-                        PhoneNumber = userModel.PhoneNumber,
-                        Status = true,
-                        Password = BCrypt.Net.BCrypt.EnhancedHashPassword(CommonConstants.PasswordConfig.DefaultPassword)
-                    });
-
-                    await factory.SaveChangesAsync();
-                }
-
-                // Assigned role selectef from the front end dropdown
-                foreach (RoleModel role in userModel.UserRoles)
-                {
-                    await _userRoleRepo.InsertAsync(new UserRoleMapping
-                    {
-                        RoleId = role.RoleId,
-                        UserId = userEntity.UserId,
-                    });
-                }
-
-                await factory.SaveChangesAsync();
-
-                return Mapper.Map<UserModel>(userEntity);
-            }
-        }
-
         public async Task<PagedModel<UserModel>> GetUserByOrganizationId(PagedModel<UserModel> pagedModel, int orgId)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsAdminOf(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 var query = _userRoleRepo.UnTrackableQuery()
                     .Where(x => x.Role.OrganizationId == orgId);
@@ -439,18 +403,5 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task RemoveUserFromOrganization(int userId, int orgId)
-        {
-            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
-            {
-                _userRoleRepo = factory.GetRepository<UserRoleMapping>();
-
-                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-
-                await _userRoleRepo.TrackableQuery().Where(x => x.UserId == userId && x.Role.OrganizationId == orgId && !x.Role.IsAdmin == true).ExecuteDeleteAsync();
-
-                await factory.SaveChangesAsync();
-            }
-        }
     }
 }

@@ -87,7 +87,7 @@ namespace Identity.WebAPI.Configurations
             }
             #endregion
 
-            #region User
+            #region Create SysAdmin User
             User? sysAdminUser = context.Users.FirstOrDefault(x => x.FirstName == "Md. Nafis" && x.LastName == "Sadik" && x.UserName == "nafis_sadik");
             if (sysAdminUser == null)
             {
@@ -108,61 +108,49 @@ namespace Identity.WebAPI.Configurations
             }
             #endregion
 
-            #region User Insert
-            if (!context.UserRoleMappings.Any())
-            {
-                context.UserRoleMappings.Add(new UserRoleMapping
-                {
-                    UserId = sysAdminUser.UserId,
-                    Role = new Role
-                    {
-                        RoleName = "System Admin",
-                        IsAdmin = true,
-                        IsRetailer = true,
-                        IsSystemAdmin = true,
-                        IsOwner = true,
-                        OrganizationId = org.OrganizationId,
-                        ApplicationId = redBookFrontEnd.ApplicationId,
-                    },
-                    OrganizationId = org.OrganizationId,
-                });
-
-                context.SaveChanges();
-            }
-            #endregion
-
             #region Roles
             Role? sysAdmin = context.Roles.FirstOrDefault(x => x.RoleName == RoleConstants.SystemAdmin.RoleName);
             if (sysAdmin == null)
             {
-                sysAdmin = context.Roles.AddAsync(RoleConstants.SystemAdmin).Result.Entity;
+                sysAdmin = context.Roles.Add(RoleConstants.SystemAdmin).Entity;
                 context.SaveChanges();
             }
             RoleConstants.SystemAdmin.RoleId = sysAdmin.RoleId;
 
-            Role? redbookAdmin = context.Roles.FirstOrDefault(x => x.RoleName == RoleConstants.RedbookAdmin.RoleName);
-            if (redbookAdmin == null)
-            {
-                redbookAdmin = context.Roles.AddAsync(RoleConstants.RedbookAdmin).Result.Entity;
-                context.SaveChanges();
-            }
-            RoleConstants.RedbookAdmin.RoleId = redbookAdmin.RoleId;
-
-            Role? redbookOwnerAdmin = context.Roles.FirstOrDefault(x => x.RoleName == RoleConstants.OwnerAdmin.RoleName);
+            Role? redbookOwnerAdmin = context.Roles.FirstOrDefault(x => x.RoleName == RoleConstants.Owner.RoleName);
             if (redbookOwnerAdmin == null)
             {
-                redbookOwnerAdmin = context.Roles.AddAsync(RoleConstants.OwnerAdmin).Result.Entity;
+                redbookOwnerAdmin = context.Roles.Add(RoleConstants.Owner).Entity;
                 context.SaveChanges();
             }
-            RoleConstants.OwnerAdmin.RoleId = redbookOwnerAdmin.RoleId;
+            RoleConstants.Owner.RoleId = redbookOwnerAdmin.RoleId;
 
             Role? retailer = context.Roles.FirstOrDefault(x => x.RoleName == RoleConstants.Retailer.RoleName);
             if (retailer == null)
             {
-                retailer = context.Roles.AddAsync(RoleConstants.Retailer).Result.Entity;
+                RoleConstants.Retailer.OrganizationId = org.OrganizationId;
+                retailer = context.Roles.Add(RoleConstants.Retailer).Entity;
                 context.SaveChanges();
             }
             RoleConstants.Retailer.RoleId = retailer.RoleId;
+            #endregion
+
+            #region User Role Mapping
+            if (!context.UserRoleMappings.Any())
+            {
+                context.UserRoleMappings.AddRange(new UserRoleMapping
+                {
+                    UserId = sysAdminUser.UserId,
+                    RoleId = sysAdmin.RoleId,
+                    OrganizationId = org.OrganizationId,
+                    CreateDate = DateTime.UtcNow,
+                    CreateBy = sysAdminUser.UserId,
+                    UpdateBy = null,
+                    UpdateDate = DateTime.UtcNow,
+                });
+
+                context.SaveChanges();
+            }
             #endregion
 
             #region Route types
@@ -176,8 +164,6 @@ namespace Identity.WebAPI.Configurations
                 context.SaveChanges();
                 RouteTypeConsts.SysAdminRoute = context.RouteTypes.Add(RouteTypeConsts.SysAdminRoute).Entity;
                 context.SaveChanges();
-                RouteTypeConsts.OrganizationOwner = context.RouteTypes.Add(RouteTypeConsts.OrganizationOwner).Entity;
-                context.SaveChanges();
             }
             else
             {
@@ -185,10 +171,10 @@ namespace Identity.WebAPI.Configurations
                 RouteTypeConsts.AdminRoute = context.RouteTypes.FirstOrDefault(x => x.RouteTypeName == RouteTypeConsts.AdminRoute.RouteTypeName)!;
                 RouteTypeConsts.RetailerRoute = context.RouteTypes.FirstOrDefault(x => x.RouteTypeName == RouteTypeConsts.RetailerRoute.RouteTypeName)!;
                 RouteTypeConsts.SysAdminRoute = context.RouteTypes.FirstOrDefault(x => x.RouteTypeName == RouteTypeConsts.SysAdminRoute.RouteTypeName)!;
-                RouteTypeConsts.OrganizationOwner = context.RouteTypes.FirstOrDefault(x => x.RouteTypeName == RouteTypeConsts.OrganizationOwner.RouteTypeName)!;
             }
             #endregion
 
+            List<Route> routes = new List<Route>();
             #region UI Routes (Menu)
             if (!context.Routes.Any())
             {
@@ -205,10 +191,10 @@ namespace Identity.WebAPI.Configurations
                         RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
                         IsMenuRoute = true
                     }).Entity;
-
                 context.SaveChanges();
+                routes.Add(dashboardRoute);
 
-                Route operationsRoute = context.Routes.AddAsync(
+                Route operationsParentRoute = context.Routes.Add(
                     new Route
                     {
                         RouteName = "Business Operations",
@@ -218,106 +204,121 @@ namespace Identity.WebAPI.Configurations
                         ParentRouteId = null,
                         RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
                         IsMenuRoute = true
-                    }).Result.Entity;
-
+                    }).Entity;
                 context.SaveChanges();
+                routes.Add(operationsParentRoute);
 
-                context.Routes.AddRange(new[] {
+                List<Route> operationsRoute = new List<Route> {
                                 new Route {
                                     RouteName = "Invoice - Purchase",
                                     RoutePath = "/dashboard/purchase",
                                     Description = "shopping-bag",
                                     ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                                    ParentRouteId = operationsRoute.RouteId,
+                                    ParentRouteId = operationsParentRoute.RouteId,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
                                     IsMenuRoute = true
                                 },
-                                new Data.Entities.Route {
+                                new Route {
                                     RouteName = "Invoice - Sales",
                                     RoutePath = "/dashboard/sales",
                                     Description = "shopping-cart",
                                     ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                                    ParentRouteId = operationsRoute.RouteId,
+                                    ParentRouteId = operationsParentRoute.RouteId,
+                                    RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                                    IsMenuRoute = true
+                                },
+                                new Route
+                                {
+                                    RouteName = "Vendors",
+                                    RoutePath = "/dashboard/vendors",
+                                    Description = "people",
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                                    ParentRouteId = operationsParentRoute.RouteId,
                                     RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
                                     IsMenuRoute = true
                                 }
-                            });
-
+                            };
+                context.Routes.AddRange(operationsRoute);
                 context.SaveChanges();
+                routes.AddRange(operationsRoute);
 
-                Route crmRoute = context.Routes.Add(
+                Route crmParentRoute = context.Routes.Add(
                     new Route
                     {
                         RouteName = "CRM",
                         RoutePath = "",
-                        Description = "people",
+                        Description = "phone-call",
                         ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                         ParentRouteId = null,
                         RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
                         IsMenuRoute = true
                     }).Entity;
-
                 context.SaveChanges();
+                routes.Add(crmParentRoute);
 
-                context.Routes.Add(new Route
-                {
-                    RouteName = "Customers",
-                    RoutePath = "/dashboard/customers",
-                    Description = "person",
-                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                    ParentRouteId = crmRoute.RouteId,
-                    RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
-                    IsMenuRoute = true
-                });
-
+                List<Route> crmRoute = new List<Route> {
+                    new Route
+                    {
+                        RouteName = "Customers",
+                        RoutePath = "/dashboard/customers",
+                        Description = "person",
+                        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                        ParentRouteId = crmParentRoute.RouteId,
+                        RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                        IsMenuRoute = true
+                    }
+                };
+                context.Routes.AddRange(crmRoute);
                 context.SaveChanges();
+                routes.AddRange(crmRoute);
 
-                Route settingsRoute = context.Routes.Add(new Route
+                Route settingsParentRoute = context.Routes.Add(new Route
                 {
                     RouteName = "Settings",
                     RoutePath = "",
                     Description = "settings",
                     ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                     ParentRouteId = null,
-                    RouteTypeId = RouteTypeConsts.AdminRoute.RouteTypeId,
+                    RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
                     IsMenuRoute = true
                 }).Entity;
-
                 context.SaveChanges();
+                routes.Add(settingsParentRoute);
 
-                context.Routes.AddRange(new[] {
-                                new Route {
-                                    RouteName = "General Settings",
-                                    RoutePath = "/dashboard/settings",
-                                    Description = "briefcase",
-                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                                    ParentRouteId = settingsRoute.RouteId,
-                                    RouteTypeId = RouteTypeConsts.AdminRoute.RouteTypeId,
-                                    IsMenuRoute = true
-                                },
-                                new Route {
-                                    RouteName = "Product List",
-                                    RoutePath = "/dashboard/products",
-                                    Description = "cube",
-                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                                    ParentRouteId = settingsRoute.RouteId,
-                                    RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
-                                    IsMenuRoute = true
-                                },
-                                new Data.Entities.Route {
-                                    RouteName = "Product Settings",
-                                    RoutePath = "/dashboard/product-settings",
-                                    Description = "options-2",
-                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                                    ParentRouteId = settingsRoute.RouteId,
-                                    RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
-                                    IsMenuRoute = true
-                                }
-                            });
-
+                List<Route> settingsRoutes = new List<Route> {
+                    new Route {
+                        RouteName = "General Settings",
+                        RoutePath = "/dashboard/settings",
+                        Description = "briefcase",
+                        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                        ParentRouteId = settingsParentRoute.RouteId,
+                        RouteTypeId = RouteTypeConsts.AdminRoute.RouteTypeId,
+                        IsMenuRoute = true
+                    },
+                    new Route {
+                        RouteName = "Product List",
+                        RoutePath = "/dashboard/products",
+                        Description = "cube",
+                        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                        ParentRouteId = settingsParentRoute.RouteId,
+                        RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                        IsMenuRoute = true
+                    },
+                    new Route {
+                        RouteName = "Product Settings",
+                        RoutePath = "/dashboard/product-settings",
+                        Description = "options-2",
+                        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                        ParentRouteId = settingsParentRoute.RouteId,
+                        RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                        IsMenuRoute = true
+                    }
+                };
+                context.Routes.AddRange(settingsRoutes);
                 context.SaveChanges();
+                routes.AddRange(settingsRoutes);
 
-                context.Routes.AddRange(new[] {
+                List<Route> othersRoutes = new List<Route> {
                                 new Route {
                                     RouteName = "Onboarding",
                                     RoutePath = "/dashboard/onboarding",
@@ -336,10 +337,42 @@ namespace Identity.WebAPI.Configurations
                                     RouteTypeId = RouteTypeConsts.SysAdminRoute.RouteTypeId,
                                     IsMenuRoute = true
                                 },
-                            });
-
+                };
+                context.Routes.AddRange(othersRoutes);
                 context.SaveChanges();
+                routes.AddRange(othersRoutes);
             }
+            #endregion
+
+            #region Role Route Mapping for SysAdmin
+            List<RoleRouteMapping> roleRouteMappings = new List<RoleRouteMapping>();
+            // Sys Admin Mapping
+            foreach (Route route in routes)
+            {
+                roleRouteMappings.Add(new RoleRouteMapping
+                {
+                    RouteId = route.RouteId,
+                    RoleId = sysAdmin.RoleId,
+                    HasCreateAccess = true,
+                    HasDeleteAccess = true,
+                    HasUpdateAccess = true,
+                });
+            }
+            Route? OnboardingRoute = routes.FirstOrDefault(x => x.RouteName == "Onboarding");
+            // Retailer Route Mapping
+            if(OnboardingRoute != null)
+            {
+                roleRouteMappings.Add(new RoleRouteMapping
+                {
+                    RoleId = retailer.RoleId,
+                    RouteId = OnboardingRoute.RouteId,
+                    HasCreateAccess = false,
+                    HasDeleteAccess = false,
+                    HasUpdateAccess = false,
+                });
+            }
+            context.RoleRouteMappings.AddRange(roleRouteMappings);
+            context.SaveChanges();
             #endregion
 
             context.Dispose();

@@ -1,4 +1,5 @@
-﻿using Identity.Data.Entities;
+﻿using Identity.Data.CommonConstant;
+using Identity.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using RedBook.Core.Domain;
 using RedBook.Core.Repositories;
@@ -14,7 +15,7 @@ namespace Identity.Domain
             => await userRoleMappingRepo.UnTrackableQuery()
                 .AnyAsync(userRoleMapping => userRoleMapping.UserId == serviceBase.User.UserId && userRoleMapping.Role.IsOwner);
 
-        internal static async Task<bool> HasOrgAdminPriviledge(this ServiceBase serviceBase, IRepositoryBase<UserRoleMapping> userRoleMappingRepo, int orgId)
+        internal static async Task<bool> IsAdminOf(this ServiceBase serviceBase, IRepositoryBase<UserRoleMapping> userRoleMappingRepo, int orgId)
             => await userRoleMappingRepo.UnTrackableQuery().AnyAsync(m => m.UserId == serviceBase.User.UserId && m.OrganizationId == orgId && m.Role.IsAdmin);
 
         internal static async Task<bool> IsOwnerOf(this ServiceBase serviceBase, IRepositoryBase<UserRoleMapping> userRoleMappingRepo, int orgId)

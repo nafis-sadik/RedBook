@@ -1,4 +1,5 @@
-﻿using Identity.Data.Entities;
+﻿using Identity.Data.CommonConstant;
+using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.AspNetCore.Http;
@@ -25,6 +26,7 @@ namespace Identity.Domain.Implementation
         { }
 
         // Org admin only
+        // review required
         public async Task<RoleModel> AddRoleAsync(RoleModel role)
         {
             if (!HttpContextAccessor.Request.Headers.TryGetValue("Origin", out var originStrPrimitives))
@@ -35,8 +37,10 @@ namespace Identity.Domain.Implementation
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _roleRepo = factory.GetRepository<Role>();
+                var _routeRepo = factory.GetRepository<Route>();
                 var _appRepo = factory.GetRepository<Application>();
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
+                var _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
                 string originUrl = originStrPrimitives.ToString();
 
@@ -47,20 +51,36 @@ namespace Identity.Domain.Implementation
 
                 if (appId <= 0) throw new ArgumentException("Unknown Origin");
 
-                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsAdminOf(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Role roleEntity = await _roleRepo.InsertAsync(new Role
                 {
                     RoleName = role.RoleName,
-                    IsAdmin = role.IsAdmin,
                     OrganizationId = role.OrganizationId,
                     ApplicationId = appId,
-                    IsRetailer = false,
-                    IsSystemAdmin = false,
-                    IsOwner = false
+                    IsAdmin = role.IsAdmin,
+                    //IsRetailer = role.IsRetailer
                 });
-
                 await factory.SaveChangesAsync();
+
+                if (role.IsAdmin)
+                {
+                    List<int> routeIdList = await _routeRepo.UnTrackableQuery()
+                        .Where(r => r.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId)
+                        .Select(r => r.RouteId)
+                        .ToListAsync();
+
+                    foreach (int routeId in routeIdList)
+                    {
+                        await _roleRouteMappingRepo.InsertAsync(new RoleRouteMapping
+                        {
+                            RoleId = roleEntity.RoleId,
+                            RouteId = routeId
+                        });
+                    }
+
+                    await factory.SaveChangesAsync();
+                }
 
                 return Mapper.Map<RoleModel>(roleEntity);
             }
@@ -86,7 +106,7 @@ namespace Identity.Domain.Implementation
                 if (role == null || role.OrganizationId == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
                 else
                 {
-                    if (!await this.HasOrgAdminPriviledge(_userRoleRepo, (int)role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                    if (!await this.IsAdminOf(_userRoleRepo, (int)role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                     _roleRepo.Delete(role);
                     await factory.SaveChangesAsync();
@@ -102,7 +122,7 @@ namespace Identity.Domain.Implementation
                 var _roleRepo = factory.GetRepository<Role>();
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsAdminOf(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 return await _roleRepo.UnTrackableQuery()
                             .Where(x => x.OrganizationId == orgId)
@@ -110,35 +130,59 @@ namespace Identity.Domain.Implementation
                             {
                                 RoleId = x.RoleId,
                                 OrganizationId = (int)x.OrganizationId,
-                                IsAdmin = x.IsAdmin == true,
+                                IsAdmin = x.IsAdmin,
                                 RoleName = x.RoleName,
                             })
                             .ToListAsync();
             }
         }
 
-        public async Task InvertRouteRoleMapping(int roleId, int routeId)
+        // review
+        public async Task<bool> InvertRouteRoleMapping(int roleId, int routeId)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
+                var _routeRepo = factory.GetRepository<Route>();
                 var _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
-                RoleRouteMapping? existingPermission = await _roleRouteMappingRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.RouteId == routeId && x.RoleId == roleId);
+                RoleRouteMapping? existingPermission = await _roleRouteMappingRepo.UnTrackableQuery()
+                    .Where(x => x.RouteId == routeId && x.RoleId == roleId)
+                    .Select(roleRouteMapping => new RoleRouteMapping
+                    {
+                        MappingId = roleRouteMapping.MappingId,
+                        Route = new Route {
+                            RouteTypeId = roleRouteMapping.Route.RouteTypeId
+                        },
+                        Role = new Role { 
+                            IsAdmin = roleRouteMapping.Role.IsAdmin,
+                            IsSystemAdmin = roleRouteMapping.Role.IsSystemAdmin,
+                            IsRetailer = roleRouteMapping.Role.IsRetailer,
+                        }
+                    }).FirstOrDefaultAsync();
 
-                if (existingPermission != null)
-                {
-                    _roleRouteMappingRepo.Delete(existingPermission);
-                }
-                else
-                {
+                bool response = false;
+                if (existingPermission != null) {
+                    if (existingPermission.Route.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId) {
+                        throw new ArgumentException("Admin routes can not be unmapped from admin roles");
+                    }
+
+                    if (existingPermission.Route.RouteTypeId == RouteTypeConsts.RetailerRoute.RouteTypeId){
+                        throw new ArgumentException("Retailer routes can not be unmapped from retailer roles");
+                    }
+
+                    await _roleRouteMappingRepo.DeleteAsync(existingPermission.MappingId);
+                } else {
                     await _roleRouteMappingRepo.InsertAsync(new RoleRouteMapping
                     {
                         RoleId = roleId,
                         RouteId = routeId
                     });
+
+                    response = true;
                 }
 
                 await factory.SaveChangesAsync();
+                return response;
             }
         }
 
@@ -150,7 +194,7 @@ namespace Identity.Domain.Implementation
                 var _roleRepo = factory.GetRepository<Role>();
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsAdminOf(_userRoleRepo, role.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Role? roleEntity = await _roleRepo.GetAsync(role.RoleId);
                 if (roleEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);

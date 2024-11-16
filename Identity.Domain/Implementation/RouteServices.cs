@@ -82,15 +82,15 @@ namespace Identity.Domain.Implementation
 
                 var query = _routeRepo.UnTrackableQuery().Where(x => x.Application.ApplicationUrl == User.RequestOrigin);
 
-                if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo))
-                {
-                    if (await this.HasOwnerPriviledge(_userRoleMappingRepo))
-                        query = query.Where(x => x.RouteId != RouteTypeConsts.OrganizationOwner.RouteTypeId);
-                    else if (await this.HasRetailerPriviledge(_userRoleMappingRepo))
-                        query = query.Where(x => x.RouteId == RouteTypeConsts.RetailerRoute.RouteTypeId);
-                    else
-                        throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
-                }
+                //if (!await this.HasSystemAdminPriviledge(_userRoleMappingRepo))
+                //{
+                //    if (await this.HasOwnerPriviledge(_userRoleMappingRepo))
+                //        query = query.Where(x => x.RouteId != RouteTypeConsts.OrganizationOwner.RouteTypeId);
+                //    else if (await this.HasRetailerPriviledge(_userRoleMappingRepo))
+                //        query = query.Where(x => x.RouteId == RouteTypeConsts.RetailerRoute.RouteTypeId);
+                //    else
+                //        throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                //}
 
                 var data = await query.Select(x => new RouteModel
                 {
@@ -115,79 +115,27 @@ namespace Identity.Domain.Implementation
                 _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
                 var _roleRouteMappingRepo = factory.GetRepository<RoleRouteMapping>();
 
-                List<Role> requesterRoles = await _userRoleMappingRepo.UnTrackableQuery()
-                    .Where(x => x.UserId == User.UserId && x.Role.Application.ApplicationUrl == User.RequestOrigin)
-                    .Select(x => new Role
-                    {
-                        RoleId = x.RoleId,
-                        ApplicationId = x.Role.ApplicationId,
-                        IsSystemAdmin = x.Role.IsSystemAdmin,
-                        IsAdmin = x.Role.IsAdmin,
-                        IsOwner = x.Role.IsOwner,
-                        IsRetailer = x.Role.IsRetailer,
-                        OrganizationId = x.Role.OrganizationId
-                    })
+                var userMenuRoutes = await _userRoleMappingRepo.UnTrackableQuery()
+                    .Where(userRole => userRole.UserId == User.UserId && userRole.Role.Application.ApplicationUrl == User.RequestOrigin)
+                    .Select(userRole => userRole.Role.RoleRouteMappings.Where(roleRoute => roleRoute.Route.IsMenuRoute)
+                        .Select(roleRoutes => new RouteModel
+                        {
+                            RouteId = roleRoutes.Route.RouteId,
+                            RouteName = roleRoutes.Route.RouteName,
+                            RouteValue = roleRoutes.Route.RoutePath,
+                            ParentRouteId = roleRoutes.Route.ParentRouteId,
+                            Description = roleRoutes.Route.Description,
+                        }))
                     .ToListAsync();
 
                 var routeQuery = _routeRepo.UnTrackableQuery()
                     .Where(x => x.Application.ApplicationUrl == User.RequestOrigin && x.IsMenuRoute);
 
-                // If the user is a sys admin user, return all available routes
-                bool hasDefaultRouteFlag = false;
-                if (await this.HasSystemAdminPriviledge(_userRoleMappingRepo))
-                {
-                    routeQuery = routeQuery.Where(x => x.RouteId > 0);
-                    hasDefaultRouteFlag = true;
-                }
-                else
-                {
-                    if (await this.HasOwnerPriviledge(_userRoleMappingRepo)) {
-                        routeQuery = routeQuery.Where(x =>
-                            x.RouteTypeId == RouteTypeConsts.OrganizationOwner.RouteTypeId
-                            || x.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId);
-                        hasDefaultRouteFlag = true;
-                    }
-                    
-                    if (await this.HasRetailerPriviledge(_userRoleMappingRepo)) {
-                        routeQuery = routeQuery.Where(x => x.RouteTypeId == RouteTypeConsts.RetailerRoute.RouteTypeId);
-                        hasDefaultRouteFlag = true;
-                    }
+                List<RouteModel> genericRoutes = new List<RouteModel>();
+                foreach (IEnumerable<RouteModel> menuList in userMenuRoutes) {
+                    genericRoutes.AddRange(menuList);
                 }
 
-                List<RouteModel> genericRoutes = await routeQuery.Select(x => new RouteModel
-                {
-                    RouteId = x.RouteId,
-                    RouteValue = x.RoutePath,
-                    RouteName = x.RouteName,
-                    Description = x.Description,
-                    ParentRouteId = x.ParentRouteId,
-                    Sequence = x.Sequence
-                }).ToListAsync();
-
-                if (!hasDefaultRouteFlag)
-                    genericRoutes = new List<RouteModel>();
-
-                // Custom role
-                var roleWiseRouteQuery = _roleRouteMappingRepo.UnTrackableQuery();
-                foreach (Role requesterRole in requesterRoles)
-                {
-                    roleWiseRouteQuery = roleWiseRouteQuery.Where(x => x.Route.ApplicationId == requesterRole.ApplicationId);
-                }
-
-                List<RouteModel> customRoleRoutes = await roleWiseRouteQuery
-                    .Distinct()
-                    .OrderBy(x => x.Route.Sequence)
-                    .Select(x => new RouteModel
-                    {
-                        RouteId = x.RouteId,
-                        RouteValue = x.Route.RoutePath,
-                        RouteName = x.Route.RouteName,
-                        Description = x.Route.Description,
-                        ParentRouteId = x.Route.ParentRouteId
-                    })
-                    .ToListAsync();
-
-                genericRoutes.AddRange(customRoleRoutes);
                 genericRoutes.Distinct();
 
                 IEnumerable<int?> parentRoutesId = genericRoutes.Where(x => x.ParentRouteId != null).Select(x => x.ParentRouteId).ToList().Distinct();
@@ -293,42 +241,13 @@ namespace Identity.Domain.Implementation
 
                 if (userRole == null) throw new Exception($"No role found with identifier {roleId}");
 
-                if (userRole.IsSystemAdmin)
-                {
-                    return await _routeRepo.UnTrackableQuery()
-                        .Where(x => x.IsMenuRoute && x.ApplicationId == appId)
-                        .Select(x => new RouteModel
-                        {
-                            RouteId = x.RouteId,
-                            RouteName = x.RouteName
-                        }).ToListAsync();
-                }
-                else if (userRole.IsAdmin)
-                {
-                    return await _routeRepo.UnTrackableQuery()
-                        .Where(x => x.IsMenuRoute && x.ApplicationId == appId && x.RouteTypeId == RouteTypeConsts.AdminRoute.RouteTypeId || x.RouteTypeId == RouteTypeConsts.GenericRoute.RouteTypeId)
-                        .Select(x => new RouteModel
-                        {
-                            RouteId = x.RouteId,
-                            RouteName = x.RouteName
-                        }).ToListAsync();
-                }
-                else
-                {
-                    var query = _roleMappingRepo.UnTrackableQuery().Where(x => x.RouteId > 0);
-
-                    if (userRole.IsRetailer)
-                        query = query.Where(x => x.Route.RouteTypeId == RouteTypeConsts.RetailerRoute.RouteTypeId);
-                    else
-                        query = query.Where(x => x.RoleId == roleId);
-
-                    return await query
-                        .Select(x => new RouteModel
-                        {
-                            RouteId = x.Route.RouteId,
-                            RouteName = x.Route.RouteName
-                        }).ToListAsync();
-                }
+                return await _roleMappingRepo.UnTrackableQuery()
+                    .Where(roleRouteMapping => roleRouteMapping.RouteId > 0 && roleRouteMapping.RoleId == roleId)
+                    .Select(x => new RouteModel
+                    {
+                        RouteId = x.Route.RouteId,
+                        RouteName = x.Route.RouteName
+                    }).ToListAsync();
             }
         }
 
@@ -340,11 +259,6 @@ namespace Identity.Domain.Implementation
 
                 return await _routeTypeRepo.UnTrackableQuery()
                     .Where(x => x.RouteTypeId > 0)
-                    .Select(x => new RouteType
-                    {
-                        RouteTypeId = x.RouteTypeId,
-                        RouteTypeName = x.RouteTypeName,
-                    })
                     .ToListAsync();
             }
         }

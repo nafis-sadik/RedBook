@@ -28,5 +28,11 @@
         }
 
         public int TotalItems { get; set; }
+
+        public bool HasCreateAccess { get; set; }
+
+        public bool HasUpdateAccess { get; set; }
+
+        public bool HasDeleteAccess { get; set; }
     }
 }

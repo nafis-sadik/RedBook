@@ -12,7 +12,7 @@ public partial class PurchaseInvoice
 
     public DateTime PurchaseDate { get; set; }
 
-    public decimal GrossTotal { get; set; }
+    public decimal InvoiceTotal { get; set; }
 
     public decimal TotalDiscount { get; set; }
 

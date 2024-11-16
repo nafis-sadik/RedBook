@@ -8,6 +8,5 @@ namespace Identity.Data.CommonConstant
         public static RouteType AdminRoute = new RouteType { RouteTypeName = "Admin Route" };
         public static RouteType RetailerRoute = new RouteType { RouteTypeName = "Retailer Route" };
         public static RouteType SysAdminRoute = new RouteType { RouteTypeName = "System Admin Route" };
-        public static RouteType OrganizationOwner = new RouteType { RouteTypeName = "Organization Owner" };
     }
 }

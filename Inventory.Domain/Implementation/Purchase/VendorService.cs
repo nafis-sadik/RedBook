@@ -99,6 +99,8 @@ namespace Inventory.Domain.Implementation.Purchase
                     })
                     .ToListAsync();
 
+                pagedModel.TotalItems = await query.CountAsync();
+
                 return pagedModel;
             }
         }

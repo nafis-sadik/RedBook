@@ -11,17 +11,9 @@ namespace Identity.WebAPI.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class RoleController : ControllerBase
+    public class RoleController(IRoleService roleService) : ControllerBase
     {
-        private readonly IRoleService _roleServices;
-
-        /// <summary>
-        /// Role Module Constructor
-        /// </summary>
-        public RoleController(IRoleService roleService)
-        {
-            _roleServices = roleService;
-        }
+        private readonly IRoleService _roleServices = roleService;
 
         [HttpPost]
         public async Task<IActionResult> AddRoleAsync(RoleModel roleModel) => Ok(await _roleServices.AddRoleAsync(roleModel));
@@ -52,11 +44,7 @@ namespace Identity.WebAPI.Controllers
         /// </summary>
         [HttpGet]
         [Route("/AllowRouteForRole/{roleId}/{routeId}")]
-        public async Task<IActionResult> MapRoleRoute(int roleId, int routeId)
-        {
-            await _roleServices.InvertRouteRoleMapping(roleId, routeId);
-            return Ok();
-        }
+        public async Task<IActionResult> MapRoleRoute(int roleId, int routeId) => Ok(await _roleServices.InvertRouteRoleMapping(roleId, routeId));
 
         /// <summary>
         /// Map role with route for permission

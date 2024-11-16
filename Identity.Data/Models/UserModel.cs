@@ -15,7 +15,7 @@
         public string Password { get; set; }
         public decimal? AccountBalance { get; set; }
         public string Email { get; set; }
-        public int OrganizationId { get; set; }
+        //public int OrganizationId { get; set; }
         public int ApplicationId { get; set; }
         public bool RememberMe { get; set; }
     }

@@ -1,4 +1,5 @@
-﻿using Identity.Data.Entities;
+﻿using Identity.Data.CommonConstant;
+using Identity.Data.Entities;
 using Identity.Data.Models;
 using Identity.Domain.Abstraction;
 using Microsoft.AspNetCore.Http;
@@ -30,7 +31,7 @@ namespace Identity.Domain.Implementation
             {
                 var _userRoleRepo = factory.GetRepository<UserRoleMapping>();
 
-                if (!await this.IsOwnerOf(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsAdminOf(_userRoleRepo, orgId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 var query = _userRoleRepo.UnTrackableQuery()
                     .Where(x => x.OrganizationId == orgId);
@@ -75,13 +76,10 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public async Task<UserModel> RegisterEmployee(UserModel userModel)
+        public async Task<UserModel> RegisterEmployee(int orgId, UserModel userModel)
         {
             if (string.IsNullOrEmpty(userModel.Email))
                 throw new ArgumentException("Email not provided");
-
-            if (userModel.OrganizationId <= 0)
-                throw new ArgumentException("No organization selected");
 
             if (userModel.ApplicationId <= 0)
                 throw new ArgumentException("Unknown application");
@@ -112,7 +110,10 @@ namespace Identity.Domain.Implementation
                     {
                         RoleId = role.RoleId,
                         UserId = userEntity.UserId,
-                        OrganizationId = userModel.OrganizationId,
+                        OrganizationId = orgId,
+                        CreateBy = User.UserId,
+                        CreateDate = DateTime.UtcNow,
+
                     });
                     await factory.SaveChangesAsync();
                 }
@@ -121,7 +122,7 @@ namespace Identity.Domain.Implementation
             return Mapper.Map<UserModel>(userEntity);
         }
 
-        public async Task<UserModel> UpdateEmployeeInfo(UserModel userModel)
+        public async Task<UserModel> UpdateEmployeeRoles(int orgId, UserModel userModel)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
@@ -131,10 +132,9 @@ namespace Identity.Domain.Implementation
 
                 if (userEntity == null) throw new ArgumentException("Invalid user exception");
 
-                userEntity.FirstName = userModel.FirstName;
-                userEntity.LastName = userModel.LastName;
-
-                Dictionary<int, UserRoleMapping> dbRoleIdDict = await _userRoleRepo.UnTrackableQuery().Where(mapping => mapping.UserId == userModel.UserId).ToDictionaryAsync(x => x.RoleId);
+                Dictionary<int, UserRoleMapping> dbRoleIdDict = await _userRoleRepo.UnTrackableQuery()
+                    .Where(mapping => mapping.UserId == userModel.UserId && !mapping.Role.IsSystemAdmin)
+                    .ToDictionaryAsync(x => x.RoleId);
 
                 foreach (var userRole in userModel.UserRoles)
                 {
@@ -144,7 +144,7 @@ namespace Identity.Domain.Implementation
                         {
                             RoleId = userRole.RoleId,
                             UserId = userModel.UserId,
-                            OrganizationId = userModel.OrganizationId
+                            OrganizationId = orgId
                         });
                     }
                 }
@@ -162,6 +162,44 @@ namespace Identity.Domain.Implementation
             }
         }
 
-        public Task ResignEmployee(int userId, int roleId) => throw new NotImplementedException();
+        public async Task ReleaseEmployee(int userId, int orgId)
+        {
+            using(var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                var _roleMappingRepo = factory.GetRepository<Role>();
+                var _userRoleMappingRepo = factory.GetRepository<UserRoleMapping>();
+
+                // Check if operation is being done by an admin user or not
+                if (!await this.IsAdminOf(_userRoleMappingRepo, orgId) && !await this.IsOwnerOf(_userRoleMappingRepo, orgId))
+                    throw new ArgumentException("You must be the owner or have admin priviledge.");
+
+                await _userRoleMappingRepo.TrackableQuery()
+                    .Where(userRoleMapping => userRoleMapping.OrganizationId == orgId)
+                    .ForEachAsync(userRoleMapping =>
+                    {
+                        userRoleMapping.Status = false;
+                        userRoleMapping.UpdateBy = User.UserId;
+                        userRoleMapping.UpdateDate = DateTime.UtcNow;
+                    });
+
+                await factory.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<OrganizationModel>> AdminOrg()
+        {
+            using (var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                var userRoleRepo = factory.GetRepository<UserRoleMapping>();
+
+                return await userRoleRepo.UnTrackableQuery()
+                    .Where(userRoleMapping => userRoleMapping.UserId == User.UserId && userRoleMapping.Role.IsAdmin)
+                    .Select(userRoleMapping => new OrganizationModel
+                    {
+                        OrganizationId = userRoleMapping.OrganizationId,
+                        OrganizationName = userRoleMapping.Organization.OrganizationName,
+                    }).ToListAsync();
+            }
+        }
     }
 }

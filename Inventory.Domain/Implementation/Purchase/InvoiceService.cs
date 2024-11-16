@@ -22,7 +22,7 @@ namespace Inventory.Domain.Implementation.Purchase
             IHttpContextAccessor httpContextAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) { }
 
-        public async Task<InvoiceModel> GetByIdAsync(int id)
+        public async Task<PurchaseInvoiceModel> GetByIdAsync(int id)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
@@ -31,7 +31,7 @@ namespace Inventory.Domain.Implementation.Purchase
                 PurchaseInvoice? entity = await _invoiceRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.InvoiceId == id);
                 if (entity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
 
-                return Mapper.Map<InvoiceModel>(entity);
+                return Mapper.Map<PurchaseInvoiceModel>(entity);
             }
         }
 
@@ -52,18 +52,35 @@ namespace Inventory.Domain.Implementation.Purchase
                     .Take(pagedModel.PageLength)
                     .OrderByDescending(i => i.CreateDate);
 
-                pagedModel.SourceData = await query.Select(i => new InvoiceModel
+                pagedModel.SourceData = await query.Select(i => new PurchaseInvoiceModel
                 {
                     InvoiceId = i.InvoiceId,
                     ChalanNumber = i.ChalanNumber,
-                    GrossTotal = i.GrossTotal,
+                    InvoiceTotal = i.InvoiceTotal,
+                    VendorName = i.Vendor.VendorName,
+                    TotalPaid = i.PurchasePaymentRecords.Sum(pay => pay.PaymentAmount)
                 }).ToListAsync();
+
+                foreach(PurchaseInvoiceModel invoice in pagedModel.SourceData)
+                {
+                    if (invoice.TotalPaid >= invoice.InvoiceTotal)
+                    {
+                        invoice.PaymentStatus = "Paid";
+                    }
+                    else
+                    {
+                        if (invoice.InvoiceTotal == 0)
+                            invoice.PaymentStatus = "Unpaid";
+                        else
+                            invoice.PaymentStatus = "Partially Paid";
+                    }
+                }
 
                 return pagedModel;
             }
         }
 
-        public async Task<InvoiceModel> AddNewAsync(InvoiceModel model)
+        public async Task<PurchaseInvoiceModel> AddNewAsync(PurchaseInvoiceModel model)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
@@ -75,11 +92,11 @@ namespace Inventory.Domain.Implementation.Purchase
 
                 await factory.SaveChangesAsync();
 
-                return Mapper.Map<InvoiceModel>(entity);
+                return Mapper.Map<PurchaseInvoiceModel>(entity);
             }
         }
 
-        public async Task<InvoiceModel> UpdateAsync(int id, Dictionary<string, object> updates)
+        public async Task<PurchaseInvoiceModel> UpdateAsync(int id, Dictionary<string, object> updates)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
@@ -91,7 +108,7 @@ namespace Inventory.Domain.Implementation.Purchase
 
                 var entity = _purchaseInvoiceRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.InvoiceId == id);
 
-                return Mapper.Map<InvoiceModel>(entity);
+                return Mapper.Map<PurchaseInvoiceModel>(entity);
             }
         }
 

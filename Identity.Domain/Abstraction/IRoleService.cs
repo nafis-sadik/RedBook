@@ -21,6 +21,6 @@ namespace Identity.Domain.Abstraction
 
         Task DeleteRoleAsync(int roleId);
 
-        Task InvertRouteRoleMapping(int roleId, int routeId);
+        Task<bool> InvertRouteRoleMapping(int roleId, int routeId);
     }
 }

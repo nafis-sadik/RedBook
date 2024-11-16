@@ -4,6 +4,7 @@ using Identity.Data.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Identity.Data.Migrations
 {
     [DbContext(typeof(RedbookIdentityContext))]
-    partial class RedbookIdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20241111180622_ActionAccessDelAdd")]
+    partial class ActionAccessDelAdd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -38,7 +41,7 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("ApplicationId");
 
-                    b.ToTable("Applications", (string)null);
+                    b.ToTable("Applications");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Organization", b =>
@@ -72,7 +75,7 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("OrganizationId");
 
-                    b.ToTable("Organizations", (string)null);
+                    b.ToTable("Organizations");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Role", b =>
@@ -110,7 +113,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex("OrganizationId");
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.RoleRouteMapping", b =>
@@ -142,7 +145,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex("RouteId");
 
-                    b.ToTable("RoleRouteMappings", (string)null);
+                    b.ToTable("RoleRouteMappings");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Route", b =>
@@ -185,7 +188,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex("RouteTypeId");
 
-                    b.ToTable("Routes", (string)null);
+                    b.ToTable("Routes");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.RouteType", b =>
@@ -201,7 +204,7 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("RouteTypeId");
 
-                    b.ToTable("RouteTypes", (string)null);
+                    b.ToTable("RouteTypes");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Subscription", b =>
@@ -233,7 +236,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex("PackageId");
 
-                    b.ToTable("Subscriptions", (string)null);
+                    b.ToTable("Subscriptions");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.SubscriptionPackage", b =>
@@ -260,7 +263,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex("ApplicationId");
 
-                    b.ToTable("SubscriptionPackages", (string)null);
+                    b.ToTable("SubscriptionPackages");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.SubscriptionTransaction", b =>
@@ -289,7 +292,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex("SubscriptionId");
 
-                    b.ToTable("SubscriptionTransactions", (string)null);
+                    b.ToTable("SubscriptionTransactions");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.User", b =>
@@ -329,7 +332,7 @@ namespace Identity.Data.Migrations
 
                     b.HasKey("UserId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.UserRoleMapping", b =>
@@ -340,26 +343,11 @@ namespace Identity.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserRoleId"));
 
-                    b.Property<int>("CreateBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreateDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<int>("OrganizationId")
                         .HasColumnType("int");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Status")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("UpdateBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
@@ -372,7 +360,7 @@ namespace Identity.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("UserRoleMappings", (string)null);
+                    b.ToTable("UserRoleMappings");
                 });
 
             modelBuilder.Entity("Identity.Data.Entities.Role", b =>

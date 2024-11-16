@@ -18,7 +18,6 @@ namespace Identity.Domain.Implementation
     public class OrganizationService : ServiceBase, IOrganizationService
     {
         private IRepositoryBase<Role> _roleRepo;
-        private IRepositoryBase<User> _userRepo;
         private IRepositoryBase<Organization> _orgRepo;
         private IRepositoryBase<UserRoleMapping> _userRoleRepo;
         private IRepositoryBase<RoleRouteMapping> _roleRouteMappingRepo;
@@ -62,7 +61,7 @@ namespace Identity.Domain.Implementation
                 // Assigning the admin role to the user who created tje organization, 
                 await _userRoleRepo.InsertAsync(new UserRoleMapping
                 {
-                    RoleId = RoleConstants.OwnerAdmin.RoleId,
+                    RoleId = RoleConstants.Owner.RoleId,
                     UserId = User.UserId,
                     OrganizationId = orgEntity.OrganizationId,
                 });
@@ -79,7 +78,7 @@ namespace Identity.Domain.Implementation
                 _userRoleRepo = factory.GetRepository<UserRoleMapping>();
                 _orgRepo = factory.GetRepository<Organization>();
 
-                if (!await this.HasOrgAdminPriviledge(_userRoleRepo, organizationModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
+                if (!await this.IsAdminOf(_userRoleRepo, organizationModel.OrganizationId)) throw new ArgumentException(CommonConstants.HttpResponseMessages.NotAllowed);
 
                 Organization? orgEntity = await _orgRepo.GetAsync(organizationModel.OrganizationId);
                 if (orgEntity == null) throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidInput);
@@ -134,6 +133,7 @@ namespace Identity.Domain.Implementation
             }
         }
 
+        // Review
         public async Task<IEnumerable<OrganizationModel>> GetUserOwnedOrgsAsync()
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())

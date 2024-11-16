@@ -55,7 +55,7 @@ namespace Identity.Domain.Implementation
                 // Assign the role to the user by mapping
                 await userRoleRepo.InsertAsync(new UserRoleMapping
                 {
-                    RoleId = RoleConstants.OwnerAdmin.RoleId,
+                    RoleId = RoleConstants.Owner.RoleId,
                     UserId = newUser.UserId,
                     OrganizationId = orgEntity.OrganizationId,
                 });
