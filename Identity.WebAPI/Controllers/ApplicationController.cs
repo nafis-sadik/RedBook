@@ -14,18 +14,9 @@ namespace Identity.WebAPI.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class ApplicationController : ControllerBase
+    public class ApplicationController(IApplicationService applicationService) : ControllerBase
     {
-        private readonly IApplicationService _applicationService;
-
-        /// <summary>
-        /// Application Module Constructor
-        /// </summary>
-        /// <param name="applicationService">An implementation of IApplicationService injected by IOC Controller</param>
-        public ApplicationController(IApplicationService applicationService)
-        {
-            _applicationService = applicationService;
-        }
+        private readonly IApplicationService _applicationService = applicationService;
 
         /// <summary>
         /// Retrieves a specific Application Details by unique id
@@ -38,7 +29,7 @@ namespace Identity.WebAPI.Controllers
         public async Task<IActionResult> GetAsync(int appId) => Ok(await _applicationService.GetApplicationAsync(appId));
 
         /// <summary>
-        /// For adding new application to eco system
+        /// For adding new application to eco systemmenu
         /// </summary>
         /// <param name="appInfo">Application View Model Object</param>
         [HttpPost]

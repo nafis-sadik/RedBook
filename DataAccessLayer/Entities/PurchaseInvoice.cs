@@ -10,8 +10,6 @@ public partial class PurchaseInvoice
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int InvoiceId { get; set; }
 
-    public DateTime PurchaseDate { get; set; }
-
     public decimal InvoiceTotal { get; set; }
 
     public decimal TotalDiscount { get; set; }

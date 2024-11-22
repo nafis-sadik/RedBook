@@ -56,8 +56,9 @@ namespace Inventory.Domain.Implementation.Purchase
                 {
                     InvoiceId = i.InvoiceId,
                     ChalanNumber = i.ChalanNumber,
+                    ChalanDate = i.ChalanDate,
                     InvoiceTotal = i.InvoiceTotal,
-                    VendorName = i.Vendor.VendorName,
+                    VendorName = i.Vendor == null? "" : i.Vendor.VendorName,
                     TotalPaid = i.PurchasePaymentRecords.Sum(pay => pay.PaymentAmount)
                 }).ToListAsync();
 
@@ -86,7 +87,15 @@ namespace Inventory.Domain.Implementation.Purchase
             {
                 var _purchaseInvoiceRepo = factory.GetRepository<PurchaseInvoice>();
 
-                var entity = Mapper.Map<PurchaseInvoice>(model);
+                PurchaseInvoice entity = Mapper.Map<PurchaseInvoice>(model);
+
+                entity.CreateDate = DateTime.UtcNow;
+                entity.CreateBy = User.UserId;
+                foreach(PurchaseInvoiceDetails purchase in entity.Purchases){
+                    purchase.CreateBy = User.UserId;
+                    purchase.CreateDate = DateTime.UtcNow;
+                    purchase.ProductId = purchase.ProductId <= 0 ? null : purchase.ProductId;
+                }
 
                 entity = await _purchaseInvoiceRepo.InsertAsync(entity);
 

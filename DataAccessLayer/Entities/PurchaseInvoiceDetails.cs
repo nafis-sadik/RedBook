@@ -20,6 +20,8 @@ public partial class PurchaseInvoiceDetails
 
     public decimal UnitPrice { get; set; }
 
+    public decimal VatRate { get; set; }
+
     public decimal Discount { get; set; }
 
     [Required]
