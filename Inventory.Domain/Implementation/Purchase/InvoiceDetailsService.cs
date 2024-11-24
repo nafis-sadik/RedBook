@@ -2,6 +2,7 @@
 using Inventory.Data.Models.Purchase;
 using Inventory.Domain.Abstraction.Purchase;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Domain;
@@ -35,8 +36,32 @@ namespace Inventory.Domain.Implementation.Purchase
                 return purchaseModel;
             }
         }
+
         public Task DeleteAsync(int id) => throw new NotImplementedException();
+
         public Task<PagedModel<InvoiceDetailsModel>> GetPagedAsync(PagedModel<InvoiceDetailsModel> purchaseModel) => throw new NotImplementedException();
+
+        public async Task<IEnumerable<InvoiceDetailsModel>> GetListAsync(int invoiceId)
+        {
+            using(var factory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                var _invoiceDetailsRepo = factory.GetRepository<PurchaseInvoiceDetails>();
+
+                return await _invoiceDetailsRepo.UnTrackableQuery()
+                    .Where(invoiceDetails => invoiceDetails.InvoiceId == invoiceId)
+                    .Select(invoiceDetails => new InvoiceDetailsModel
+                    {
+                        ProductId = invoiceDetails.ProductId == null? 0 : invoiceDetails.ProductId.Value,
+                        ProductName = invoiceDetails.ProductName,
+                        Quantity = invoiceDetails.Quantity,
+                        PurchasePrice = invoiceDetails.PurchasePrice,
+                        RetailPrice = invoiceDetails.RetailPrice,
+                        Discount = invoiceDetails.Discount,
+                        VatRate = invoiceDetails.VatRate
+                    }).ToListAsync();
+            }
+        }
+
         public Task<InvoiceDetailsModel> UpdateAsync(InvoiceDetailsModel purchaseModel) => throw new NotImplementedException();
     }
 }

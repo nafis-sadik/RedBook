@@ -48,9 +48,9 @@ namespace Inventory.Domain.Implementation.Purchase
 
                 pagedModel.TotalItems = await query.CountAsync();
 
-                query = query.Skip(pagedModel.Skip)
-                    .Take(pagedModel.PageLength)
-                    .OrderByDescending(i => i.CreateDate);
+                query = query.OrderByDescending(i => i.CreateDate)
+                    .Skip(pagedModel.Skip)
+                    .Take(pagedModel.PageLength);
 
                 pagedModel.SourceData = await query.Select(i => new PurchaseInvoiceModel
                 {
@@ -87,11 +87,18 @@ namespace Inventory.Domain.Implementation.Purchase
             {
                 var _purchaseInvoiceRepo = factory.GetRepository<PurchaseInvoice>();
 
+                bool inRecord = await _purchaseInvoiceRepo.UnTrackableQuery()
+                    .AnyAsync(invoice => invoice.OrganizationId == model.OrganizationId && invoice.ChalanNumber.ToLower().Equals(model.ChalanNumber.ToLower()));
+
+                if (inRecord) {
+                    throw new ArgumentException($"You already have an invoice with invoice id {model.ChalanNumber}");
+                }
+
                 PurchaseInvoice entity = Mapper.Map<PurchaseInvoice>(model);
 
                 entity.CreateDate = DateTime.UtcNow;
                 entity.CreateBy = User.UserId;
-                foreach(PurchaseInvoiceDetails purchase in entity.Purchases){
+                foreach(PurchaseInvoiceDetails purchase in entity.Purchases) {
                     purchase.CreateBy = User.UserId;
                     purchase.CreateDate = DateTime.UtcNow;
                     purchase.ProductId = purchase.ProductId <= 0 ? null : purchase.ProductId;

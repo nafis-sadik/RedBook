@@ -16,11 +16,15 @@ namespace Inventory.WebAPI.Controllers.Purchase
     {
         private readonly IInvoiceDetailsService _invoiceDetailsService = invoiceDetailsService;
 
-        [HttpPost]
-        public async Task<IActionResult> AddAsync(List<InvoiceDetailsModel> model) => Ok(await _invoiceDetailsService.AddNewAsync(model));
+        //[HttpPost]
+        //public async Task<IActionResult> AddAsync(List<InvoiceDetailsModel> model) => Ok(await _invoiceDetailsService.AddNewAsync(model));
+
+        //[HttpGet]
+        //[Route("PagedAsync")]
+        //public async Task<IActionResult> PagedAsync(PagedModel<InvoiceDetailsModel> pagedModel) => Ok(await _invoiceDetailsService.GetPagedAsync(pagedModel));
 
         [HttpGet]
-        [Route("PagedAsync")]
-        public async Task<IActionResult> PagedAsync(PagedModel<InvoiceDetailsModel> pagedModel) => Ok(await _invoiceDetailsService.GetPagedAsync(pagedModel));
+        [Route("List/{invoiceId}")]
+        public async Task<IActionResult> GetListAsync(int invoiceId) => Ok(await _invoiceDetailsService.GetListAsync(invoiceId));
     }
 }

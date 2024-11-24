@@ -12,7 +12,11 @@
 
         public decimal Quantity { get; set; } 
 
-        public decimal UnitPrice { get; set; }
+        public decimal VatRate { get; set; } 
+
+        public decimal PurchasePrice { get; set; }
+
+        public decimal RetailPrice { get; set; }
 
         public int? CreateBy { get; set; }
 
