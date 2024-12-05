@@ -1,8 +1,6 @@
-﻿using Inventory.Data.Models.Purchase;
-using Inventory.Domain.Abstraction.Purchase;
+﻿using Inventory.Domain.Abstraction.Purchase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RedBook.Core.Models;
 
 namespace Inventory.WebAPI.Controllers.Purchase
 {

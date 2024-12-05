@@ -210,8 +210,8 @@ namespace Identity.WebAPI.Configurations
 
                 List<Route> operationsRoute = new List<Route> {
                                 new Route {
-                                    RouteName = "Invoice - Purchase",
-                                    RoutePath = "/dashboard/purchase",
+                                    RouteName = "Purchase Invoices",
+                                    RoutePath = "/dashboard/operations/purchase",
                                     Description = "shopping-bag",
                                     ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = operationsParentRoute.RouteId,
@@ -219,8 +219,17 @@ namespace Identity.WebAPI.Configurations
                                     IsMenuRoute = true
                                 },
                                 new Route {
-                                    RouteName = "Invoice - Sales",
-                                    RoutePath = "/dashboard/sales",
+                                    RouteName = "Sales Invoices",
+                                    RoutePath = "/dashboard/operations/sales",
+                                    Description = "list",
+                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                                    ParentRouteId = operationsParentRoute.RouteId,
+                                    RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                                    IsMenuRoute = true
+                                },
+                                new Route {
+                                    RouteName = "Sales (POS)",
+                                    RoutePath = "/dashboard/operations/pos",
                                     Description = "shopping-cart",
                                     ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = operationsParentRoute.RouteId,
@@ -230,7 +239,7 @@ namespace Identity.WebAPI.Configurations
                                 new Route
                                 {
                                     RouteName = "Vendors",
-                                    RoutePath = "/dashboard/vendors",
+                                    RoutePath = "/dashboard/operations/vendors",
                                     Description = "people",
                                     ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                                     ParentRouteId = operationsParentRoute.RouteId,
@@ -242,35 +251,74 @@ namespace Identity.WebAPI.Configurations
                 context.SaveChanges();
                 routes.AddRange(operationsRoute);
 
-                Route crmParentRoute = context.Routes.Add(
+                //Route crmParentRoute = context.Routes.Add(
+                //    new Route
+                //    {
+                //        RouteName = "CRM",
+                //        RoutePath = "",
+                //        Description = "phone-call",
+                //        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                //        ParentRouteId = null,
+                //        RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                //        IsMenuRoute = true
+                //    }).Entity;
+                //context.SaveChanges();
+                //routes.Add(crmParentRoute);
+
+                //List<Route> crmRoute = new List<Route> {
+                //    new Route
+                //    {
+                //        RouteName = "Customers",
+                //        RoutePath = "/dashboard/customers",
+                //        Description = "person",
+                //        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                //        ParentRouteId = crmParentRoute.RouteId,
+                //        RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                //        IsMenuRoute = true
+                //    }
+                //};
+                //context.Routes.AddRange(crmRoute);
+                //context.SaveChanges();
+                //routes.AddRange(crmRoute);
+
+                Route productSettingsParentRoute = context.Routes.Add(new Route
+                {
+                    RouteName = "Product Management",
+                    RoutePath = "",
+                    Description = "cube",
+                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                    ParentRouteId = null,
+                    RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                    IsMenuRoute = true
+                }).Entity;
+                context.SaveChanges();
+                routes.Add(productSettingsParentRoute);
+
+                List<Route> productSettingsRoutes = new List<Route> {
                     new Route
                     {
-                        RouteName = "CRM",
-                        RoutePath = "",
-                        Description = "phone-call",
+                        RouteName = "Product List",
+                        RoutePath = "/dashboard/products",
+                        Description = "list",
                         ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                        ParentRouteId = null,
+                        ParentRouteId = productSettingsParentRoute.RouteId,
                         RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
                         IsMenuRoute = true
-                    }).Entity;
-                context.SaveChanges();
-                routes.Add(crmParentRoute);
-
-                List<Route> crmRoute = new List<Route> {
+                    },
                     new Route
                     {
-                        RouteName = "Customers",
-                        RoutePath = "/dashboard/customers",
-                        Description = "person",
+                        RouteName = "Product Settings",
+                        RoutePath = "/dashboard/products/settings",
+                        Description = "options-2",
                         ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                        ParentRouteId = crmParentRoute.RouteId,
+                        ParentRouteId = productSettingsParentRoute.RouteId,
                         RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
                         IsMenuRoute = true
                     }
                 };
-                context.Routes.AddRange(crmRoute);
+                context.Routes.AddRange(productSettingsRoutes);
                 context.SaveChanges();
-                routes.AddRange(crmRoute);
+                routes.AddRange(productSettingsRoutes);
 
                 Route settingsParentRoute = context.Routes.Add(new Route
                 {
@@ -287,8 +335,8 @@ namespace Identity.WebAPI.Configurations
 
                 List<Route> settingsRoutes = new List<Route> {
                     new Route {
-                        RouteName = "General Settings",
-                        RoutePath = "/dashboard/settings",
+                        RouteName = "User Management",
+                        RoutePath = "/dashboard/settings/ums",
                         Description = "briefcase",
                         ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                         ParentRouteId = settingsParentRoute.RouteId,
@@ -296,47 +344,38 @@ namespace Identity.WebAPI.Configurations
                         IsMenuRoute = true
                     },
                     new Route {
-                        RouteName = "Product List",
-                        RoutePath = "/dashboard/products",
-                        Description = "cube",
+                        RouteName = "Role Management",
+                        RoutePath = "/dashboard/settings/role-management",
+                        Description = "briefcase",
                         ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                         ParentRouteId = settingsParentRoute.RouteId,
-                        RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
+                        RouteTypeId = RouteTypeConsts.AdminRoute.RouteTypeId,
                         IsMenuRoute = true
                     },
-                    new Route {
-                        RouteName = "Product Settings",
-                        RoutePath = "/dashboard/product-settings",
-                        Description = "options-2",
-                        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                        ParentRouteId = settingsParentRoute.RouteId,
-                        RouteTypeId = RouteTypeConsts.GenericRoute.RouteTypeId,
-                        IsMenuRoute = true
-                    }
                 };
                 context.Routes.AddRange(settingsRoutes);
                 context.SaveChanges();
                 routes.AddRange(settingsRoutes);
 
                 List<Route> othersRoutes = new List<Route> {
-                                new Route {
-                                    RouteName = "Onboarding",
-                                    RoutePath = "/dashboard/onboarding",
-                                    Description = "person-add",
-                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                                    ParentRouteId = null,
-                                    RouteTypeId = RouteTypeConsts.RetailerRoute.RouteTypeId,
-                                    IsMenuRoute = true
-                                },
-                                new Route {
-                                    RouteName = "Platform Settings",
-                                    RoutePath = "/dashboard/platform-settings",
-                                    Description = "settings-2",
-                                    ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
-                                    ParentRouteId = null,
-                                    RouteTypeId = RouteTypeConsts.SysAdminRoute.RouteTypeId,
-                                    IsMenuRoute = true
-                                },
+                    new Route {
+                        RouteName = "Onboarding",
+                        RoutePath = "/dashboard/onboarding",
+                        Description = "person-add",
+                        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                        ParentRouteId = null,
+                        RouteTypeId = RouteTypeConsts.RetailerRoute.RouteTypeId,
+                        IsMenuRoute = true
+                    },
+                    new Route {
+                        RouteName = "Platform Settings",
+                        RoutePath = "/dashboard/platform-settings",
+                        Description = "settings-2",
+                        ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
+                        ParentRouteId = null,
+                        RouteTypeId = RouteTypeConsts.SysAdminRoute.RouteTypeId,
+                        IsMenuRoute = true
+                    },
                 };
                 context.Routes.AddRange(othersRoutes);
                 context.SaveChanges();
