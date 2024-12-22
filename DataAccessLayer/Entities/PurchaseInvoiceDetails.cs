@@ -10,7 +10,7 @@ public partial class PurchaseInvoiceDetails
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int RecordId { get; set; }
 
-    public int? ProductId { get; set; }
+    public int? ProductVariantId { get; set; }
 
     public int InvoiceId { get; set; }
 
@@ -34,6 +34,6 @@ public partial class PurchaseInvoiceDetails
     [ForeignKey("InvoiceId")]
     public virtual PurchaseInvoice Invoice { get; set; }
 
-    [ForeignKey("ProductId")]
-    public virtual Product Product { get; set; }
+    [ForeignKey("ProductVariantId")]
+    public virtual ProductVariant ProductVariant { get; set; }
 }

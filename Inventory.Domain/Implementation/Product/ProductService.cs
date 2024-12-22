@@ -1,4 +1,5 @@
-﻿using Inventory.Data.Models.Product;
+﻿using Inventory.Data.Entities;
+using Inventory.Data.Models.Product;
 using Inventory.Domain.Abstraction.Product;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -26,13 +27,24 @@ namespace Inventory.Domain.Implementation.Product
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
+                var productVariantRepo = _repositoryFactory.GetRepository<ProductVariant>();
 
                 Data.Entities.Product product = Mapper.Map<Data.Entities.Product>(productModel);
                 product.CreateBy = User.UserId;
                 product.CreateDate = DateTime.UtcNow;
                 product = await _productRepo.InsertAsync(product);
-
                 await _repositoryFactory.SaveChangesAsync();
+
+                IEnumerable<ProductVariant> entityList = Mapper.Map<IEnumerable<ProductVariant>>(productModel.ProductVariants);
+                foreach (ProductVariant entity in entityList) { 
+                    entity.CreateBy = User.UserId;
+                    entity.CreateDate = DateTime.UtcNow;
+                    entity.UpdateBy = null;
+                    entity.UpdateDate = null;
+                    entity.IsActive = true;
+                }
+
+                await productVariantRepo.BulkInsertAsync(entityList);
 
                 return Mapper.Map<ProductModel>(product);
             }
@@ -55,20 +67,12 @@ namespace Inventory.Domain.Implementation.Product
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
+                var _purchaseDetailsRepo = _repositoryFactory.GetRepository<Data.Entities.PurchaseInvoiceDetails>();
 
-                var query = _productRepo.UnTrackableQuery();
+                var query = _productRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId);
 
                 if (!string.IsNullOrWhiteSpace(pagedModel.SearchString))
-                {
-                    query = query.Where(x =>
-                        x.OrganizationId == orgId
-                        && x.ProductName.ToLower().Trim().Contains(pagedModel.SearchString.ToLower().Trim())
-                    );
-                }
-                else
-                {
-                    query = query.Where(x => x.OrganizationId == orgId);
-                }
+                    query = query.Where(x => x.ProductName.ToLower().Trim().Contains(pagedModel.SearchString.ToLower().Trim()));
 
                 pagedModel.SourceData = await query
                     .Skip(pagedModel.Skip)
@@ -79,12 +83,22 @@ namespace Inventory.Domain.Implementation.Product
                         ProductName = x.ProductName,
                         SubcategoryId = x.CategoryId,
                         SubcategoryName = x.Category.CatagoryName,
-                        CategoryId = (int)x.Category.ParentCategoryId,
-                        CategoryName = x.Category.ParentCategory.CatagoryName.ToString(),
+                        CategoryId = x.Category.ParentCategoryId == null? 0 : x.Category.ParentCategoryId.Value,
+                        CategoryName = x.Category.ParentCategoryId == null ? "Empty Category Name" : x.Category.ParentCategory.CatagoryName.ToString(),
+                        PurchasePrice = (float)_purchaseDetailsRepo.UnTrackableQuery()
+                                        .Where(purchaseDetails => purchaseDetails.ProductVariantId == x.ProductId)
+                                        .OrderByDescending(purchaseDetails => purchaseDetails.CreateDate)
+                                        .Select(purchaseDetails => purchaseDetails.PurchasePrice)
+                                        .FirstOrDefault(),
+                        RetailPrice = (float)_purchaseDetailsRepo.UnTrackableQuery()
+                                        .Where(purchaseDetails => purchaseDetails.ProductVariantId == x.ProductId)
+                                        .OrderByDescending(purchaseDetails => purchaseDetails.CreateDate)
+                                        .Select(purchaseDetails => purchaseDetails.RetailPrice)
+                                        .FirstOrDefault(),
                         OrganizationId = x.OrganizationId,
-                        QuantityTypeId = x.QuantityAttributeId,
                         BrandName = x.BrandAttribute.AttributeName,
-                        BrandAttributeId = x.BrandAttribute.AttributeId
+                        BrandId = x.BrandId,
+                        QuantityTypeId = x.QuantityAttributeId,
                     })
                     .ToArrayAsync();
 
@@ -110,23 +124,17 @@ namespace Inventory.Domain.Implementation.Product
             }
         }
 
-        public async Task<ProductModel> UpdateAsync(ProductModel productModel)
+        public async Task<ProductModel> UpdateAsync(int productId, Dictionary<string, object> productModel)
         {
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _productRepo = factory.GetRepository<Data.Entities.Product>();
 
-                Data.Entities.Product? product = await _productRepo.UnTrackableQuery().FirstOrDefaultAsync(x => x.ProductId == productModel.ProductId);
+                productModel["UpdateBy"] = User.UserId;
+                productModel["UpdateDate"] = DateTime.UtcNow;
+                productModel["categoryId"] = productModel["subcategoryId"];
 
-                if (product == null) throw new ArgumentException("Resource not found");
-                
-                product.ProductName = productModel.ProductName;
-                product.CategoryId = productModel.SubcategoryId;
-                product.BrandId = productModel.BrandAttributeId;
-                product.UpdateBy = User.UserId;
-                product.UpdateDate = DateTime.UtcNow;
-
-                _productRepo.Update(product);
+                _productRepo.ColumnUpdate(productId, productModel);
 
                 await factory.SaveChangesAsync();
 

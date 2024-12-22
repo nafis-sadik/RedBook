@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.Json;
 using CaseExtensions;
+using System.Text;
 
 namespace RedBook.Core.Repositories
 {
@@ -30,7 +31,39 @@ namespace RedBook.Core.Repositories
             else throw new InvalidOperationException($"Failed to insert {entity}");
         }
 
-        public async Task BulkInsertAsync(IEnumerable<TEntity> entities) => await _dbSet.AddRangeAsync(entities);
+        //public async Task BulkInsertAsync(IEnumerable<TEntity> entities) => await _dbSet.AddRangeAsync(entities);
+        public async Task BulkInsertAsync(IEnumerable<TEntity> entities) { 
+            if (entities == null || !entities.Any()) return;
+
+            Type? entityType = typeof(TEntity);
+            string? tableName = _dbContext.Model.FindEntityType(entityType)?.GetTableName();
+            if (string.IsNullOrEmpty(tableName)) throw new ArgumentException("Table name not found!");
+
+            List<PropertyInfo> properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => !p.GetGetMethod().IsVirtual).ToList(); 
+            
+            var columns = string.Join(", ", properties.Select(p => p.Name)); 
+            var values = new StringBuilder(); 
+            
+            foreach (var entity in entities) { 
+                var valueList = new List<string>(); 
+                foreach (var property in properties) { 
+                    var value = property.GetValue(entity); 
+                    valueList.Add(FormatValueForSql(value)); 
+                } 
+                
+                values.AppendLine($"({string.Join(", ", valueList)}),"); } 
+            var insertSql = $"INSERT INTO {tableName} ({columns}) VALUES {values.ToString().TrimEnd(',', '\r', '\n')};"; 
+            await _dbContext.Database.ExecuteSqlRawAsync(insertSql); 
+        }
+
+        private string FormatValueForSql(object value) { 
+            if (value == null) return "NULL"; 
+            if (value is string || value is DateTime) return $"'{value.ToString().Replace("'", "''")}'"; 
+            if (value is bool) return (bool)value ? "1" : "0"; 
+            return value.ToString(); 
+        }
+
 
         // Read Async
         public TEntity? Get(int id) => _dbSet.Find(id);

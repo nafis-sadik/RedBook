@@ -101,7 +101,7 @@ namespace Inventory.Domain.Implementation.Purchase
                 foreach(PurchaseInvoiceDetails purchase in entity.Purchases) {
                     purchase.CreateBy = User.UserId;
                     purchase.CreateDate = DateTime.UtcNow;
-                    purchase.ProductId = purchase.ProductId <= 0 ? null : purchase.ProductId;
+                    purchase.ProductVariantId = purchase.ProductVariantId <= 0 ? null : purchase.ProductVariantId;
                 }
 
                 entity = await _purchaseInvoiceRepo.InsertAsync(entity);

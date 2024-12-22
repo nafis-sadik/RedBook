@@ -24,4 +24,6 @@ public partial class CommonAttribute
     //public virtual ICollection<Product> Products { get; set; } = new List<Product>();
 
     //public virtual ICollection<Product> ProductsBrand { get; set; } = new List<Product>();
+
+    //public virtual ICollection<ProductVariant> ProductVariant { get; set; } = new List<ProductVariant>();
 }

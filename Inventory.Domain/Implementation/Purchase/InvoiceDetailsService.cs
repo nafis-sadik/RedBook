@@ -51,7 +51,7 @@ namespace Inventory.Domain.Implementation.Purchase
                     .Where(invoiceDetails => invoiceDetails.InvoiceId == invoiceId)
                     .Select(invoiceDetails => new InvoiceDetailsModel
                     {
-                        ProductId = invoiceDetails.ProductId == null? 0 : invoiceDetails.ProductId.Value,
+                        VariantId = invoiceDetails.ProductVariantId == null? 0 : invoiceDetails.ProductVariantId.Value,
                         ProductName = invoiceDetails.ProductName,
                         Quantity = invoiceDetails.Quantity,
                         PurchasePrice = invoiceDetails.PurchasePrice,

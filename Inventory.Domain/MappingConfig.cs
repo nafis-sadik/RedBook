@@ -26,11 +26,10 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.ParentCategory, opt => opt.Ignore());
 
             CreateMap<ProductModel, Product>()
-                .ForMember(dest => dest.QuantityAttributeId, opt => opt.MapFrom(opt => opt.QuantityTypeId))
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(opt => opt.SubcategoryId))
-                .ForMember(dest => dest.BrandId, opt => opt.MapFrom(opt => opt.BrandAttributeId))
+                .ForMember(dest => dest.BrandId, opt => opt.MapFrom(opt => opt.BrandId))
+                .ForMember(dest => dest.QuantityAttributeId, opt => opt.MapFrom(opt => opt.QuantityTypeId))
                 .ReverseMap()
-                .ForMember(dest => dest.QuantityTypeId, opt => opt.MapFrom(opt => opt.QuantityAttributeId))
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(opt => opt.Category.ParentCategory))
                 .ForMember(dest => dest.SubcategoryId, opt => opt.MapFrom(opt => opt.CategoryId))
                 .ForMember(dest => dest.PurchasePrice, opt => opt.Ignore())
@@ -40,7 +39,6 @@ namespace Inventory.Domain
 
             CreateMap<CommonAttribute, CommonAttributeModel>()
                 .ReverseMap();
-                //.ForMember(dest => dest.Products, opt => opt.Ignore());
         }
     }
 }

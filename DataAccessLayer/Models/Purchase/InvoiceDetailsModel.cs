@@ -6,7 +6,7 @@
 
         public int InvoiceId { get; set; }
 
-        public int ProductId { get; set; }
+        public int VariantId { get; set; }
 
         public string ProductName { get; set; }
 

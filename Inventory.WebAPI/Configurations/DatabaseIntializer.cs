@@ -1,5 +1,6 @@
 ﻿using Inventory.Data.Entities;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Crypto.Generators;
 
 namespace Inventory.WebAPI.Configurations
 {
@@ -24,8 +25,19 @@ namespace Inventory.WebAPI.Configurations
                     {
                         context.Database.Migrate();
                     }
+
+                    SeedData(context);
                 }
             }
+        }
+
+        private static async void SeedData(RedbookInventoryContext context)
+        {
+            context.Database.EnsureCreated();
+
+            context.SaveChanges();
+
+            context.Dispose();
         }
     }
 }
