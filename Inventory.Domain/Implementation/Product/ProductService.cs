@@ -9,18 +9,26 @@ using RedBook.Core.Domain;
 using RedBook.Core.Models;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 
 namespace Inventory.Domain.Implementation.Product
 {
     public class ProductService : ServiceBase, IProductService
     {
+        private IHttpContextAccessor _contextAccessor;
+        private IClaimsPrincipalAccessor _claimsPrincipalAccessor;
         public ProductService(
             ILogger<ProductService> logger,
             IObjectMapper mapper,
             IClaimsPrincipalAccessor claimsPrincipalAccessor,
             IUnitOfWorkManager unitOfWork,
             IHttpContextAccessor httpContextAccessor
-        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) { }
+        ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) {
+            _contextAccessor = httpContextAccessor;
+            _claimsPrincipalAccessor = claimsPrincipalAccessor;
+        }
 
         public async Task<ProductModel> AddNewAsync(ProductModel productModel)
         {
@@ -32,19 +40,35 @@ namespace Inventory.Domain.Implementation.Product
                 Data.Entities.Product product = Mapper.Map<Data.Entities.Product>(productModel);
                 product.CreateBy = User.UserId;
                 product.CreateDate = DateTime.UtcNow;
-                product = await _productRepo.InsertAsync(product);
-                await _repositoryFactory.SaveChangesAsync();
-
-                IEnumerable<ProductVariant> entityList = Mapper.Map<IEnumerable<ProductVariant>>(productModel.ProductVariants);
-                foreach (ProductVariant entity in entityList) { 
-                    entity.CreateBy = User.UserId;
-                    entity.CreateDate = DateTime.UtcNow;
-                    entity.UpdateBy = null;
-                    entity.UpdateDate = null;
-                    entity.IsActive = true;
+                product.ProductVariants.Clear();
+                foreach(ProductVariantModel variant in productModel.ProductVariants)
+                {
+                    product.ProductVariants.Add(new ProductVariant
+                    {
+                        VariantName = variant.VariantName,
+                        Attributes = variant.Attributes,
+                        SKU = variant.SKU,
+                        StockQuantity = 0,
+                        CreateBy = User.UserId,
+                        CreateDate = DateTime.UtcNow,
+                        BarCode = Guid.NewGuid().ToString(),
+                        IsActive = true
+                    });
                 }
+                product = await _productRepo.InsertAsync(product);
 
-                await productVariantRepo.BulkInsertAsync(entityList);
+                //IEnumerable<ProductVariant> variantList = Mapper.Map<IEnumerable<ProductVariant>>(productModel.ProductVariants);
+                //foreach (ProductVariant entity in variantList) { 
+                //    entity.CreateBy = User.UserId;
+                //    entity.CreateDate = DateTime.UtcNow;
+                //    entity.UpdateBy = null;
+                //    entity.UpdateDate = null;
+                //    entity.IsActive = true;
+                //}
+
+                //await productVariantRepo.BulkInsertAsync(variantList);
+
+                await _repositoryFactory.SaveChangesAsync();
 
                 return Mapper.Map<ProductModel>(product);
             }
@@ -67,7 +91,8 @@ namespace Inventory.Domain.Implementation.Product
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
-                var _purchaseDetailsRepo = _repositoryFactory.GetRepository<Data.Entities.PurchaseInvoiceDetails>();
+                var _purchaseVariantRepo = _repositoryFactory.GetRepository<ProductVariant>();
+                var _purchaseDetailsRepo = _repositoryFactory.GetRepository<PurchaseInvoiceDetails>();
 
                 var query = _productRepo.UnTrackableQuery().Where(x => x.OrganizationId == orgId);
 
@@ -77,28 +102,40 @@ namespace Inventory.Domain.Implementation.Product
                 pagedModel.SourceData = await query
                     .Skip(pagedModel.Skip)
                     .Take(pagedModel.PageLength)
-                    .Select(x => new ProductModel
+                    .Select(product => new ProductModel
                     {
-                        ProductId = x.ProductId,
-                        ProductName = x.ProductName,
-                        SubcategoryId = x.CategoryId,
-                        SubcategoryName = x.Category.CatagoryName,
-                        CategoryId = x.Category.ParentCategoryId == null? 0 : x.Category.ParentCategoryId.Value,
-                        CategoryName = x.Category.ParentCategoryId == null ? "Empty Category Name" : x.Category.ParentCategory.CatagoryName.ToString(),
+                        ProductId = product.ProductId,
+                        ProductName = product.ProductName,
+                        SubcategoryId = product.CategoryId,
+                        SubcategoryName = product.Category.CatagoryName,
+                        CategoryId = product.Category.ParentCategoryId == null? 0 : product.Category.ParentCategoryId.Value,
+                        CategoryName = product.Category.ParentCategoryId == null ? "Empty Category Name" : product.Category.ParentCategory.CatagoryName.ToString(),
                         PurchasePrice = (float)_purchaseDetailsRepo.UnTrackableQuery()
-                                        .Where(purchaseDetails => purchaseDetails.ProductVariantId == x.ProductId)
+                                        .Where(purchaseDetails => purchaseDetails.ProductVariantId == product.ProductId)
                                         .OrderByDescending(purchaseDetails => purchaseDetails.CreateDate)
                                         .Select(purchaseDetails => purchaseDetails.PurchasePrice)
                                         .FirstOrDefault(),
                         RetailPrice = (float)_purchaseDetailsRepo.UnTrackableQuery()
-                                        .Where(purchaseDetails => purchaseDetails.ProductVariantId == x.ProductId)
+                                        .Where(purchaseDetails => purchaseDetails.ProductVariantId == product.ProductId)
                                         .OrderByDescending(purchaseDetails => purchaseDetails.CreateDate)
                                         .Select(purchaseDetails => purchaseDetails.RetailPrice)
                                         .FirstOrDefault(),
-                        OrganizationId = x.OrganizationId,
-                        BrandName = x.BrandAttribute.AttributeName,
-                        BrandId = x.BrandId,
-                        QuantityTypeId = x.QuantityAttributeId,
+                        OrganizationId = product.OrganizationId,
+                        BrandName = product.BrandAttribute.AttributeName,
+                        BrandId = product.BrandId,
+                        QuantityTypeId = product.QuantityAttributeId,
+                        ProductVariants = _purchaseVariantRepo.UnTrackableQuery()
+                                        .Where(variant => variant.IsActive && variant.ProductId == product.ProductId)
+                                        .Select(variant => new ProductVariantModel
+                                        {
+                                            ProductId = product.ProductId,
+                                            VariantId = variant.VariantId,
+                                            VariantName = variant.VariantName,
+                                            SKU = variant.SKU,
+                                            BarCode = variant.BarCode,
+                                            Attributes = variant.Attributes,
+                                            StockQuantity = variant.StockQuantity
+                                        }).ToList()
                     })
                     .ToArrayAsync();
 
@@ -124,21 +161,61 @@ namespace Inventory.Domain.Implementation.Product
             }
         }
 
-        public async Task<ProductModel> UpdateAsync(int productId, Dictionary<string, object> productModel)
+        public async Task UpdateAsync(int productId, Dictionary<string, object> productModel)
         {
+            // Variant entity object generation
+            string? productVariantsJson = productModel["productVariants"].ToString();
+            if (string.IsNullOrWhiteSpace(productVariantsJson)) throw new ArgumentException("Product must have atleast 1 variant");
+            object[]? productVariantArr = JsonConvert.DeserializeObject<object[]>(productVariantsJson);
+            List<ProductVariantModel> productVariants = new List<ProductVariantModel>();
+            if (productVariantArr == null) {
+                Logger.LogError($"{DateTime.UtcNow} :: ProductService :: UpdateAsync :: Failed to generate productVariants from productModel.");
+                throw new ArgumentException("Failed to generate variant model");
+            } else {
+                foreach(JObject variantData in productVariantArr)
+                {
+                    ProductVariantModel variant = new ProductVariantModel();
+                    variant.VariantId = variantData.ContainsKey("variantId") ? int.Parse(variantData.GetValue("variantId")?.ToString()!) : 0;
+                    variant.SKU = variantData.ContainsKey("sku") ? variantData.GetValue("sku")?.ToString()! : string.Empty;
+                    variant.Attributes = variantData.ContainsKey("attributes") ? variantData.GetValue("attributes")?.ToString()! : string.Empty;
+                    variant.VariantName = variantData.ContainsKey("variantName") ? variantData.GetValue("variantName")?.ToString()! : string.Empty;
+                    variant.ProductId = productId;
+                    variant.StockQuantity = decimal.Zero;
+                    variant.BarCode = Guid.NewGuid().ToString();
+
+                    productVariants.Add(variant);
+                }
+            }
+
+            // Product view model generation
+            productModel["UpdateBy"] = User.UserId;
+            productModel["UpdateDate"] = DateTime.UtcNow;
+            productModel["categoryId"] = productModel["subcategoryId"];
+
+            // Database operation
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
+                // Update product table data
                 var _productRepo = factory.GetRepository<Data.Entities.Product>();
-
-                productModel["UpdateBy"] = User.UserId;
-                productModel["UpdateDate"] = DateTime.UtcNow;
-                productModel["categoryId"] = productModel["subcategoryId"];
 
                 _productRepo.ColumnUpdate(productId, productModel);
 
                 await factory.SaveChangesAsync();
 
-                return Mapper.Map<ProductModel>(productModel);
+                // Update variant table data
+                using var loggerFactory = LoggerFactory.Create(builder => { builder.AddConsole(); });
+                ILogger<ProductVariantService> _productVariantLogger = loggerFactory.CreateLogger<ProductVariantService>();
+
+                ProductVariantService productVariantService = new ProductVariantService(
+                    logger: _productVariantLogger,
+                    mapper: Mapper,
+                    claimsPrincipalAccessor: _claimsPrincipalAccessor,
+                    unitOfWork: UnitOfWorkManager,
+                    httpContextAccessor: _contextAccessor
+                );
+                await productVariantService.SaveNewVariantsAsync(factory, productVariants);
+
+                await factory.SaveChangesAsync();
             }
         }
     }

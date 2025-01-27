@@ -360,7 +360,7 @@ namespace Identity.WebAPI.Configurations
                 List<Route> othersRoutes = new List<Route> {
                     new Route {
                         RouteName = "Onboarding",
-                        RoutePath = "/dashboard/onboarding",
+                        RoutePath = "/dashboard/retailer",
                         Description = "person-add",
                         ApplicationId = GenericConstants.RedBookFrontEnd.ApplicationId,
                         ParentRouteId = null,

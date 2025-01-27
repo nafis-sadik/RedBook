@@ -16,16 +16,17 @@ namespace Inventory.WebAPI.Controllers.Product
         /// <summary>
         /// Retrieves list of product variants under specific product
         /// </summary>
-        /// <param name="productId">Unique identifier of Product</param>
+        /// <param name="ProductId">Unique identifier of Product</param>
         [HttpGet]
-        [Route("{productId}")]
-        public async Task<IActionResult> GetList(int productId) => Ok(await _productVariantService.GetVariantListOfProduct(productId));
+        [Route("{ProductId}")]
+        public async Task<IActionResult> GetList(int ProductId) => Ok(await _productVariantService.GetVariantListOfProduct(ProductId));
 
         /// <summary>
-        /// Adds list of product variants under specific product
+        /// Synchronizes list of product variants under specific product
         /// </summary>
         [HttpPatch]
-        public async Task<IActionResult> AddList(IEnumerable<ProductVariantModel> productVariants) => Ok(await _productVariantService.SaveNewVariantsAsync(productVariants));
+        [Route("{ProductId}")]
+        public async Task<IActionResult> AddList(int ProductId, IEnumerable<ProductVariantModel> productVariants) => Ok(await _productVariantService.SaveNewVariantsAsync(ProductId, productVariants));
 
         /// <summary>
         /// Update specific variant informations

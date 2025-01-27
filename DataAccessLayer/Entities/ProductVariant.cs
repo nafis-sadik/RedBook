@@ -9,7 +9,7 @@ namespace Inventory.Data.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int VariantId { get; set; }
 
-        public int VariantName { get; set; }
+        public string VariantName { get; set; }
 
         public string SKU { get; set; }
 

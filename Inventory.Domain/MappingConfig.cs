@@ -25,6 +25,14 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.Products, opt => opt.Ignore())
                 .ForMember(dest => dest.ParentCategory, opt => opt.Ignore());
 
+            CreateMap<ProductVariantModel, ProductVariant>()
+                .ForMember(dest => dest.CreateBy, opt => opt.Ignore())
+                .ForMember(dest => dest.CreateDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateBy, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
+                .ReverseMap();
+
             CreateMap<ProductModel, Product>()
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(opt => opt.SubcategoryId))
                 .ForMember(dest => dest.BrandId, opt => opt.MapFrom(opt => opt.BrandId))

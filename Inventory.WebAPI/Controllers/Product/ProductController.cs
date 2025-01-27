@@ -68,7 +68,11 @@ namespace Inventory.WebAPI.Controllers.Product
         [SwaggerResponse(statusCode: 200, type: typeof(ProductModel), description: "Update an existing product subcategory under organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> UpdateAsync(int productId, Dictionary<string, object> productModel) => Ok(await _productService.UpdateAsync(productId, productModel));
+        public async Task<IActionResult> UpdateAsync(int productId, Dictionary<string, object> productModel)
+        {
+            await _productService.UpdateAsync(productId, productModel);
+            return Ok();
+        }
 
         /// <summary>
         /// Remove an existing product by product id

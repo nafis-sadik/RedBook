@@ -9,7 +9,7 @@ namespace RedBook.Core.Repositories
 
         // Create Async
         Task<TEntity> InsertAsync(TEntity entity);
-        Task BulkInsertAsync(IEnumerable<TEntity> entity);
+        Task<IEnumerable<TEntity>> BulkInsertAsync(IEnumerable<TEntity> entity);
 
         // Read
         TEntity? Get(int id);

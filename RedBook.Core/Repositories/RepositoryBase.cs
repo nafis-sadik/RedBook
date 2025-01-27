@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text.Json;
 using CaseExtensions;
 using System.Text;
+using Microsoft.Data.SqlClient;
 
 namespace RedBook.Core.Repositories
 {
@@ -32,38 +33,93 @@ namespace RedBook.Core.Repositories
         }
 
         //public async Task BulkInsertAsync(IEnumerable<TEntity> entities) => await _dbSet.AddRangeAsync(entities);
-        public async Task BulkInsertAsync(IEnumerable<TEntity> entities) { 
-            if (entities == null || !entities.Any()) return;
+        public async Task<IEnumerable<TEntity>> BulkInsertAsync(IEnumerable<TEntity> entities)
+        {
+            if (entities == null || !entities.Any())
+                throw new ArgumentException("No valid entities found!");
 
-            Type? entityType = typeof(TEntity);
+            Type entityType = typeof(TEntity);
             string? tableName = _dbContext.Model.FindEntityType(entityType)?.GetTableName();
-            if (string.IsNullOrEmpty(tableName)) throw new ArgumentException("Table name not found!");
+            if (string.IsNullOrEmpty(tableName))
+                throw new ArgumentException("Table name not found!");
+
+            PropertyInfo? primaryKeyColumnInfo = _dbContext.Model.FindEntityType(typeof(TEntity))?.FindPrimaryKey()?.Properties.Single().PropertyInfo;
+            if (primaryKeyColumnInfo == null)
+                throw new ArgumentException($"Unable to locate primary key for type {nameof(entityType)}");
+
+            Type primaryKeyType = primaryKeyColumnInfo.PropertyType;
 
             List<PropertyInfo> properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => !p.GetGetMethod().IsVirtual).ToList(); 
-            
-            var columns = string.Join(", ", properties.Select(p => p.Name)); 
-            var values = new StringBuilder(); 
-            
-            foreach (var entity in entities) { 
-                var valueList = new List<string>(); 
-                foreach (var property in properties) { 
-                    var value = property.GetValue(entity); 
-                    valueList.Add(FormatValueForSql(value)); 
-                } 
-                
-                values.AppendLine($"({string.Join(", ", valueList)}),"); } 
-            var insertSql = $"INSERT INTO {tableName} ({columns}) VALUES {values.ToString().TrimEnd(',', '\r', '\n')};"; 
-            await _dbContext.Database.ExecuteSqlRawAsync(insertSql); 
+                .Where(p => !p.GetGetMethod().IsVirtual && p.Name != primaryKeyColumnInfo.Name)
+                .ToList();
+
+            string columns = string.Join(", ", properties.Select(p => p.Name));
+            StringBuilder values = new StringBuilder();
+            List<SqlParameter> parameters = new List<SqlParameter>();
+            int parameterIndex = 0;
+
+            foreach (var entity in entities)
+            {
+                var valueList = new List<string>();
+                for (int i = 0; i < properties.Count; i++)
+                {
+                    var property = properties[i];
+                    var parameterName = $"@p{parameterIndex++}";
+                    var value = property.GetValue(entity);
+                    valueList.Add(parameterName);
+                    parameters.Add(new SqlParameter(parameterName, value ?? DBNull.Value));
+                }
+
+                values.AppendLine($"({string.Join(", ", valueList)}),");
+            }
+
+            string insertSql = $@"
+                INSERT INTO {tableName} ({columns})
+                OUTPUT INSERTED.{primaryKeyColumnInfo.Name}
+                VALUES {values.ToString().TrimEnd(',', '\r', '\n')};";
+
+            var insertedIds = new List<object>();
+            await using (var connection = _dbContext.Database.GetDbConnection())
+            {
+                await connection.OpenAsync();
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = insertSql;
+                    foreach (var parameter in parameters)
+                    {
+                        command.Parameters.Add(parameter);
+                    }
+
+                    var entityList = entities.ToList();
+                    int index = 0;
+                    await using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            insertedIds.Add(Convert.ChangeType(reader[0], primaryKeyType));
+                            entityType.GetProperty(primaryKeyColumnInfo.Name)?.SetValue(entityList[index], insertedIds.Last());
+                            index++;
+                        }
+                    }
+                }
+            }
+
+            // Attach the inserted entities back to the context to ensure they are tracked
+            foreach (var entity in entities)
+            {
+                _dbContext.Entry(entity).State = EntityState.Unchanged;
+            }
+
+            return entities;
         }
 
-        private string FormatValueForSql(object value) { 
+        private string FormatValueForSql(object value){
             if (value == null) return "NULL"; 
-            if (value is string || value is DateTime) return $"'{value.ToString().Replace("'", "''")}'"; 
+            if (value is string || value is DateTime) return $"'{value.ToString()?.Replace("'", "''")}'"; 
             if (value is bool) return (bool)value ? "1" : "0"; 
-            return value.ToString(); 
+            if (Nullable.GetUnderlyingType(value.GetType()) != null) return value?.ToString(); 
+            return value.ToString();
         }
-
 
         // Read Async
         public TEntity? Get(int id) => _dbSet.Find(id);

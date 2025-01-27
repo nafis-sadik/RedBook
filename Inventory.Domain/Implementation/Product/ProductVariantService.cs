@@ -6,9 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Domain;
+using RedBook.Core.Repositories;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using System.Collections.Generic;
+using System.Linq;
 
 namespace Inventory.Domain.Implementation.Product
 {
@@ -22,48 +23,67 @@ namespace Inventory.Domain.Implementation.Product
             IHttpContextAccessor httpContextAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) { }
 
-        public async Task<IEnumerable<ProductVariantModel>> SaveNewVariantsAsync(IEnumerable<ProductVariantModel> productVariants)
+        public async Task<IEnumerable<ProductVariantModel>> SaveNewVariantsAsync(IRepositoryFactory factory, IEnumerable<ProductVariantModel> productVariants)
+        {
+            IRepositoryBase<ProductVariant> productVariantRepo = factory.GetRepository<ProductVariant>();
+
+            IEnumerable<ProductVariant> entityList = Mapper.Map<IEnumerable<ProductVariant>>(productVariants);
+
+            IEnumerable<ProductVariant> newItems = entityList.Where(x => x.VariantId <= 0).ToList();
+            IEnumerable<ProductVariant> existingItems = entityList.Where(x => x.VariantId > 0).ToList();
+
+            foreach(ProductVariant variantEntity in newItems){
+                variantEntity.CreateBy = User.UserId;
+                variantEntity.CreateDate = DateTime.UtcNow;
+                variantEntity.IsActive = true;
+            }
+            newItems = await productVariantRepo.BulkInsertAsync(newItems);
+
+            foreach (ProductVariant item in existingItems) {
+                productVariantRepo.ColumnUpdate(item.VariantId, new Dictionary<string, object>
+                {
+                    { "VariantName", item.VariantName },
+                    { "SKU", item.SKU },
+                    { "BarCode", item.BarCode },
+                    { "Attributes", item.Attributes },
+                    { "UpdateBy", User.UserId },
+                    { "UpdateDate", DateTime.UtcNow },
+                    { "ProductId", item.ProductId },
+                    { "IsActive", true },
+                });
+            }
+            await productVariantRepo.SaveChangesAsync();
+
+            List<int> newAndExistingRecordIds = existingItems.Select(existingVariants => existingVariants.VariantId).ToList();
+            newAndExistingRecordIds.AddRange(newItems.Select(newVariants => newVariants.VariantId).ToList());
+
+            int[] deletedItemIds = await productVariantRepo.UnTrackableQuery()
+                .Where(x => x.ProductId == entityList.First().ProductId 
+                    && !newAndExistingRecordIds.Contains(x.VariantId)
+                    && x.IsActive)
+                .Select(x => x.VariantId)
+                .ToArrayAsync();
+
+            foreach (int itemId in deletedItemIds)
+            {
+                productVariantRepo.ColumnUpdate(itemId, new Dictionary<string, object>
+                    {
+                        { "UpdateBy", User.UserId },
+                        { "UpdateDate", DateTime.UtcNow },
+                        { "IsActive", false },
+                    });
+            }
+
+            await productVariantRepo.SaveChangesAsync();
+
+            return productVariants;
+        }
+
+        public async Task<IEnumerable<ProductVariantModel>> SaveNewVariantsAsync(int ProductId, IEnumerable<ProductVariantModel> productVariants)
         {
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                var productVariantRepo = _repositoryFactory.GetRepository<ProductVariant>();
-
-                IEnumerable<ProductVariant> entityList = Mapper.Map<IEnumerable<ProductVariant>>(productVariants);
-
-                IEnumerable<ProductVariant> newItems = entityList.Where(x => x.VariantId <= 0).ToList();
-                IEnumerable<ProductVariant> existingItems = entityList.Where(x => x.VariantId > 0).ToList();
-
-                await productVariantRepo.BulkInsertAsync(newItems);
-                foreach (ProductVariant item in existingItems)
-                {
-                    productVariantRepo.ColumnUpdate(item.VariantId, new Dictionary<string, object>
-                    {
-                        { "VariantName", item.VariantName },
-                        { "SKU", item.SKU },
-                        { "BarCode", item.BarCode },
-                        { "Attributes", item.Attributes },
-                        { "UpdateBy", User.UserId },
-                        { "UpdateDate", DateTime.UtcNow },
-                    });
-                }
-
-                int[] existingItemIds = existingItems.Where(x => x.VariantId > 0).Select(x => x.VariantId).ToArray();
-                int[] deletedItemIds = await productVariantRepo.TrackableQuery()
-                    .Where(x => x.ProductId == entityList.First().ProductId && !existingItemIds.Contains(x.VariantId))
-                    .Select(x => x.VariantId)
-                    .ToArrayAsync();
-
-                foreach (int itemId in deletedItemIds)
-                {
-                    productVariantRepo.ColumnUpdate(itemId, new Dictionary<string, object>
-                    {
-                        { "IsActive", false },
-                    });
-                }
-
-                await productVariantRepo.SaveChangesAsync();
-
-                return productVariants;
+                return await SaveNewVariantsAsync(_repositoryFactory, productVariants);
             }
         }
 
