@@ -7,6 +7,11 @@ using System.Text.Json;
 using CaseExtensions;
 using System.Text;
 using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Newtonsoft.Json.Linq;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Data;
 
 namespace RedBook.Core.Repositories
 {
@@ -33,26 +38,46 @@ namespace RedBook.Core.Repositories
         }
 
         //public async Task BulkInsertAsync(IEnumerable<TEntity> entities) => await _dbSet.AddRangeAsync(entities);
-        public async Task<IEnumerable<TEntity>> BulkInsertAsync(IEnumerable<TEntity> entities)
+        public async Task<IEnumerable<TEntity>> BulkInsertAsync(IEnumerable<TEntity> entities, bool isRaw = false)
         {
             if (entities == null || !entities.Any())
-                throw new ArgumentException("No valid entities found!");
+                return new List<TEntity>();
 
             Type entityType = typeof(TEntity);
-            string? tableName = _dbContext.Model.FindEntityType(entityType)?.GetTableName();
+            var entityTypeMetadata = _dbContext.Model.FindEntityType(entityType);
+            string? tableName = entityTypeMetadata?.GetTableName();
+            string? schemaName = entityTypeMetadata?.GetSchema();
+
             if (string.IsNullOrEmpty(tableName))
                 throw new ArgumentException("Table name not found!");
 
-            PropertyInfo? primaryKeyColumnInfo = _dbContext.Model.FindEntityType(typeof(TEntity))?.FindPrimaryKey()?.Properties.Single().PropertyInfo;
-            if (primaryKeyColumnInfo == null)
-                throw new ArgumentException($"Unable to locate primary key for type {nameof(entityType)}");
+            var primaryKey = entityTypeMetadata?.FindPrimaryKey();
+            if (primaryKey == null)
+                throw new ArgumentException($"Unable to locate primary key for type {entityType.Name}");
 
-            Type primaryKeyType = primaryKeyColumnInfo.PropertyType;
-
-            List<PropertyInfo> properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(p => !p.GetGetMethod().IsVirtual && p.Name != primaryKeyColumnInfo.Name)
+            PropertyInfo? primaryKeyProperty = primaryKey.Properties.Single().PropertyInfo;
+            if (primaryKeyProperty == null)
+                throw new ArgumentException($"Unable to locate primary key for type {entityType.Name}");
+            string primaryKeyName = primaryKeyProperty.Name;
+            
+            // Build the columns and values for the INSERT statement 
+            List<PropertyInfo> properties = entityType
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => !p.GetGetMethod().IsVirtual 
+                    && p.Name != primaryKeyName 
+                    && !Attribute.IsDefined(p, typeof(ForeignKeyAttribute)))
                 .ToList();
 
+            return isRaw ? await BulkInsertRawAsync(entities, properties, primaryKeyProperty, tableName) : await BulkInsertEFAsync(entities, properties, primaryKeyProperty, tableName, schemaName);
+        }
+
+        private async Task<IEnumerable<TEntity>> BulkInsertRawAsync(
+            IEnumerable<TEntity> entities, 
+            List<PropertyInfo> properties, 
+            PropertyInfo primaryKeyColumnInfo,
+            string tableName
+        ) 
+        {
             string columns = string.Join(", ", properties.Select(p => p.Name));
             StringBuilder values = new StringBuilder();
             List<SqlParameter> parameters = new List<SqlParameter>();
@@ -94,6 +119,8 @@ namespace RedBook.Core.Repositories
                     int index = 0;
                     await using (var reader = await command.ExecuteReaderAsync())
                     {
+                        Type entityType = typeof(TEntity);
+                        Type primaryKeyType = primaryKeyColumnInfo.PropertyType;
                         while (await reader.ReadAsync())
                         {
                             insertedIds.Add(Convert.ChangeType(reader[0], primaryKeyType));
@@ -111,6 +138,109 @@ namespace RedBook.Core.Repositories
             }
 
             return entities;
+        }
+
+        private async Task<IEnumerable<TEntity>> BulkInsertEFAsync(
+            IEnumerable<TEntity> entities,
+            List<PropertyInfo> columnList,
+            PropertyInfo primaryKeyColumnInfo,
+            string tableName,
+            string schemaName
+        )
+        {
+            // Build the columns and values for the INSERT statement
+            string columns = string.Join(", ", columnList.Select(p => $"[{p.Name}]"));
+            StringBuilder values = new StringBuilder();
+            List<SqlParameter> parameters = new List<SqlParameter>();
+            int parameterIndex = 0;
+
+            foreach (var entity in entities)
+            {
+                var valueList = new List<string>();
+                foreach (var property in columnList)
+                {
+                    var parameterName = $"@p{parameterIndex++}";
+                    var value = property.GetValue(entity);
+                    valueList.Add(parameterName);
+                    parameters.Add(new SqlParameter(parameterName, value ?? DBNull.Value));
+                }
+
+                values.AppendLine($"({string.Join(", ", valueList)}),");
+            }
+
+            // Generate the temporary table name dynamically
+            string tempTableName = $"#Inserted_{tableName}_{Guid.NewGuid():N}";
+
+            // Get the list of properties to insert (excluding primary key and navigation properties)
+            Type entityType = typeof(TEntity);
+            string primaryKeyName = primaryKeyColumnInfo.Name;
+            List<PropertyInfo> properties = entityType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p =>
+                    !p.GetGetMethod().IsVirtual &&
+                    p.Name != primaryKeyName &&
+                    !Attribute.IsDefined(p, typeof(ForeignKeyAttribute)))
+                .ToList();
+
+            // Create the temporary table to hold the inserted IDs
+            Type primaryType = typeof(TEntity);
+            Type primaryKeyType = primaryKeyColumnInfo.PropertyType;
+            string primaryKeySqlType = FormatValueForSql(primaryKeyType);
+            string createTempTableSql = $@"CREATE TABLE {tempTableName} ([{primaryKeyName}] {primaryKeySqlType});";
+            await _dbContext.Database.ExecuteSqlRawAsync(createTempTableSql);
+
+            // Build the INSERT statement with OUTPUT INTO the temp table
+            string insertSql = $@"
+                INSERT INTO {(string.IsNullOrEmpty(schemaName) ? "" : $"[{schemaName}].")}[{tableName}] ({columns})
+                OUTPUT INSERTED.[{primaryKeyName}] INTO {tempTableName} ([{primaryKeyName}])
+                VALUES {values.ToString().TrimEnd(',', '\r', '\n')};";
+
+            // Execute the INSERT command
+            await _dbContext.Database.ExecuteSqlRawAsync(insertSql, parameters.ToArray());
+
+            // Retrieve the inserted IDs
+            string selectInsertedIdsSql = $@"SELECT [{primaryKeyName}] FROM {tempTableName};";
+            var insertedIds = new List<object>();
+
+            await using (var command = _dbContext.Database.GetDbConnection().CreateCommand())
+            {
+                command.CommandText = selectInsertedIdsSql;
+                command.CommandType = CommandType.Text;
+
+                // Ensure the connection is open
+                if (command.Connection.State != ConnectionState.Open)
+                    await command.Connection.OpenAsync();
+
+                // Assign the transaction if one exists
+                var currentTransaction = _dbContext.Database.CurrentTransaction;
+                if (currentTransaction != null)
+                {
+                    command.Transaction = currentTransaction.GetDbTransaction();
+                }
+
+                await using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var insertedId = Convert.ChangeType(reader[primaryKeyName], primaryKeyType);
+                        insertedIds.Add(insertedId);
+                    }
+                }
+            }
+
+            // Drop the temporary table
+            string dropTempTableSql = $@"DROP TABLE {tempTableName};";
+            await _dbContext.Database.ExecuteSqlRawAsync(dropTempTableSql);
+
+            // Assign the IDs to the entities and attach them to the context
+            var entitiesList = entities.ToList();
+            for (int i = 0; i < insertedIds.Count; i++)
+            {
+                primaryKeyColumnInfo.SetValue(entitiesList[i], insertedIds[i]);
+                _dbContext.Attach(entitiesList[i]);
+                _dbContext.Entry(entitiesList[i]).State = EntityState.Unchanged;
+            }
+
+            return entitiesList;
         }
 
         private string FormatValueForSql(object value){

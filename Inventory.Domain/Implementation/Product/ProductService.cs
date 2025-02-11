@@ -57,16 +57,17 @@ namespace Inventory.Domain.Implementation.Product
                 }
                 product = await _productRepo.InsertAsync(product);
 
-                //IEnumerable<ProductVariant> variantList = Mapper.Map<IEnumerable<ProductVariant>>(productModel.ProductVariants);
-                //foreach (ProductVariant entity in variantList) { 
-                //    entity.CreateBy = User.UserId;
-                //    entity.CreateDate = DateTime.UtcNow;
-                //    entity.UpdateBy = null;
-                //    entity.UpdateDate = null;
-                //    entity.IsActive = true;
-                //}
+                IEnumerable<ProductVariant> variantList = Mapper.Map<IEnumerable<ProductVariant>>(productModel.ProductVariants);
+                foreach (ProductVariant entity in variantList)
+                {
+                    entity.CreateBy = User.UserId;
+                    entity.CreateDate = DateTime.UtcNow;
+                    entity.UpdateBy = null;
+                    entity.UpdateDate = null;
+                    entity.IsActive = true;
+                }
 
-                //await productVariantRepo.BulkInsertAsync(variantList);
+                await productVariantRepo.BulkInsertAsync(variantList);
 
                 await _repositoryFactory.SaveChangesAsync();
 
