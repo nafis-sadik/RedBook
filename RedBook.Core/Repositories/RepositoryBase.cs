@@ -68,76 +68,7 @@ namespace RedBook.Core.Repositories
                     && !Attribute.IsDefined(p, typeof(ForeignKeyAttribute)))
                 .ToList();
 
-            return isRaw ? await BulkInsertRawAsync(entities, properties, primaryKeyProperty, tableName) : await BulkInsertEFAsync(entities, properties, primaryKeyProperty, tableName, schemaName);
-        }
-
-        private async Task<IEnumerable<TEntity>> BulkInsertRawAsync(
-            IEnumerable<TEntity> entities, 
-            List<PropertyInfo> properties, 
-            PropertyInfo primaryKeyColumnInfo,
-            string tableName
-        ) 
-        {
-            string columns = string.Join(", ", properties.Select(p => p.Name));
-            StringBuilder values = new StringBuilder();
-            List<SqlParameter> parameters = new List<SqlParameter>();
-            int parameterIndex = 0;
-
-            foreach (var entity in entities)
-            {
-                var valueList = new List<string>();
-                for (int i = 0; i < properties.Count; i++)
-                {
-                    var property = properties[i];
-                    var parameterName = $"@p{parameterIndex++}";
-                    var value = property.GetValue(entity);
-                    valueList.Add(parameterName);
-                    parameters.Add(new SqlParameter(parameterName, value ?? DBNull.Value));
-                }
-
-                values.AppendLine($"({string.Join(", ", valueList)}),");
-            }
-
-            string insertSql = $@"
-                INSERT INTO {tableName} ({columns})
-                OUTPUT INSERTED.{primaryKeyColumnInfo.Name}
-                VALUES {values.ToString().TrimEnd(',', '\r', '\n')};";
-
-            var insertedIds = new List<object>();
-            await using (var connection = _dbContext.Database.GetDbConnection())
-            {
-                await connection.OpenAsync();
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = insertSql;
-                    foreach (var parameter in parameters)
-                    {
-                        command.Parameters.Add(parameter);
-                    }
-
-                    var entityList = entities.ToList();
-                    int index = 0;
-                    await using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        Type entityType = typeof(TEntity);
-                        Type primaryKeyType = primaryKeyColumnInfo.PropertyType;
-                        while (await reader.ReadAsync())
-                        {
-                            insertedIds.Add(Convert.ChangeType(reader[0], primaryKeyType));
-                            entityType.GetProperty(primaryKeyColumnInfo.Name)?.SetValue(entityList[index], insertedIds.Last());
-                            index++;
-                        }
-                    }
-                }
-            }
-
-            // Attach the inserted entities back to the context to ensure they are tracked
-            foreach (var entity in entities)
-            {
-                _dbContext.Entry(entity).State = EntityState.Unchanged;
-            }
-
-            return entities;
+            return await BulkInsertEFAsync(entities, properties, primaryKeyProperty, tableName, schemaName);
         }
 
         private async Task<IEnumerable<TEntity>> BulkInsertEFAsync(
@@ -152,8 +83,8 @@ namespace RedBook.Core.Repositories
             string columns = string.Join(", ", columnList.Select(p => $"[{p.Name}]"));
             StringBuilder values = new StringBuilder();
             List<SqlParameter> parameters = new List<SqlParameter>();
-            int parameterIndex = 0;
 
+            int parameterIndex = 0;
             foreach (var entity in entities)
             {
                 var valueList = new List<string>();
@@ -169,7 +100,7 @@ namespace RedBook.Core.Repositories
             }
 
             // Generate the temporary table name dynamically
-            string tempTableName = $"#Inserted_{tableName}_{Guid.NewGuid():N}";
+            string tempTableName = $"Inserted_{tableName}_{Guid.NewGuid():N}";
 
             // Get the list of properties to insert (excluding primary key and navigation properties)
             Type entityType = typeof(TEntity);
@@ -248,7 +179,8 @@ namespace RedBook.Core.Repositories
             if (value is string || value is DateTime) return $"'{value.ToString()?.Replace("'", "''")}'"; 
             if (value is bool) return (bool)value ? "1" : "0"; 
             if (Nullable.GetUnderlyingType(value.GetType()) != null) return value?.ToString(); 
-            return value.ToString();
+            string valueTypeStr = value.ToString();
+            return valueTypeStr == "System.Int32"? "INT" : valueTypeStr;
         }
 
         // Read Async

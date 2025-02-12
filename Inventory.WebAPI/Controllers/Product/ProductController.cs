@@ -13,17 +13,9 @@ namespace Inventory.WebAPI.Controllers.Product
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
-    public class ProductController : ControllerBase
+    public class ProductController(IProductService productService) : ControllerBase
     {
-        private readonly IProductService _productService;
-
-        /// <summary>
-        /// Product Module Constructor
-        /// </summary>
-        public ProductController(IProductService productService)
-        {
-            _productService = productService;
-        }
+        private readonly IProductService _productService = productService;
 
         /// <summary>
         /// Retrieves paged list of products under organization
