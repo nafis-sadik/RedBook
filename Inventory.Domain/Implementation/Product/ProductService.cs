@@ -11,6 +11,8 @@ using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using RedBook.Core;
 
 
 namespace Inventory.Domain.Implementation.Product
@@ -162,7 +164,7 @@ namespace Inventory.Domain.Implementation.Product
             }
         }
 
-        public async Task UpdateAsync(int productId, Dictionary<string, object> productModel)
+        public async Task<ProductModel> UpdateAsync(int productId, Dictionary<string, object> productModel)
         {
             // Variant entity object generation
             string? productVariantsJson = productModel["productVariants"].ToString();
@@ -214,10 +216,15 @@ namespace Inventory.Domain.Implementation.Product
                     unitOfWork: UnitOfWorkManager,
                     httpContextAccessor: _contextAccessor
                 );
-                await productVariantService.SaveNewVariantsAsync(factory, productVariants);
+                productVariants = (await productVariantService.SaveNewVariantsAsync(factory, productVariants)).ToList();
 
                 await factory.SaveChangesAsync();
             }
+
+            ProductModel productViewModel = productModel.ToObject<ProductModel>();
+            productViewModel.ProductVariants = productVariants;
+
+            return productViewModel;
         }
     }
 }

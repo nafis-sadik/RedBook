@@ -1,4 +1,8 @@
-﻿namespace Inventory.Data.Models.Product
+﻿using System.Reflection;
+using System.Collections.Generic;
+using System.Globalization;
+
+namespace Inventory.Data.Models.Product
 {
     public class ProductModel
     {
