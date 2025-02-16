@@ -159,6 +159,11 @@ namespace Inventory.Domain.Implementation.Product
                     {
                         ProductId= x.ProductId,
                         ProductName = x.ProductName,
+                        ProductVariants = x.ProductVariants.Select(variant => new ProductVariantModel
+                        {
+                            VariantId = variant.VariantId,
+                            VariantName = variant.VariantName,
+                        }).ToList()
                     })
                     .ToListAsync();
             }
