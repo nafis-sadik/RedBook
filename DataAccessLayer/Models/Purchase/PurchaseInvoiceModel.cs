@@ -34,6 +34,6 @@ namespace Inventory.Data.Models.Purchase
 
         public DateTime CreateDate { get; set; }
 
-        public List<PurchaseInvoiceDetails> PurchaseDetails { get; set; } = new List<PurchaseInvoiceDetails>();
+        public List<PurchaseInvoiceDetailsModel> PurchaseDetails { get; set; } = new List<PurchaseInvoiceDetailsModel>();
     }
 }

@@ -51,13 +51,16 @@ namespace Inventory.Domain.Implementation.Purchase
                     .Where(invoiceDetails => invoiceDetails.InvoiceId == invoiceId)
                     .Select(invoiceDetails => new InvoiceDetailsModel
                     {
-                        VariantId = invoiceDetails.ProductVariantId == null? 0 : invoiceDetails.ProductVariantId.Value,
+                        VariantId = invoiceDetails.ProductVariantId == null? 0 : invoiceDetails.ProductVariantId,
                         ProductName = invoiceDetails.ProductName,
+                        ProductVariantName = invoiceDetails.ProductVariantName,
                         Quantity = invoiceDetails.Quantity,
                         PurchasePrice = invoiceDetails.PurchasePrice,
+                        PurchaseDiscount = invoiceDetails.PurchaseDiscount,
                         RetailPrice = invoiceDetails.RetailPrice,
-                        Discount = invoiceDetails.Discount,
-                        VatRate = invoiceDetails.VatRate
+                        MaxRetailDiscount = invoiceDetails.MaxRetailDiscount,
+                        VatRate = invoiceDetails.VatRate,
+                        BarCode = invoiceDetails.BarCode
                     }).ToListAsync();
             }
         }

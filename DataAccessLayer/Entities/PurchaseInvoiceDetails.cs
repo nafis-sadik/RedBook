@@ -10,21 +10,29 @@ public partial class PurchaseInvoiceDetails
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int RecordId { get; set; }
 
-    public int? ProductVariantId { get; set; }
-
     public int InvoiceId { get; set; }
 
+    public int ProductVariantId { get; set; }
+
     public string ProductName { get; set; }
+
+    public string ProductVariantName { get; set; }
+
+    public string BarCode { get; set; }
 
     public decimal Quantity { get; set; }
 
     public decimal PurchasePrice { get; set; }
 
+    public decimal PurchaseDiscount { get; set; }
+
     public decimal RetailPrice { get; set; }
+
+    public decimal MaxRetailDiscount { get; set; }
 
     public decimal VatRate { get; set; }
 
-    public decimal Discount { get; set; }
+    public decimal CurrentStockQuantity { get; set; }
 
     [Required]
     public int CreateBy { get; set; }

@@ -14,9 +14,14 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.PurchaseDetails, src => src.MapFrom(opt => opt.Purchases))
                 .ReverseMap();
 
-            CreateMap<PurchaseInvoiceDetails, InvoiceDetailsModel>()
-                .ForMember(dest => dest.PurchasePrice, src => src.MapFrom(opt => opt.PurchasePrice))
-                .ReverseMap();
+            CreateMap<PurchaseInvoiceDetails, PurchaseInvoiceDetailsModel>().ReverseMap();
+                //.ForMember(dest => dest.Quantity, src => src.MapFrom(opt => opt.Quantity))
+                //.ForMember(dest => dest.PurchasePrice, src => src.MapFrom(opt => opt.PurchasePrice))
+                //.ForMember(dest => dest.PurchaseDiscount, src => src.MapFrom(opt => opt.PurchaseDiscount))
+                //.ForMember(dest => dest.RetailPrice, src => src.MapFrom(opt => opt.RetailPrice))
+                //.ForMember(dest => dest.MaxRetailDiscount, src => src.MapFrom(opt => opt.MaxRetailDiscount))
+                //.ForMember(dest => dest.VatRate, src => src.MapFrom(opt => opt.VatRate))
+                //.ReverseMap();
 
             CreateMap<Category, CategoryModel>()
                 .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.OrganizationId))

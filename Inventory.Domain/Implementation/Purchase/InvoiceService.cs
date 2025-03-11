@@ -86,29 +86,40 @@ namespace Inventory.Domain.Implementation.Purchase
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _purchaseInvoiceRepo = factory.GetRepository<PurchaseInvoice>();
-
+                // Validate uniqueness of purchase invoice
                 bool inRecord = await _purchaseInvoiceRepo.UnTrackableQuery()
                     .AnyAsync(invoice => invoice.OrganizationId == model.OrganizationId && invoice.ChalanNumber.ToLower().Equals(model.ChalanNumber.ToLower()));
-
-                if (inRecord) {
+                if (inRecord)
                     throw new ArgumentException($"You already have an invoice with invoice id {model.ChalanNumber}");
+
+                // Validate invoice accounting
+                decimal invoiceTotal = 0; 
+                foreach(PurchaseInvoiceDetailsModel invoiceDetails in model.PurchaseDetails) {
+                    invoiceDetails.TotalPrice = (invoiceDetails.PurchasePrice * invoiceDetails.Quantity) - invoiceDetails.PurchaseDiscount;
+                    invoiceTotal += invoiceDetails.TotalPrice;
+                }
+                invoiceTotal -= model.TotalDiscount;
+
+                if (model.InvoiceTotal != invoiceTotal)
+                    throw new ArgumentException($"Invoice total mismatched");
+
+                // Insert master table record
+                PurchaseInvoice purchaseMaster = Mapper.Map<PurchaseInvoice>(model);
+                purchaseMaster.CreateDate = DateTime.UtcNow;
+                purchaseMaster.CreateBy = User.UserId;
+
+                foreach (PurchaseInvoiceDetails purchaseDetails in purchaseMaster.Purchases) {
+                    purchaseDetails.CreateBy = User.UserId;
+                    purchaseDetails.CreateDate = DateTime.UtcNow;
+                    purchaseDetails.BarCode = Guid.NewGuid().ToString();
+                    purchaseDetails.CurrentStockQuantity = purchaseDetails.Quantity;
                 }
 
-                PurchaseInvoice entity = Mapper.Map<PurchaseInvoice>(model);
-
-                entity.CreateDate = DateTime.UtcNow;
-                entity.CreateBy = User.UserId;
-                foreach(PurchaseInvoiceDetails purchase in entity.Purchases) {
-                    purchase.CreateBy = User.UserId;
-                    purchase.CreateDate = DateTime.UtcNow;
-                    purchase.ProductVariantId = purchase.ProductVariantId <= 0 ? null : purchase.ProductVariantId;
-                }
-
-                entity = await _purchaseInvoiceRepo.InsertAsync(entity);
+                purchaseMaster = await _purchaseInvoiceRepo.InsertAsync(purchaseMaster);
 
                 await factory.SaveChangesAsync();
 
-                return Mapper.Map<PurchaseInvoiceModel>(entity);
+                return Mapper.Map<PurchaseInvoiceModel>(purchaseMaster);
             }
         }
 
