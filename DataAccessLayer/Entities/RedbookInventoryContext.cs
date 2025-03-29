@@ -31,9 +31,9 @@ public partial class RedbookInventoryContext : DbContext
 
     public virtual DbSet<PurchasePaymentRecord> PurchasePaymentRecords { get; set; }
 
-    public virtual DbSet<Sale> Sales { get; set; }
+    public virtual DbSet<SalesInvoice> SalesInvoice { get; set; }
 
-    public virtual DbSet<SalesInvoice> SalesInvoices { get; set; }
+    public virtual DbSet<SalesInvoiceDetails> SalesRecords { get; set; }
 
     public virtual DbSet<SalesPaymentRecord> SalesPaymentRecords { get; set; }
 

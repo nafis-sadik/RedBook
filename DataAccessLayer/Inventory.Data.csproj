@@ -31,4 +31,8 @@
     <ProjectReference Include="..\RedBook.Core\RedBook.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Sales\" />
+  </ItemGroup>
+
 </Project>

@@ -9,17 +9,32 @@ public partial class SalesInvoice
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int InvoiceId { get; set; }
 
-    public DateTime SalesDate { get; set; }
+    public decimal InvoiceTotal { get; set; }
 
-    public string SoldBy { get; set; }
-
-    public decimal TotalAmount { get; set; }
+    public decimal TotalDiscount { get; set; }
 
     public int OrganizationId { get; set; }
 
-    public string ChalanNo { get; set; }
+    public string InvoiceNumber { get; set; }
 
-    public virtual ICollection<Sale> Sales { get; set; } = new List<Sale>();
+    [Column(TypeName = "nvarchar(MAX)")]
+    public string Terms { get; set; }
+
+    [Column(TypeName = "nvarchar(MAX)")]
+    public string Remarks { get; set; }
+
+    public int CreateBy { get; set; }
+
+    public DateTime CreateDate { get; set; }
+
+    public bool IsDeleted { get; set; }
+
+    [ForeignKey("Customer")]
+    public int? CustomerId { get; set; } = null;
+
+    public virtual Customer? Customer { get; set; }
+
+    public virtual ICollection<SalesInvoiceDetails> SalesInvoiceDetails { get; set; } = new List<SalesInvoiceDetails>();
 
     public virtual ICollection<SalesPaymentRecord> SalesPaymentRecords { get; set; } = new List<SalesPaymentRecord>();
 }

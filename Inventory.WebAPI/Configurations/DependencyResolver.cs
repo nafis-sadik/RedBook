@@ -1,8 +1,10 @@
 ﻿using Inventory.Data.Entities;
 using Inventory.Domain.Abstraction;
+using Inventory.Domain.Abstraction.CRM;
 using Inventory.Domain.Abstraction.Product;
 using Inventory.Domain.Abstraction.Purchase;
 using Inventory.Domain.Implementation;
+using Inventory.Domain.Implementation.CRM;
 using Inventory.Domain.Implementation.Product;
 using Inventory.Domain.Implementation.Purchase;
 using RedBook.Core;
@@ -26,6 +28,7 @@ namespace Inventory.WebAPI.Configurations
             services.AddScoped<IInvoiceService, InvoiceService>();
             services.AddScoped<IInvoiceDetailsService, InvoiceDetailsService>();
             services.AddScoped<IVendorService, VendorService>();
+            services.AddScoped<ICustomerServices, CustomerServices>();
         }
     }
 }

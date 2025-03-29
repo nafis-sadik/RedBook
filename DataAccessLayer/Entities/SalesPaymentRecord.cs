@@ -22,6 +22,4 @@ public partial class SalesPaymentRecord
     public decimal PaymentAmount { get; set; }
 
     public virtual SalesInvoice Invoice { get; set; }
-
-    public virtual Customer Customer { get; set; }
 }

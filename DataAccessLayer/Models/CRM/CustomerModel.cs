@@ -1,22 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace Inventory.Data.Entities
+namespace Inventory.Data.Models.CRM
 {
-    public class Customer
+    public class CustomerModel
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CustomerId { get; set; }
-
         public string CustomerName { get; set; }
-
         public string ContactNumber { get; set; }
-
         public string Email { get; set; }
-
         public string Address { get; set; }
-
         public string Remarks { get; set; }
     }
+
 }
