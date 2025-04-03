@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Inventory.Data.Entities;
 using Inventory.Data.Models;
+using Inventory.Data.Models.CRM;
 using Inventory.Data.Models.Product;
 using Inventory.Data.Models.Purchase;
 
@@ -15,13 +16,6 @@ namespace Inventory.Domain
                 .ReverseMap();
 
             CreateMap<PurchaseInvoiceDetails, PurchaseInvoiceDetailsModel>().ReverseMap();
-                //.ForMember(dest => dest.Quantity, src => src.MapFrom(opt => opt.Quantity))
-                //.ForMember(dest => dest.PurchasePrice, src => src.MapFrom(opt => opt.PurchasePrice))
-                //.ForMember(dest => dest.PurchaseDiscount, src => src.MapFrom(opt => opt.PurchaseDiscount))
-                //.ForMember(dest => dest.RetailPrice, src => src.MapFrom(opt => opt.RetailPrice))
-                //.ForMember(dest => dest.MaxRetailDiscount, src => src.MapFrom(opt => opt.MaxRetailDiscount))
-                //.ForMember(dest => dest.VatRate, src => src.MapFrom(opt => opt.VatRate))
-                //.ReverseMap();
 
             CreateMap<Category, CategoryModel>()
                 .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.OrganizationId))
@@ -51,6 +45,18 @@ namespace Inventory.Domain
             CreateMap<Vendor, VendorModel>().ReverseMap();
 
             CreateMap<CommonAttribute, CommonAttributeModel>()
+                .ReverseMap();
+
+            CreateMap<Customer, CustomerModel>()
+                .ForMember(dest => dest.CustomerId, opt => opt.MapFrom(src => src.CustomerId))
+                .ForMember(dest => dest.ContactNumber, opt => opt.MapFrom(src => src.ContactNumber))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ReverseMap();
+
+            CreateMap<CustomerDetails, CustomerModel>()
+                .ForMember(dest => dest.CustomerName, opt => opt.MapFrom(src => src.CustomerName))
+                .ForMember(dest => dest.Address, opt => opt.MapFrom(src => src.Address))
+                .ForMember(dest => dest.Remarks, opt => opt.MapFrom(src => src.Remarks))
                 .ReverseMap();
         }
     }

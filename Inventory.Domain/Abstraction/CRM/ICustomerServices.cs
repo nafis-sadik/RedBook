@@ -10,6 +10,7 @@ namespace Inventory.Domain.Abstraction.CRM
 {
     public interface ICustomerServices
     {
+        public Task<CustomerModel?> SyncCustomerInfoAsync(CustomerModel model);
         public Task<string[]> SearchByContactNumberFromPurchaseHistory(string contactNumber, int orgId);
         public Task<CustomerModel?> FindCustomerByContactNumber(string contactNumber, int orgId);
     }

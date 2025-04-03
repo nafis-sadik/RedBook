@@ -14,8 +14,8 @@ namespace Inventory.Domain.Implementation.CRM
 {
     public class CustomerServices : ServiceBase, ICustomerServices
     {
-        private IHttpContextAccessor _contextAccessor;
-        private IClaimsPrincipalAccessor _claimsPrincipalAccessor;
+        private readonly IHttpContextAccessor _contextAccessor;
+        private readonly IClaimsPrincipalAccessor _claimsPrincipalAccessor;
         public CustomerServices(
             ILogger<ProductService> logger,
             IObjectMapper mapper,
@@ -28,6 +28,76 @@ namespace Inventory.Domain.Implementation.CRM
             _claimsPrincipalAccessor = claimsPrincipalAccessor;
         }
 
+        public async Task<CustomerModel?> SyncCustomerInfoAsync(CustomerModel model)
+        {
+            using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
+            {
+                var _customerRepo = _repositoryFactory.GetRepository<Customer>();
+                var _customerDetailsRepo = _repositoryFactory.GetRepository<CustomerDetails>();
+
+                int customerId = await _customerRepo.UnTrackableQuery()
+                    .Where(customer => customer.ContactNumber.ToLower().Equals(model.ContactNumber.ToLower()))
+                    .Select(customer => customer.CustomerId)
+                    .FirstOrDefaultAsync();
+
+                if (customerId <= 0)
+                {
+                    Customer customerEntity = Mapper.Map<Customer>(model);
+                    customerEntity.CustomerDetails = [Mapper.Map<CustomerDetails>(model)];
+                    customerEntity.CustomerId = 0;
+                    foreach(CustomerDetails details in customerEntity.CustomerDetails)
+                    {
+                        details.CustomerDetailId = 0;
+                        details.OrgId = model.OrgId;
+                    }
+                    customerEntity = await _customerRepo.InsertAsync(customerEntity);
+                    await _repositoryFactory.SaveChangesAsync();
+                    CustomerModel response = Mapper.Map<CustomerModel>(customerEntity);
+                    response.OrgId = model.OrgId;
+                    return response;
+                }
+                else 
+                {
+                    CustomerDetails? customerDetails = await _customerDetailsRepo.TrackableQuery()
+                        .Where(customerDetails => customerDetails.CustomerId == customerId && customerDetails.OrgId == model.OrgId)
+                        .FirstOrDefaultAsync();
+
+                    if(customerDetails == null)
+                    {
+                        customerDetails = await _customerDetailsRepo.InsertAsync(new CustomerDetails
+                        {
+                            CustomerId = customerId,
+                            OrgId = model.OrgId,
+                            CustomerName = model.CustomerName,
+                            Address = model.Address,
+                            Remarks = model.Remarks,
+                        });
+                    } 
+                    else
+                    {
+                        customerDetails.CustomerName = model.CustomerName;
+                        customerDetails.Address = model.Address;
+                        customerDetails.Remarks = model.Remarks;
+                    }
+
+                    await _repositoryFactory.SaveChangesAsync();
+
+                    model = new CustomerModel
+                    {
+                        CustomerId = customerId,
+                        OrgId = customerDetails.OrgId,
+                        CustomerName = customerDetails.CustomerName,
+                        ContactNumber = model.ContactNumber,
+                        Email = model.Email,
+                        Address = customerDetails.Address,
+                        Remarks = customerDetails.Remarks,
+                    };
+
+                    return model;
+                }
+            }
+        }
+
         public async Task<string[]> SearchByContactNumberFromPurchaseHistory(string contactNumber, int orgId)
         {
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
@@ -35,19 +105,18 @@ namespace Inventory.Domain.Implementation.CRM
                 var _salesRepo = _repositoryFactory.GetRepository<SalesInvoice>();
 
                 // After implementation of gRPC, we need to verify if this user have the right role and the right
-
                 string[] tempres = await _salesRepo.UnTrackableQuery().Where(sales =>
                         sales.OrganizationId == orgId
                         && sales.Customer != null
                         && sales.Customer.ContactNumber.ToLower().Contains(contactNumber.ToLower())
                     ).Select(sales => sales.Customer.ContactNumber).ToArrayAsync();
 
-                return tempres.Length <= 0 ? new string[]
-                {
+                return tempres.Length <= 0 ?
+                [
                     "01715422084",
                     "01628301510",
                     "01780705708"
-                } : tempres;
+                ] : tempres;
             }
         }
 
@@ -55,27 +124,24 @@ namespace Inventory.Domain.Implementation.CRM
         {
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                var _customerRepo = _repositoryFactory.GetRepository<Customer>();
-                var _salesRepo = _repositoryFactory.GetRepository<SalesInvoice>();
+                var _customerDetailsRepo = _repositoryFactory.GetRepository<CustomerDetails>();
 
                 // After implementation of gRPC, we need to verify if this user have the right role and the right
 
-                return await _salesRepo.UnTrackableQuery()
-                    .Where(sales =>
-                        sales.OrganizationId == orgId
-                        && sales.Customer != null && sales.CustomerId != null
-                        && sales.Customer.ContactNumber.ToLower().Contains(contactNumber.ToLower())
-                    ).Select(sales => new CustomerModel
+                return await _customerDetailsRepo.UnTrackableQuery()
+                    .Where(customerDetails =>
+                        customerDetails.OrgId == orgId
+                        && customerDetails.Customer.ContactNumber.ToLower().Equals(contactNumber.ToLower())
+                    ).Select(customerDetails => new CustomerModel
                     {
-                        CustomerId = sales.CustomerId.Value,
-                        CustomerName = sales.Customer.CustomerName,
-                        Address = sales.Customer.Address,
-                        ContactNumber = sales.Customer.ContactNumber,
-                        Email = sales.Customer.Email,
-                        Remarks = sales.Customer.Remarks
+                        CustomerId = customerDetails.CustomerId,
+                        CustomerName = customerDetails.CustomerName,
+                        Address = customerDetails.Address,
+                        ContactNumber = customerDetails.Customer.ContactNumber,
+                        Email = customerDetails.Customer.Email,
+                        Remarks = customerDetails.Remarks
                     })
                     .FirstOrDefaultAsync();
-
             }
         }
     }
