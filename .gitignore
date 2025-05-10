@@ -1,8 +1,110 @@
-.vs
-*/bin
-*/obj
+###########################
+# General Ignore Patterns #
+###########################
+.DS_Store
+*.user
+*.userprefs
+*.log
+*.bak
+*.tmp
+*.pid
+.env
+.env.local
+*.swp
+*.swo
 
+#######################
+# IDE Specific #
+#######################
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.iml
 
-*/node_modules
-*/.vscode
-*/.angular
+#######################
+# Frontend Specific #
+#######################
+**/.vscode/
+**/node_modules/
+**/dist/
+**/.angular/
+**/.cache/
+**/coverage/
+**/browserslist
+**/.eslintcache
+**/*.log
+
+#######################
+# .NET Specific #
+#######################
+## Build results
+*/bin/*
+*/obj/*
+**/publish/*
+**/Debug/*
+**/Release/*
+**/debug/*
+**/release/*
+**/packages/*
+**/artifacts/*
+
+src/Backend/Identity.Data/obj/
+src/Backend/Identity.Domain/obj/
+src/Backend/Identity.WebAPI/obj/
+src/Backend/Inventory.Clients/obj/
+src/Backend/Inventory.Data/obj/
+src/Backend/Inventory.Domain/obj/
+src/Backend/Inventory.WebAPI/obj/
+src/Backend/RedBook.Core/obj/
+
+src/Backend/Identity.Data/bin/
+src/Backend/Identity.Domain/bin/
+src/Backend/Identity.WebAPI/bin/
+src/Backend/Inventory.Clients/bin/
+src/Backend/Inventory.Data/bin/
+src/Backend/Inventory.Domain/bin/
+src/Backend/Inventory.WebAPI/bin/
+src/Backend/RedBook.Core/bin/
+
+#######################
+# Compiled .NET Files #
+#######################
+*.dll
+*.pdb
+*.exe
+*.cache
+*.config
+*.manifest
+*.xml
+
+## Visual Studio cache
+**/.vs/
+**/.vscode/
+**/.msbuild/
+**/.ionide/
+
+## Project files
+**/*.csproj.user
+**/appsettings.Development.json
+
+## Test results
+**/TestResults/
+
+## NuGet
+**/[Pp]ackages/
+.nuget/
+**/.nuget/
+**/nuget.exe
+
+## Rider
+**/.idea/
+**/*.sln.iml
+
+#######################
+# Docker Specific #
+#######################
+docker-compose.override.yml
+**/docker-compose*.yml
+**/Dockerfile*
+**/.dockerignore
