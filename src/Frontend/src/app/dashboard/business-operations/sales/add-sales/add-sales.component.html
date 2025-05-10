@@ -22,8 +22,9 @@
                            placeholder="Customer Name"
                            formControlName="customerName">
                   </div>
-                  <div class="input-group">                    
-                    <div *ngIf="(clientDetailsForm.get('customerName')?.touched || clientDetailsForm.get('customerName')?.dirty) && clientDetailsForm.get('customerName')?.invalid" class="validationError"></div>
+                  <div class="input-group">
+                    <div *ngIf="(clientDetailsForm.get('customerName')?.touched || clientDetailsForm.get('customerName')?.dirty) && clientDetailsForm.get('customerName')?.invalid"
+                         class="validationError"></div>
                   </div>
                 </div>
                 <div class="col-md-4">
@@ -34,9 +35,10 @@
                            formControlName="customerPhoneNumber"
                            [nbAutocomplete]="autoControl">
                     <nb-autocomplete #autoControl>
-                      <nb-option *ngFor="let customerContactNumber of customerContactNumbers" [value]="customerContactNumber">
+                      <nb-option *ngFor="let customerContactNumber of customerContactNumbers"
+                                 [value]="customerContactNumber">
                         {{ customerContactNumber }}
-                      </nb-option>              
+                      </nb-option>
                     </nb-autocomplete>
                   </div>
                 </div>
@@ -67,7 +69,8 @@
                   </div>
                 </div>
                 <div class="col-md-12 mt-5">
-                  <button nbButton hero type="button" status="primary" class="float-right" nbStepperNext (stepChange)="syncCustomerInfo($event)">next</button>
+                  <button nbButton hero type="button" status="primary" class="float-right" nbStepperNext
+                          (NbStepChangeEvent)="syncCustomerInfo($event)">next</button>
                 </div>
               </div>
             </div>

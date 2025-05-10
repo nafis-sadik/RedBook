@@ -12,8 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DataAccessLayer\Inventory.Data.csproj" />
     <ProjectReference Include="..\Inventory.Clients\Inventory.Clients.csproj" />
+    <ProjectReference Include="..\Inventory.Data\Inventory.Data.csproj" />
   </ItemGroup>
 
   <ItemGroup>

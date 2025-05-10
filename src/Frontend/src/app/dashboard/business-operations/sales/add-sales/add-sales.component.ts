@@ -10,6 +10,7 @@ import { CustomerService } from 'src/app/dashboard/services/customer.services';
   templateUrl: './add-sales.component.html',
   styleUrls: ['./add-sales.component.scss']
 })
+
 export class AddSalesComponent {
   @Input() selectOrganization: number = 0;
 
@@ -58,18 +59,18 @@ export class AddSalesComponent {
       remarks: [''],
     });
 
-    if(this.allowCustomerFormEdit){
+    if (this.allowCustomerFormEdit) {
       this.clientDetailsForm.disable();
     }
-    else{
+    else {
       this.clientDetailsForm.valueChanges.subscribe(formData => {
         this.customerModel.customerName = formData.customerName;
         this.customerModel.contactNumber = String(formData.customerPhoneNumber);
         this.customerModel.email = formData.email;
         this.customerModel.address = formData.deliveryLocation;
         this.customerModel.remarks = formData.remarks;
-        
-        if(this.customerModel.contactNumber.length >= 8 && this.selectOrganization > 0){
+
+        if (this.customerModel.contactNumber.length >= 8 && this.selectOrganization > 0) {
           this.customerService.getCustomerByContactNumber(this.customerModel.contactNumber, this.selectOrganization)
             .subscribe((similarCustomerContactNumbers: Array<string>) => {
               this.customerContactNumbers = similarCustomerContactNumbers;
@@ -80,7 +81,7 @@ export class AddSalesComponent {
   }
 
   syncCustomerInfo(event: NbStepChangeEvent): void {
-    if(this.selectOrganization > 0){
+    if (this.selectOrganization > 0) {
       this.customerModel.orgId = this.selectOrganization;
       this.customerService.addCustomer(this.customerModel)
         .subscribe((response: CustomerModel) => {
@@ -135,23 +136,23 @@ export class AddSalesComponent {
       //   }
       // })
       console.log(productId, itemFound)
-      if(!itemFound){
+      if (!itemFound) {
         newlyAddedProductId.push(productId);
       }
     });
 
-    if(newlyAddedProductId.length > 0){
+    if (newlyAddedProductId.length > 0) {
       newlyAddedProductId.forEach(() => {
         this.outletProductList.forEach(() => {
           // if(productId == product.productId)
-            // this.selectedProductsForSale.push({
-            //   ProductId: product.productId,
-            //   ProductName: product.productName,
-            //   ProductNetTotalPrice: 0,
-            //   PurchasePrice: product.purchasePrice,
-            //   Quantity: 0,
-            //   RetailPrice: product.retailPrice
-            // });
+          // this.selectedProductsForSale.push({
+          //   ProductId: product.productId,
+          //   ProductName: product.productName,
+          //   ProductNetTotalPrice: 0,
+          //   PurchasePrice: product.purchasePrice,
+          //   Quantity: 0,
+          //   RetailPrice: product.retailPrice
+          // });
         })
       })
     }
