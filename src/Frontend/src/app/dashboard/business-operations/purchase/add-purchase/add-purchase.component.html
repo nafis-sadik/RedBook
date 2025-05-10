@@ -1,0 +1,366 @@
+<section id="OrderMasterForm">
+  <nb-card>
+    <nb-card-header>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            Product Purchase Invoice
+          </div>
+        </div>
+      </div>
+    </nb-card-header>
+    <nb-card-body>
+      <!-- <nb-stepper #stepper disableStepNavigation [linear]="linearMode"> -->
+      <nb-stepper #stepper [linear]="linearMode">
+        <nb-step [stepControl]="orderMasterForm" label="Invoice">
+          <form [formGroup]="orderMasterForm" class="step-container">
+            <div class="container-fluid input-group">
+              <div class="row">
+                <div class="col-xl-3">
+                  <label class="mb-2 mt-4 p-0">
+                    Reference #
+                    <span nbTooltipStatus="primary" 
+                          nbTooltip="Invoice/Chalan Number (Id of this purchase)"
+                          class="tooltip-style">?</span>
+                  </label>
+                  <nb-form-field>
+                    <input nbInput required fullWidth
+                      placeholder="Chalan Number"
+                      formControlName="chalanNumber"
+                      [value]="purchaseMasterModel.chalanNumber">
+                    <button nbButton hero nbSuffix
+                      nbTooltipStatus="primary" 
+                      nbTooltip="Auto Generate Chalan Number" 
+                      status="primary" 
+                      type="button" 
+                      (click)="generateChalanNumber()">
+                      <nb-icon icon="plus-circle"></nb-icon>
+                    </button>
+                  </nb-form-field>
+                  <div class="input-group">                    
+                    <div *ngIf="(orderMasterForm.get('chalanNumber')?.touched || orderMasterForm.get('chalanNumber')?.dirty) && orderMasterForm.get('chalanNumber')?.invalid" class="validationError"></div>
+                  </div>
+                </div>
+                <div class="col-xl-3">
+                  <label class="mb-2 mt-4 p-0">Select Vendors/Supplier</label>
+                  <nb-select fullWidth required
+                             placeholder="Select Showcase"
+                             formControlName="vendorId"
+                             [(selected)]="purchaseMasterModel.vendorId">
+                    <nb-option value="0">Select Vendor</nb-option>
+                    <nb-option *ngFor="let Vendor of vendorList" value={{Vendor.vendorId}}>{{ Vendor.vendorName
+                      }}</nb-option>
+                  </nb-select>
+                  <div *ngIf="(orderMasterForm.get('vendorId')?.touched || orderMasterForm.get('vendorId')?.dirty) && orderMasterForm.get('vendorId')?.invalid"
+                       class="validationError"></div>
+                </div>
+                <div class="col-xl-3">
+                  <label class="mb-2 mt-4 p-0">
+                    Purchase Date
+                    <span nbTooltipStatus="primary" nbTooltip="Date mentioned in actual invoice"
+                          class="tooltip-style">?</span>
+                  </label>
+                  <div class="input-group">
+                    <input fullWidth nbInput required
+                           placeholder="Purchase Date"
+                           formControlName="purchaseDate"
+                           [value]="purchaseMasterModel.chalanDate"
+                           [nbDatepicker]="datepicker">
+                    <nb-datepicker #datepicker></nb-datepicker>
+                    <div *ngIf="(orderMasterForm.get('purchaseDate')?.touched || orderMasterForm.get('purchaseDate')?.dirty) && orderMasterForm.get('purchaseDate')?.invalid"
+                         class="validationError"></div>
+                  </div>
+                </div>
+                <div class="col-xl-3">
+                  <label class="mb-2 mt-4 p-0">
+                    Invoice Payable
+                    <span nbTooltipStatus="primary" nbTooltip="The total cost price mentioned at your actual invoice"
+                          class="tooltip-style">?</span>
+                  </label>
+                  <div class="input-group">
+                    <input fullWidth nbInput required
+                           placeholder="Total Invoice Value"
+                           formControlName="invoiceTotal"
+                           [value]="purchaseMasterModel.invoiceTotal"
+                           type="number">
+                    <div *ngIf="(orderMasterForm.get('invoiceTotal')?.touched || orderMasterForm.get('invoiceTotal')?.dirty) && orderMasterForm.get('invoiceTotal')?.invalid"
+                         class="validationError"></div>
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <label class="mb-2 mt-4 p-0">Terms</label>
+                  <div class="input-group">
+                    <textarea fullWidth nbInput
+                              placeholder="Terms"
+                              formControlName="terms"
+                              [value]="purchaseMasterModel.terms"></textarea>
+                  </div>
+                </div>
+                <div class="col-md-12">
+                  <label class="mb-2 mt-4 p-0">Remarks</label>
+                  <div class="input-group">
+                    <textarea fullWidth nbInput
+                              placeholder="Remarks"
+                              formControlName="remarks"
+                              [value]="purchaseMasterModel.remarks"></textarea>
+                  </div>
+                </div>
+                <div class="col-md-12 mt-5">
+                  <button nbButton hero fullWidth type="button" status="primary" class="float-right" nbStepperNext (click)="initializeOrderDetails()">next</button>
+                </div>
+              </div>
+            </div>
+          </form>
+        </nb-step>
+        <nb-step label="Product Details" [stepControl]="orderDetailsForm">
+          <div #productDetails class="step-container">
+            <div class="container-fluid">
+              <div class="row">
+                <div class="col-md-4">
+                  <label class="mb-2 mt-4 p-0">Select Product</label>
+                  <nb-select fullWidth required
+                             placeholder="Select Product"
+                             [(selected)]="selectedProdId"
+                             (selectedChange)="selectProduct($event)">
+                    <nb-option value=0>Select Product</nb-option>
+                    <nb-option *ngFor="let product of productList" value={{product.productId}}>
+                      {{ product.productName }}</nb-option>
+                  </nb-select>
+                </div>
+                <div class="col-md-4">
+                  <label class="mb-2 mt-4 p-0">Select Variant</label>
+                  <nb-select fullWidth required
+                             placeholder="Select Variant"
+                             [(selected)]="selectedVariantId">
+                    <nb-option value=0>Select Variant</nb-option>
+                    <nb-option *ngFor="let variant of variantList" value={{variant.variantId}}>
+                      {{ variant.variantName }}</nb-option>
+                  </nb-select>
+                </div>
+                <div class="col-md-4">
+                  <label class="mb-2 mt-4 p-0">&nbsp;</label>
+                  <input 
+                    nbButton fullWidth hero status="primary"
+                    type="button" 
+                    value="Add Product" 
+                    class="btn btn-primary"
+                    (click)="addProduct()">
+                </div>
+              </div>
+              <div class="row">
+                <div [formGroup]="orderDetailsForm" class="col-md-12 step-2">
+                  <table id="PagedTable" class="mt-4" style="width:100%">
+                    <thead>
+                      <tr class="caption">
+                        <th style="background-color: transparent;" colspan="2"></th>
+                        <th class="ng-star-inserted text-center p-0" colspan="2">
+                          Product Information
+                        </th>
+                        <th class="ng-star-inserted text-center p-0" colspan="3">
+                          Purchase Information
+                        </th>
+                        <th class="ng-star-inserted text-center p-0" colspan="3">
+                          Retail Information
+                        </th>
+                      </tr>
+                      <tr class="align-bottom row-color-2">
+                        <th class="ng-star-inserted">Actions</th>
+                        <th class="ng-star-inserted">#</th>
+                        <th class="ng-star-inserted">Product Name</th>
+                        <th class="ng-star-inserted">Variant Name</th>
+                        <th class="ng-star-inserted">Quantity</th>
+                        <th class="ng-star-inserted">Purchase Price</th>
+                        <th class="ng-star-inserted">Purchase Discount</th>                      
+                        <th class="ng-star-inserted">Retail Price</th>
+                        <th class="ng-star-inserted">Retail Vat Rate</th>
+                        <th class="ng-star-inserted">Max Retail Discount</th>
+                        <th class="ng-star-inserted">Total</th>
+                      </tr>
+                    </thead>
+                    <!-- <tbody> -->
+                    <tbody>
+                      <ng-container formArrayName="purchaseDetails" *ngFor="let rowFormGroup of orderDetailsFormArray.controls; let i = index">
+                        <tr [formGroupName]="i">
+                          <td>
+                            <button nbButton nbTooltip="Remove this item from this list" nbTooltipStatus="danger" type="button" status="danger" (click)="removeProduct(i)">
+                              <nb-icon icon="trash-2"></nb-icon>
+                            </button>
+                          </td>
+                          <td>{{ i+1 }}</td>
+                          <td>
+                            {{ purchaseMasterModel.purchaseDetails[i].productName }}
+                          </td>
+                          <td>
+                            {{ purchaseMasterModel.purchaseDetails[i].productVariantName }}
+                          </td>
+                          <td>
+                            <input fullWidth nbInput required
+                                   selectOnFocus
+                                   type="number"
+                                   formControlName="quantity">
+                                   <!-- {{product.quantity}} -->
+                            <div *ngIf="(orderMasterForm.get('quantity')?.touched || orderMasterForm.get('quantity')?.dirty) && orderMasterForm.get('quantity')?.invalid" class="validationError"></div>
+                          </td>
+                          <td>
+                            <input fullWidth nbInput required
+                                   type="number"
+                                   selectOnFocus
+                                   formControlName="purchasePrice">
+                                   <!-- {{product.purchasePrice}} -->
+                            <div *ngIf="(orderMasterForm.get('purchasePrice')?.touched || orderMasterForm.get('purchasePrice')?.dirty) && orderMasterForm.get('purchasePrice')?.invalid" class="validationError"></div>
+                          </td>
+                          <td>
+                            <input fullWidth nbInput required
+                                   type="number"
+                                   selectOnFocus
+                                   formControlName="purchaseDiscount">
+                                   <!-- {{product.purchaseDiscount}} -->
+                            <div *ngIf="(orderMasterForm.get('purchaseDiscount')?.touched || orderMasterForm.get('purchaseDiscount')?.dirty) && orderMasterForm.get('purchaseDiscount')?.invalid" class="validationError"></div>
+                          </td>
+                          <td>
+                            <input fullWidth nbInput required
+                                   type="number"
+                                   selectOnFocus
+                                   formControlName="retailPrice">
+                                   <!-- {{product.retailPrice}} -->
+                            <div *ngIf="(orderMasterForm.get('retailPrice')?.touched || orderMasterForm.get('retailPrice')?.dirty) && orderMasterForm.get('retailPrice')?.invalid" class="validationError"></div>
+                          </td>
+                          <td>
+                            <input fullWidth nbInput required
+                                  type="number"
+                                  selectOnFocus
+                                  formControlName="vatRate">
+                                  <!-- {{product.vatRate}} -->
+                            <div *ngIf="(orderMasterForm.get('vatRate')?.touched || orderMasterForm.get('vatRate')?.dirty) && orderMasterForm.get('vatRate')?.invalid" class="validationError"></div>
+                          </td>
+                          <td>
+                            <input fullWidth nbInput required
+                                  type="number"
+                                  selectOnFocus
+                                  formControlName="maxRetailDiscount">
+                                  <!-- {{product.maxRetailDiscount}} -->
+                            <div *ngIf="(orderMasterForm.get('maxRetailDiscount')?.touched || orderMasterForm.get('maxRetailDiscount')?.dirty) && orderMasterForm.get('maxRetailDiscount')?.invalid" class="validationError"></div>
+                          </td>
+                          <td>{{ purchaseMasterModel.purchaseDetails[i].totalCostPrice }}</td>
+                        </tr>
+                      </ng-container>
+                      <tr>
+                        <td colspan="10">Total</td>
+                        <td>{{ calculatedTotalAmount + purchaseMasterModel.totalDiscount }}</td>
+                      </tr>
+                      <tr>
+                        <td colspan="10">Discount</td>
+                        <td class="py-0">
+                          <input fullWidth nbInput required type="number" [value]="purchaseMasterModel.totalDiscount" formControlName="totalDiscount">
+                          <!-- {{purchaseMasterModel.totalDiscount}} -->
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colspan="10">
+                          Total Cost Price 
+                          <span [ngClass]="purchaseMasterModel.invoiceTotal == calculatedTotalAmount ? 'text-success' : 'text-danger'" nbTooltip="The total cost price mentioned at your actual invoice"> 
+                            <b>({{ purchaseMasterModel.invoiceTotal }})</b>
+                          </span>
+                        </td>
+                        <td>{{ calculatedTotalAmount }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="d-flex justify-content-between mt-4">
+                  <div>
+                    <button nbButton hero nbStepperPrevious type="button" status="primary" (click)="addCustom()">Back</button>
+                  </div>
+                  <div>
+                    <button nbButton hero type="button" status="primary" (click)="addCustom()">Add Custom Product or Service</button>
+                  </div>
+                  <div>
+                    <button nbButton hero nbStepperNext type="button" status="primary" (click)="saveInvoice()">next</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </nb-step>
+        <nb-step [stepControl]="somethingForm" label="Payments">
+          <div class="container-fluid input-group">
+            <form #somethingForm="ngForm" class="step-container" id="step3Form">
+              <div class="row">
+                <div class="col-md-12">
+                  <h5 class="mt-3 pt-3">All Payment Records</h5>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <table class="mt-4" style="width:100%">
+                    <thead>
+                      <tr class="align-bottom">
+                        <th class="ng-star-inserted">Payment Id</th>
+                        <th class="ng-star-inserted">Payment Date</th>
+                        <th class="ng-star-inserted">Payment Amount</th>
+                        <th class="ng-star-inserted">Invoice Total</th>
+                        <th class="ng-star-inserted">Due Amount</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let payment of paymentHistory; let i = index">
+                        <td>{{ payment.purchasePaymentId }}</td>
+                        <td>{{ payment.paymentDate }}</td>
+                        <td>{{ payment.paymentAmount }}</td>
+                        <td>{{ payment.invoiceTotalAmount }}</td>
+                        <td>{{ payment.totalDueAmount }}</td>
+                      </tr>
+                      <tr>
+                        <td colspan="3">Net Total</td>
+                        <td>{{ purchaseMasterModel.invoiceTotal - purchaseMasterModel.totalDiscount }}</td>
+                        <td>{{ purchaseMasterModel.invoiceTotal - purchaseMasterModel.totalDiscount }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <h5 class="mt-3 pt-3">New Payment Details</h5>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="mb-2 mt-4 p-0">Payment Date</label>
+                  <input fullWidth nbInput required
+                         placeholder="Payment Date"
+                         name="PaymentDate"
+                         class="input-group"
+                         [nbDatepicker]="dateTimePicker"
+                         [(ngModel)]="paymentInvoice.paymentDate">
+                  <nb-datepicker #dateTimePicker></nb-datepicker>
+                </div>
+                <div class="col-md-6">
+                  <label class="mb-2 mt-4 p-0">Payment Amount</label>
+                  <input fullWidth nbInput required
+                         placeholder="Payment Amount"
+                         name="PaymentAmount"
+                         class="input-group"
+                         [(ngModel)]="paymentInvoice.paymentAmount">
+                </div>
+              </div>
+              <div class="col-md-12 mt-5">
+                <button nbButton hero type="button" status="primary" class="float-right" nbStepperNext>Pay</button>
+              </div>
+            </form>
+          </div>
+        </nb-step>
+        <nb-step [hidden]="true">
+          <div class="container-fluid">
+            <div class="step-container">
+              <div class="row">
+                <h3 style="text-align: center;">Invoice Saved Successfully!</h3>
+                <button nbButton hero type="button" status="primary" class="float-right" (click)="stepper.reset()">Done</button>
+              </div>
+            </div>
+          </div>
+        </nb-step>
+      </nb-stepper>
+    </nb-card-body>
+  </nb-card>
+</section>

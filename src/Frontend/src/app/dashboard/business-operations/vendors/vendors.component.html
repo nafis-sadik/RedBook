@@ -1,0 +1,18 @@
+<section id="Vendor">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="menu-container">
+                    <ul>
+                        <li *ngFor="let outlet of outlets" class="outletItems"
+                            (click)="selectOutlet(outlet.organizationId, $event)">{{ outlet.organizationName }}
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-md-10">
+                <ngx-pagination [paginationModel]="pagedVendorModel" class="d-none"></ngx-pagination>
+            </div>
+        </div>
+    </div>
+</section>

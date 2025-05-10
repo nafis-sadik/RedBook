@@ -1,0 +1,15 @@
+#ProductSave {
+  min-width: 60vw;
+}
+
+#ProductSave nb-card-footer button{
+  float: right;
+}
+
+#ProductSave nb-card-body input{
+  width: 100%;
+}
+
+#ProductSave nb-card-body label{
+  font-weight: var(--text-caption-font-weight);
+}

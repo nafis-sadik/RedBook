@@ -1,0 +1,112 @@
+<section id="Categories">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <nb-card size="large">
+                    <nb-card-header>
+                        Your Business Outlets
+                    </nb-card-header>
+                    <nb-card-body>
+                        <nb-list>
+                            <nb-list-item *ngFor="let business of ownedBusinesses">
+                                <nb-radio class="col-xxl-8" name="BusinessOutlet"
+                                          (valueChange)="loadCategories(business.organizationId)">
+                                    {{ business.organizationName }}
+                                </nb-radio>
+                            </nb-list-item>
+                        </nb-list>
+                    </nb-card-body>
+                </nb-card>
+            </div>
+            <div class="col-md-4">
+                <nb-card size="large">
+                    <nb-card-header>
+                        Categories
+                    </nb-card-header>
+                    <nb-card-body>
+                        <nb-list>
+                            <nb-list-item *ngFor="let category of categories">
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <nb-radio class="col-xxl-8" name="Category"
+                                                  (valueChange)="loadSubcategories(category.categoryId)">
+                                            {{ category.catagoryName }}
+                                        </nb-radio>
+                                        <div class="col-xxl-4">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button nbButton hero nbTooltip="Update" status="primary"
+                                                            class="btn-custom"
+                                                            (click)="openSaveCategoryWindow('Update Category Information', false, category)">
+                                                        <nb-icon icon="copy"></nb-icon>
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button nbButton hero nbTooltip="Delete" status="danger"
+                                                            class="btn-custom"
+                                                            (click)="openDeleteCategoryWindow('Delete Category', category.categoryId)">
+                                                        <nb-icon icon="trash-2"></nb-icon>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </nb-list-item>
+                        </nb-list>
+                    </nb-card-body>
+                    <nb-card-footer>
+                        <button nbButton hero status="primary"
+                                (click)="openSaveCategoryWindow('Add New Category', false, null)">
+                            <nb-icon icon="plus-square"></nb-icon> Add Category
+                        </button>
+                    </nb-card-footer>
+                </nb-card>
+            </div>
+            <div class="col-md-4">
+                <nb-card size="large">
+                    <nb-card-header>
+                        Subcategories
+                    </nb-card-header>
+                    <nb-card-body>
+                        <nb-list>
+                            <nb-list-item *ngFor="let subcategory of subcategories">
+                                <div class="container-fluid">
+                                    <div class="row">
+                                        <span class="col-xxl-8">
+                                            {{ subcategory.catagoryName }}
+                                        </span>
+                                        <div class="col-xxl-4">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button nbButton hero nbTooltip="Update" status="primary"
+                                                            class="btn-custom"
+                                                            (click)="openSaveCategoryWindow('Update Subcategory Information', true, subcategory)">
+                                                        <nb-icon icon="copy"></nb-icon>
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button nbButton hero nbTooltip="Delete" status="danger"
+                                                            class="btn-custom"
+                                                            (click)="openDeleteCategoryWindow('Delete Subcategory', subcategory.categoryId)">
+                                                        <nb-icon icon="trash-2"></nb-icon>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </nb-list-item>
+                        </nb-list>
+                    </nb-card-body>
+                    <nb-card-footer>
+                        <button nbButton hero shape="rectangle" status="primary"
+                                (click)="openSaveCategoryWindow('Add Subcategory Information', true, null)">
+                            <nb-icon icon="plus-square"></nb-icon> Add Subcategory
+                        </button>
+                    </nb-card-footer>
+                </nb-card>
+            </div>
+        </div>
+    </div>
+</section>

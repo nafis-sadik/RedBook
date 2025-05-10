@@ -1,0 +1,48 @@
+<section id="ProductTracker" class="mt-4">
+    <nb-card>
+        <nb-card-header>
+            Product Tracker
+        </nb-card-header>
+        <nb-card-body>
+            <div class="container p-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="left-div p-2 pl-0">
+                        <table>
+                            <tr>
+                                <td>Invoice Number</td>
+                                <td>:</td>
+                                <td>{{ invoiceNumber }}</td>
+                            </tr>
+                            <tr>
+                                <td>Product Name</td>
+                                <td>:</td>
+                                <td>{{ invoiceDetailsModel.productName }}</td>
+                            </tr>
+                            <tr>
+                                <td>Variant Name</td>
+                                <td>:</td>
+                                <td>{{ invoiceDetailsModel.productVariantName }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div id="Tracker" class="right-div pl-1">
+                        <div class="text-center pt-2">
+                            <div>{{ outletName }}</div>
+                            <div>{{ invoiceDetailsModel.productName }} - {{ invoiceDetailsModel.productVariantName }}</div>
+                        </div>
+                        <svg id="barcode"></svg>
+                        <div class="text-center">
+                            <div>{{ invoiceDetailsModel.barCode }}</div>
+                            <div>Retail Price : {{ invoiceDetailsModel.retailPrice }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nb-card-body>
+        <nb-card-footer>
+            <button nbButton hero status="primary" (click)="printInvoice()">
+                <nb-icon icon="printer"></nb-icon> Print Invoice
+            </button>
+        </nb-card-footer>
+    </nb-card>
+</section>

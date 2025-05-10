@@ -1,0 +1,9 @@
+#UserForm{
+    min-width: 40vw;
+}
+
+#UserForm input {
+    background-color: var(--input-primary-background-color);
+    border-color: var(--input-primary-border-color);
+    color: var(--input-primary-text-color);
+}

@@ -1,0 +1,11 @@
+<section id="AddNewSection">
+  <button nbButton hero status="primary" (click)="addNew()">
+    <nb-icon
+             *ngIf="addNewModel.showIcon"
+             icon="plus-outline"
+             class="edit"></nb-icon>
+    <span *ngIf="addNewModel.addNewButtonLabel != null">{{
+      addNewModel.addNewButtonLabel
+      }}</span>
+  </button>
+</section>

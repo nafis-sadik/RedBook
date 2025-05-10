@@ -1,0 +1,90 @@
+@use 'themes' as *;
+
+@use '@nebular/theme/styles/globals' as *;
+
+@forward '@nebular/theme/styles/theming';
+@use '@nebular/theme/styles/theming' as *;
+@use '@nebular/theme/styles/themes/default';
+@use '@nebular/theme/styles/themes/dark';
+
+@include nb-install() {
+  @include nb-theme-global();
+};
+
+:root{
+  --card-shadow-style: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+}
+
+$nb-enable-css-custom-properties: true; // <-- enable css custom properties
+/* You can add global styles to this file, and also import other style files */
+
+.float-right{
+  float: left;
+}
+
+.float-right{
+  float: right;
+}
+
+.pl-0{
+  padding-left: 0 !important;
+}
+
+.pr-0{
+  padding-right: 0 !important;
+}
+
+#InvoiceForm nb-stepper .header{
+  padding-left: 20px!important;
+  padding-right: 20px!important;
+}
+
+#InvoiceForm nb-stepper .step-content{
+  padding-left: 0!important;
+  padding-right: 0!important;
+}
+
+#CashMemoForm nb-stepper .header{
+  padding-left: 20px!important;
+  padding-right: 20px!important;
+}
+
+#CashMemoForm nb-stepper .step-content{
+  padding-left: 0!important;
+  padding-right: 0!important;
+}
+
+#UserManagement #NGX-Pagination{
+  padding-top: 0!important;
+  margin-top: 0!important;
+}
+
+nb-radio :hover{
+  cursor: pointer;
+}
+
+#RetailForm nb-stepper .step-content {
+  padding: var(--stepper-step-content-padding);
+  width: 100%;
+}
+
+.validationError::after{
+  content: '** Required Field **';
+  font-style: italic;
+  color: var(--card-header-danger-background-color);
+  font-size: 0.7rem;
+}
+
+.tooltip-style{
+  color: var(--text-primary-focus-color);
+  border: 1px solid var(--text-primary-focus-color);
+  border-radius: 100%;
+  padding: 0 0.25rem;
+  margin-left: 0.2rem;
+  font-weight: bold;
+}
+
+.tooltip-style:hover{
+  cursor: pointer;
+}

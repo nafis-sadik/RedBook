@@ -1,0 +1,95 @@
+<section id="UserForm">
+  <nb-card>
+    <nb-card-header>User Form</nb-card-header>
+    <nb-card-body>
+      <div class="container-fluid">
+        <form [formGroup]="userForm" (ngSubmit)="saveUser()" class="step-container row">
+          <div class="col-md-6 p-1">
+            <label class="mb-1">First Name</label>
+            <input
+                   nbInput
+                   fullWidth
+                   status="primary"
+                   type="text"
+                   formControlName="firstName"
+                   class="form-control"
+                   placeholder="First Name"
+                   [value]="userModel.firstName"
+                   [readonly]="userModel.userId > 0"
+                   >
+          </div>
+          <div class="col-md-6 p-1">
+            <label class="mb-1">Last Name</label>
+            <input
+                   nbInput
+                   fullWidth
+                   status="primary"
+                   type="text"
+                   formControlName="lastName"
+                   class="form-control"
+                   placeholder="Last Name"
+                   [value]="userModel.lastName"
+                   [readonly]="userModel.userId > 0">
+          </div>
+          <div class="col-md-6 p-1">
+            <label class="mb-1">User Name</label>
+            <input
+                   nbInput
+                   fullWidth
+                   status="primary"
+                   type="text"
+                   formControlName="userName"
+                   class="form-control"
+                   placeholder="User Name"
+                   [value]="userModel.userName"
+                   [readonly]="userModel.userId > 0"
+                   required>
+            <div *ngIf="userForm.get('userName')?.touched && userForm.get('userName')?.invalid" class="validationError">
+            </div>
+          </div>
+          <div class="col-md-6 p-1">
+            <label class="mb-1">Email</label>
+            <input
+                   nbInput
+                   fullWidth
+                   status="primary"
+                   type="email"
+                   formControlName="email"
+                   class="form-control"
+                   placeholder="Email"
+                   [value]="userModel.email"
+                   [readonly]="userModel.userId > 0"
+                   required>
+            <div *ngIf="userForm.get('email')?.touched && userForm.get('email')?.invalid" class="validationError"></div>
+          </div>
+          <div class="col-md-6 p-1">
+            <label class="mb-1">Phone Number</label>
+            <input
+                   nbInput
+                   fullWidth
+                   status="primary"
+                   type="number"
+                   formControlName="phoneNumber"
+                   class="form-control"
+                   placeholder="Phone Number"
+                   [value]="userModel.phoneNumber"
+                   [readonly]="userModel.userId > 0"
+                   required>
+            <div *ngIf="userForm.get('email')?.touched && userForm.get('email')?.invalid" class="validationError"></div>
+          </div>
+          <div class="col-md-6 p-1">
+            <label class="mb-1">Roles</label>
+            <nb-select multiple fullWidth placeholder="Select User Role" status="primary" formControlName="roles">
+              <!-- <nb-select multiple fullWidth placeholder="Select User Role" status="primary" formControlName="roles" [selected]=userModel?.roleIds> -->
+              <nb-option *ngFor="let roleInfo of roleList" [value]=roleInfo.roleId>{{ roleInfo.roleName }}</nb-option>
+            </nb-select>
+            <div *ngIf="userForm.get('roles')?.touched && userForm.get('roles')?.invalid" class="validationError"></div>
+          </div>
+          <div class="col-md-12 p-1">
+            <button nbButton hero fullWidth status="primary" type="submit">Save</button>
+          </div>
+        </form>
+      </div>
+    </nb-card-body>
+  </nb-card>
+</section>

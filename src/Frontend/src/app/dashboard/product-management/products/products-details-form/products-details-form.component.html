@@ -1,0 +1,126 @@
+<section id="ProductSave">
+  <nb-card>
+    <nb-card-header>
+      <div class="container-fluid">
+        <div class="row">
+          <span>
+            Save Product Information
+          </span>
+        </div>
+      </div>
+    </nb-card-header>
+    <nb-card-body class="pt-0">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-md-6">
+            <form [formGroup]="productForm" class="container-fluid">
+              <div class="row">
+                <div class="col-md-12">
+                  <label class="mb-2 mt-4 p-0 col-md-6">Product Name</label>
+                  <input
+                         type="text"
+                         status="primary"
+                         placeholder="Product Name"
+                         aria-label="ProductName"
+                         nbInput fullWidth required
+                         formControlName="productName"
+                         [value]="productModel.productName">
+                  <div *ngIf="productForm.get('productName')?.touched && productForm.get('productName')?.invalid"
+                       class="validationError"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="mb-2 mt-4 p-0 col-md-6">Category</label>
+                  <nb-select formControlName="categoryId" [selected]="productModel.categoryId"
+                             (selectedChange)="loadSubCategories($event)" selected fullWidth status="primary"
+                             placeholder="Product Category" aria-label="ProductCategory">
+                    <nb-option value>Select Product Category</nb-option>
+                    <nb-option *ngFor="let category of categoryList" [value]="category.categoryId">{{ category.catagoryName
+                      }}</nb-option>
+                  </nb-select>
+                  <div *ngIf="productForm.get('categoryId')?.touched && productForm.get('categoryId')?.invalid"
+                       class="validationError"></div>
+                </div>
+                <div class="col-md-6">
+                  <label class="mb-2 mt-4 p-0 col-md-6">Subcategory</label>
+                  <nb-select formControlName="subcategoryId" [selected]="productModel.subcategoryId" selected fullWidth
+                             status="primary" placeholder="Product Subcategory" aria-label="ProductSubcategory">
+                    <nb-option value>Select Product Subcategory</nb-option>
+                    <nb-option *ngFor="let category of subcategoryList" [value]="category.categoryId">{{ category.catagoryName
+                      }}</nb-option>
+                  </nb-select>
+                  <div *ngIf="productForm.get('subcategoryId')?.touched && productForm.get('subcategoryId')?.invalid"
+                       class="validationError"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <label class="mb-2 mt-4 p-0 col-md-6">Quantity Type</label>
+                  <nb-select formControlName="quantityTypeId" [selected]="productModel.quantityTypeId" selected fullWidth
+                             status="primary" placeholder="Quantity Type" aria-label="ProductSubcategory">
+                    <nb-option value>Select Quantity Type</nb-option>
+                    <nb-option *ngFor="let quantityAttr of quantityAttributes" [value]="quantityAttr.attributeId">{{
+                      quantityAttr.attributeName }}</nb-option>
+                  </nb-select>
+                  <div *ngIf="productForm.get('quantityTypeId')?.touched && productForm.get('quantityTypeId')?.invalid"
+                       class="validationError"></div>
+                </div>
+                <div class="col-md-6">
+                  <label class="mb-2 mt-4 p-0 col-md-6">Brand</label>
+                  <nb-select formControlName="brandId" [selected]="productModel.brandId" selected fullWidth
+                             status="primary" placeholder="Quantity Type" aria-label="ProductSubcategory">
+                    <nb-option value>Select Brand</nb-option>
+                    <nb-option *ngFor="let brand of brandAttributes" [value]="brand.attributeId">{{ brand.attributeName }}</nb-option>
+                  </nb-select>
+                  <div *ngIf="productForm.get('brandId')?.touched && productForm.get('brandId')?.invalid"
+                       class="validationError"></div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="col-md-6">
+            <div *ngFor="let variant of productModel.productVariants" class="row">
+              <div class="d-flex justify-content-end mt-4">
+                <button type="button" nbButton hero status="danger" (click)="removeVariant(variant)">
+                  <nb-icon icon="close-outline"></nb-icon>
+                </button>
+              </div>
+              <div class="col-12">
+                <label class="mb-2 p-0 col-md-6">Variant Name</label>
+                <input type="text" fullWidth nbInput required [(ngModel)]="variant.variantName" class="required">
+              </div>
+              <div class="col-6">
+                <label class="mb-2 mt-4 p-0 col-md-6">SKU</label>
+                <input type="text" fullWidth nbInput required [(ngModel)]="variant.sku" class="required">
+              </div>
+              <div class="col-6">
+                <label class="mb-2 mt-4 p-0 col-md-6">Attributes</label>
+                <input type="text" fullWidth nbInput required [(ngModel)]="variant.attributes" class="required">
+                <!-- <nb-select fullWidth required
+                    placeholder="Select Color"
+                    [(selected)]="variant.attributes">
+                  <nb-option *ngFor="let colorAttr of colorAttributes" [value]="colorAttr.attributeId"> {{ colorAttr.attributeName }} </nb-option>
+                </nb-select> -->
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-12">
+                <button type="button" class="mb-2 mt-4" nbButton fullWidth hero status="primary" (click)="addVariant()">Add Variant</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nb-card-body>
+    <nb-card-footer>
+      <div class="container-fluid">
+        <div class="row">
+          <span>
+            <button nbButton hero status="primary" (click)="save()">Save</button>
+          </span>
+        </div>
+      </div>
+    </nb-card-footer>
+  </nb-card>
+</section>

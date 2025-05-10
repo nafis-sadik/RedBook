@@ -1,0 +1,44 @@
+<section id="AddCategoryComponent" class="container">
+    <div class="row">
+        <nb-toggle
+                   status="success"
+                   labelPosition="end"
+                   [checked]="isAdminRole"
+                   [(ngModel)]="isAdminRole"
+                   style="padding-left: 1rem;"
+                   class="col-md-12 p-0 mb-3"
+                   (checkedChange)="isAdminRole = !isAdminRole">
+            Is Admin Role</nb-toggle>
+    </div>
+    <div class="row">
+        <input
+               nbInput
+               type="text"
+               fullWidth
+               placeholder="Title"
+               class="col-md-12 mb-3"
+               [(ngModel)]="roleName"
+               #title />
+    </div>
+    <div class="row">
+        <button
+                nbButton hero
+                class="col-md-4"
+                status="success"
+                nbTooltip="Save"
+                nbTooltipStatus="success"
+                (click)="submit(title.value)">
+            <nb-icon icon="checkmark"></nb-icon>
+        </button>
+        <div class="col-md-4"></div>
+        <button
+                nbButton hero
+                status="danger"
+                nbTooltip="Cancel"
+                nbTooltipStatus="danger"
+                class="col-md-4"
+                (click)="cancel()">
+            <nb-icon icon="close"></nb-icon>
+        </button>
+    </div>
+</section>

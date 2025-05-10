@@ -1,0 +1,20 @@
+<section id="SystemSettings" class="mt-4">
+    <nb-card>
+        <nb-card-body class="p-0">
+            <nb-accordion>
+                <nb-accordion-item expanded="true">
+                    <nb-accordion-item-header>Product Category Management</nb-accordion-item-header>
+                    <nb-accordion-item-body>
+                        <app-category [ownedBusinesses]="ownedBusinesses"></app-category>
+                    </nb-accordion-item-body>
+                </nb-accordion-item>
+                <nb-accordion-item>
+                    <nb-accordion-item-header>Quantity Unit & Brands</nb-accordion-item-header>
+                    <nb-accordion-item-body>
+                        <app-quantity-unit [quantityUnits]="quantityUnits" [brands]="brands"></app-quantity-unit>
+                    </nb-accordion-item-body>
+                </nb-accordion-item>
+            </nb-accordion>
+        </nb-card-body>
+    </nb-card>
+</section>

@@ -1,0 +1,48 @@
+<section id="PagedTable" class="table-responsive">
+  <table class="table table-bordered align-middle">
+    <thead>
+      <tr class="align-bottom row-color-2">
+        <th>#</th>
+        <th
+          *ngFor="let item of this.config.columnNames"
+          class="ng-star-inserted"
+        >
+          {{ item }}
+        </th>
+        <th
+          scope="col"
+          *ngIf="config?.onEdit || config?.onView || config?.onDelete"
+          class="table-actions"
+        >
+          <span><b>Actions</b></span>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of config.mappedData;let i = index">
+        <td>{{ i+1 }}</td>
+        <td *ngFor="let col of row">
+          {{ col }}
+        </td>
+        <td
+          scope="col"
+          *ngIf="config.onEdit || config.onView || config.onDelete"
+          class="table-actions"
+          [style.width]="config.actionColWidth"
+        >
+          <div class="d-block">
+            <span *ngIf="config.onEdit" (click)="onEdit(i)">
+              <nb-icon icon="edit-2-outline" class="edit"></nb-icon>
+            </span>
+            <span *ngIf="config.onView" (click)="onView(i)">
+              <nb-icon icon="file-text-outline" class="delete"></nb-icon>
+            </span>
+            <span *ngIf="config.onDelete" (click)="onDelete(i)">
+              <nb-icon icon="trash-2-outline" class="delete"></nb-icon>
+            </span>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</section>

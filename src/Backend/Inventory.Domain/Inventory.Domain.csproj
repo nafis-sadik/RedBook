@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataAccessLayer\Inventory.Data.csproj" />
+    <ProjectReference Include="..\Inventory.Clients\Inventory.Clients.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Abstraction\Sales\" />
+    <Folder Include="Implementation\Sales\" />
+  </ItemGroup>
+
+</Project>

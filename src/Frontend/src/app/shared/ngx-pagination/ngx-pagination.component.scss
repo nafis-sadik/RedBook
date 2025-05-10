@@ -1,0 +1,58 @@
+.pagindDetails {
+  font-size: var(--text-button-small-font-size);
+}
+
+#SearchComponent button {
+  margin-left: 1rem;
+}
+
+// paging css stat
+
+#Paging ul li:hover {
+  cursor: pointer;
+}
+
+#Paging .page-link {
+  padding: 10px 10px;
+  background-color: transparent;
+  color: var(--color-basic-primary);
+  border: 1px solid var(--divider-color);
+  font-size: var(--button-medium-text-font-size);
+  line-height: var(--button-medium-text-line-height);
+}
+
+#Paging .active {
+  background-color: transparent;
+  border-bottom: 3px;
+}
+
+#Paging .active > .page-link {
+  color: white;
+  border: 1px solid var(--text-primary-color);
+  background-color: var(--color-primary-default);
+}
+
+#Paging .page-number {
+  padding: 12px 18px;
+  line-height: var(--button-medium-text-line-height);
+}
+
+#Paging .page-link:hover {
+  transition: 0.5s;
+  color: var(--color-primary-default);
+  border-bottom-color: var(--text-primary-color);
+  background-color: var(--background-basic-color-3);
+}
+
+#PagingSection .row section {
+  padding: 0;
+}
+
+#PageItemCountDropdown span {
+  margin-right: 10px;
+}
+
+#PagingSection .active .page-link{
+  z-index: 1 !important;
+}
+// paging css end

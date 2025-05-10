@@ -1,0 +1,84 @@
+<section id="NGX-Pagination" class="p-0 mt-3" *ngIf="tableConfig">
+  <nb-card>
+    <nb-card-header *ngIf="paginationModel.tableCardHeader != null && paginationModel.tableCardHeader.length > 0">
+      {{ paginationModel.tableCardHeader }}
+    </nb-card-header>
+    <nb-card-body>
+      <div class="d-flex justify-content-between mt-2 mb-2">
+        <!-- Search Section Starts Here -->
+        <section id="SearchComponent" *ngIf="paginationModel.searchingConfig">
+          <nb-form-field>
+            <input nbInput type="text"
+                 placeholder="{{ paginationModel.searchingConfig.inputFieldPlaceholder }}"
+                 [(ngModel)]="paginationModel.searchingConfig.searchString" />
+            <button nbButton hero nbSuffix status="primary" (click)="search()">
+              <nb-icon *ngIf="paginationModel.searchingConfig.showIcon" icon="search" class="edit"></nb-icon>
+              <span *ngIf="paginationModel.searchingConfig.buttonLabel">{{ paginationModel.searchingConfig.buttonLabel }}</span>
+            </button>
+          </nb-form-field>
+        </section>
+        <!-- Search Section Ends Here -->
+        <!-- If searching is turned off, a place holder empty div must be placed to maintain UI integrity -->
+        <div *ngIf="!paginationModel.searchingConfig"></div>
+        <ngx-paged-add-new *ngIf="addNewButtonConfig" [addNewModel]="addNewButtonConfig"></ngx-paged-add-new>
+      </div>
+      <!-- Table rendering begins -->
+      <ngx-paged-table [config]="tableConfig"></ngx-paged-table>
+      <!-- Table rendering ends -->
+    </nb-card-body>
+    <nb-card-footer *ngIf="this.paginationModel.pagingConfig">
+      <!-- <ngx-pagination-pages></ngx-pagination-pages> -->
+      <!-- Pagination page numbers & page length section starts here -->
+      <section id="PagingSection" *ngIf="this.paginationModel.pagingConfig">
+        <div class="container-fluid">
+          <div class="row">
+            <section id="Paging" class="col-md-6">
+              <ul class="pagination float-left">
+                <li class="page-item" (click)="loadFirst()">
+                  <a class="page-link"><nb-icon icon="arrowhead-left"></nb-icon></a>
+                </li>
+                <li class="page-item" (click)="loadPrevious()">
+                  <a class="page-link"><nb-icon icon="arrow-ios-back"></nb-icon></a>
+                </li>
+
+                <li
+                    class="page-item page-number-container"
+                    *ngFor="let pageNumber of pageNumbersToPrint"
+                    [ngClass]="{ active: pageNumber == this.paginationModel.pagingConfig.pageNumber }"
+                    (click)="onPageSelect(pageNumber)">
+                  <a class="page-link page-number">{{ pageNumber }}</a>
+                </li>
+
+                <li class="page-item" (click)="loadNext()">
+                  <a class="page-link"><nb-icon icon="arrow-ios-forward"></nb-icon></a>
+                </li>
+                <li class="page-item" (click)="loadLast()">
+                  <a class="page-link"><nb-icon icon="arrowhead-right"></nb-icon></a>
+                </li>
+              </ul>
+            </section>
+            <section id="PageItemCountDropdown" class="col-md-6">
+              <div class="float-right text-right">
+                <span><b>Items per page</b></span>
+                <nb-select [(selected)]="this.paginationModel.pagingConfig.pageLength"
+                           (selectedChange)="onPageLengthChange()">
+                  <nb-option *ngFor="let pageNumber of pageLengthArray" [value]="pageNumber">
+                    {{ pageNumber }}
+                  </nb-option>
+                </nb-select>
+              </div>
+            </section>
+          </div>
+        </div>
+      </section>
+      <!-- Dropdown default doesn't work when data is dynamic in the version of Nebula UI kit used in this project
+      https://github.com/akveo/nebular/issues/2145 -->
+      <!-- Pagination page numbers & page length section starts here -->
+
+      <span *ngIf="this.paginationModel.pagingConfig" class="pagindDetails">Showing {{
+        this.paginationModel.pagingConfig.pageNumber }} of
+        {{ this.totalPageCount }} pages of
+        {{ this.paginationModel.pagingConfig.totalItems }} entries</span>
+    </nb-card-footer>
+  </nb-card>
+</section>

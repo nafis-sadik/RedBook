@@ -1,0 +1,29 @@
+<section id="AddCategoryComponent" class="container">
+    <div class="row">
+        <input
+               nbInput
+               [(ngModel)]="textValue"
+               type="text"
+               placeholder="Title"
+               class="col-md-7"
+               #title />
+        <button
+                nbButton hero
+                status="success"
+                class="col-md-2"
+                nbTooltip="Save"
+                nbTooltipStatus="primary"
+                (click)="submit(title.value)">
+            <nb-icon icon="checkmark"></nb-icon>
+        </button>
+        <button
+                nbButton hero
+                status="danger"
+                class="col-md-2"
+                nbTooltip="Cancel"
+                nbTooltipStatus="danger"
+                (click)="cancel()">
+            <nb-icon icon="close"></nb-icon>
+        </button>
+    </div>
+</section>

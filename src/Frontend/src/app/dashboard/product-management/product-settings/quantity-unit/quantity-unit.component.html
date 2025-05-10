@@ -1,0 +1,152 @@
+<section id="BrandsNQuantities">
+    <div class="container-fluid">
+        <div class="row">
+            <section id="Quantity" class="col-md-6">
+                <nb-card size="large">
+                    <nb-card-header>Quantity Units</nb-card-header>
+                    <nb-card-body>
+                        <nb-list>
+                            <nb-list-item *ngFor="let unit of quantityUnits">
+                                <div class="container">
+                                    <div class="row">
+                                        <div class="col-xxl-8">
+                                            <span class="align-middle list-item-label">{{ unit.attributeName }}</span>
+                                        </div>
+                                        <div class="col-xxl-4">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button nbButton hero status="primary" nbTooltip="Update"
+                                                            nbTooltipStatus="primary"
+                                                            (click)="selectedAttribute(unit.attributeId, $event, 'Quantity')">
+                                                        <nb-icon icon="file-text"></nb-icon>
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button nbButton hero status="danger" nbTooltip="Delete"
+                                                            nbTooltipStatus="danger"
+                                                            (click)="removeAttribute(unit.attributeId, 'Quantity')">
+                                                        <nb-icon icon="trash-2"></nb-icon>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </nb-list-item>
+                        </nb-list>
+                    </nb-card-body>
+                    <nb-card-footer>
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-xxl-8 col-md-12 mb-1">
+                                    <input
+                                           nbInput
+                                           fullWidth
+                                           status="primary"
+                                           type="text"
+                                           placeholder="Quantity Attribute Name"
+                                           fieldSize="medium"
+                                           [(ngModel)]="selectedUnit.attributeName">
+                                </div>
+                                <div class="col-xxl-4 col-md-12">
+                                    <div class="container-fluid">
+                                        <div class="row">
+                                            <div class="col-md-5 p-0">
+                                                <button nbButton hero fullWidth status="success" nbTooltip="Save"
+                                                        nbTooltipStatus="success"
+                                                        (click)="saveAttribute('Quantity')">
+                                                    <nb-icon icon="checkmark"></nb-icon>
+                                                </button>
+                                            </div>
+                                            <div class="col-md-2"></div>
+                                            <div class="col-md-5 p-0">
+                                                <button nbButton hero fullWidth status="primary" nbTooltip="Reset"
+                                                        nbTooltipStatus="primary"
+                                                        (click)="resetAttribute('Quantity')">
+                                                    <nb-icon icon="flip-2"></nb-icon>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </nb-card-footer>
+                </nb-card>
+            </section>
+            <section id="Brands" class="col-md-6">
+                <nb-card size="large">
+                    <nb-card-header>Brands</nb-card-header>
+                    <nb-card-body>
+                        <nb-list>
+                            <nb-list-item *ngFor="let brand of brands">
+                                <div class="container">
+                                    <div class="row">
+                                        <div class="col-xxl-8">
+                                            <div class="align-middle list-item-label">{{ brand.attributeName }}</div>
+                                        </div>
+                                        <div class="col-xxl-4">
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <button nbButton hero status="primary" nbTooltip="Update"
+                                                            nbTooltipStatus="primary"
+                                                            (click)="selectedAttribute(brand.attributeId, $event, 'Brands')">
+                                                        <nb-icon icon="file-text"></nb-icon>
+                                                    </button>
+                                                </div>
+                                                <div class="col-6">
+                                                    <button nbButton hero status="danger" nbTooltip="Delete"
+                                                            nbTooltipStatus="danger"
+                                                            (click)="removeAttribute(brand.attributeId, 'Brands')">
+                                                        <nb-icon icon="trash-2"></nb-icon>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </nb-list-item>
+                        </nb-list>
+                    </nb-card-body>
+                    <nb-card-footer>
+                        <div class="container-fluid">
+                            <div class="row">
+                                <div class="col-xxl-8 col-md-12 mb-1">
+                                    <input
+                                           nbInput
+                                           fullWidth
+                                           status="primary"
+                                           type="text"
+                                           placeholder="Brand Name"
+                                           fieldSize="medium"
+                                           [(ngModel)]="selectedBrand.attributeName">
+                                </div>
+                                <div class="col-xxl-4 col-md-12">
+                                    <div class="container-fluid">
+                                        <div class="row">
+                                            <div class="col-md-5 p-0">
+                                                <button nbButton hero fullWidth status="success" nbTooltip="Save"
+                                                        nbTooltipStatus="success"
+                                                        (click)="saveAttribute('Brands')">
+                                                    <nb-icon icon="checkmark"></nb-icon>
+                                                </button>
+                                            </div>
+                                            <div class="col-md-2"></div>
+                                            <div class="col-md-5 p-0">
+                                                <button nbButton hero fullWidth status="primary" nbTooltip="Reset"
+                                                        nbTooltipStatus="primary"
+                                                        (click)="resetAttribute('Brands')">
+                                                    <nb-icon icon="flip-2"></nb-icon>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </nb-card-footer>
+                </nb-card>
+            </section>
+        </div>
+    </div>
+</section>

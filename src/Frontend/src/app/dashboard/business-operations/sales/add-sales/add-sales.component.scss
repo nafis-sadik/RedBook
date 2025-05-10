@@ -1,0 +1,33 @@
+#CashMemoForm{
+  max-width: 60vw;
+}
+
+#CashMemoForm table{
+  color: var(--text-basic-color);
+  border: 1px solid var(--divider-color);
+  font-family: var(--smart-table-header-font-family);
+}
+
+#CashMemoForm table td, #CashMemoForm table th{
+  padding: .5rem .5rem;
+  border: 1px solid var(--divider-color);
+}
+
+#CashMemoForm .row-color-1{
+  background-color: var(--background-basic-color-1);
+}
+
+#CashMemoForm .row-color-2{
+  background-color: var(--background-basic-color-2);
+}
+
+#CashMemoForm tbody tr:hover, #CashMemoForm thead tr:hover{
+  cursor: pointer;
+  transition: 0.5s;
+  color: var(--text-basic-color);
+  background-color: var(--background-basic-color-3);
+}
+
+#CashMemoForm tbody tr:nth-child(2n){
+  background-color: var(--background-basic-color-2);
+}

@@ -1,0 +1,50 @@
+#Products ngx-pagination {
+  box-shadow: var(--card-shadow-style);
+}
+
+#Products nb-card{
+  max-height: 80vh;
+}
+
+#Products nb-card-body{
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#Products .menu-container{
+  max-height: 70vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+#Products .active{
+  background-color: var(--menu-item-hover-background-color);
+  color: var(--menu-item-hover-text-color);
+  cursor: var(--menu-item-hover-cursor);
+}
+
+#Products ul{
+  padding: var(--card-padding);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.outletItems{
+  list-style-type: none;
+  padding: var(--menu-item-padding);
+  border-bottom: var(--menu-item-divider-width) var(--menu-item-divider-style) var(--menu-item-divider-color);
+  margin-bottom: 0.2rem;
+  font-family: var(--radio-text-font-family);
+  font-size: var(--radio-text-font-size);
+  font-weight: var(--radio-text-font-weight);
+}
+
+.outletItems:last-of-type{
+  border-bottom: 0;
+  margin-bottom: 0;
+}
+
+.outletItems:hover{
+  color: var(--menu-item-hover-text-color);
+  cursor: pointer;
+}

@@ -1,0 +1,98 @@
+<section id="RouteForm">
+    <form [formGroup]="routeForm" (ngSubmit)="saveRoute()">
+        <nb-card>
+            <nb-card-header class="d-flex justify-content-between">
+                <div class="align-self-center">Route Form</div>
+                <nb-toggle status="primary" [(checked)]="inputModel.isMenuRoute"> 
+                    <span *ngIf="inputModel.isMenuRoute">Active</span> 
+                    <span *ngIf="!inputModel.isMenuRoute">Inactive</span>
+                </nb-toggle>
+            </nb-card-header>
+            <nb-card-body>
+                <div class="container-fluid">
+                    <div class="row py-2">
+                        <div class="col-md-6 pl-0">
+                            <label class="mb-1">Route Name</label>
+                            <input
+                                nbInput
+                                fullWidth
+                                status="primary"
+                                type="text"
+                                formControlName="routeName"
+                                class="form-control"
+                                placeholder="Route Name"
+                                [value]="inputModel.routeName"
+                                required>
+                            <div *ngIf="routeForm.get('routeName')?.touched && routeForm.get('routeName')?.invalid" class="validationError"></div>
+                        </div>
+                        <div class="col-md-6 pr-0">
+                            <label class="mb-1">Route Path</label>
+                            <input
+                                nbInput
+                                fullWidth
+                                status="primary"
+                                type="text"
+                                formControlName="routeValue"
+                                class="form-control"
+                                placeholder="Route Path"
+                                [value]=inputModel.routeValue>
+                        </div>
+                    </div>
+                    <div class="row py-2">
+                        <div class="col-md-6 pl-0">
+                            <label class="mb-1 d-block">Application</label>
+                            <nb-select fullWidth placeholder="Select Application" status="primary" formControlName="applicationId" [selected]=inputModel.applicationId>
+                                <nb-option *ngFor="let appInfo of appList" [value]=appInfo.id>{{ appInfo.applicationName }}</nb-option>
+                            </nb-select>
+                        </div>
+                        <div class="col-md-6 pr-0">
+                            <label class="mb-1 d-block">Route Type</label>
+                            <nb-select fullWidth
+                                    status="primary"
+                                    placeholder=" Select Route Type"
+                                    formControlName="routeTypeId"
+                                    [selected]=inputModel.routeTypeId>
+                                <nb-option *ngFor="let routeType of routeTypeList" [value]=routeType.routeTypeId>
+                                    {{ routeType.routeTypeName }}
+                                </nb-option>
+                            </nb-select>
+                        </div>
+                    </div>
+                    <div class="row py-2">
+                        <div class="col-md-12 px-0">
+                            <label class="mb-1 d-block">Parent Route</label>
+                            <nb-select fullWidth
+                                    status="primary"
+                                    placeholder="Select Parent Route"
+                                    formControlName="parentRouteId"
+                                    [selected]=inputModel.parentRouteId>
+                                <nb-option *ngFor="let route of routeList" [value]=route.routeId>
+                                    {{ route.routeName }}
+                                </nb-option>
+                            </nb-select>
+                        </div>
+                    </div>
+                    <div class="row py-2">
+                        <div class="col-md-12 px-0">
+                            <label class="mb-1">Route Description</label>
+                            <textarea
+                                    nbInput
+                                    fullWidth
+                                    status="primary"
+                                    type="text"
+                                    formControlName="description"
+                                    class="form-control"
+                                    placeholder="Route Description"
+                                    [value]=inputModel.description></textarea>
+                        </div>
+                    </div>
+                    <div class="row py-2">
+                        <div class="col-md-12 px-0">
+                            <button nbButton hero fullWidth status="primary">Save</button>
+                        </div>
+                    </div>
+                </div>
+            </nb-card-body>
+        </nb-card>
+    </form>
+</section>

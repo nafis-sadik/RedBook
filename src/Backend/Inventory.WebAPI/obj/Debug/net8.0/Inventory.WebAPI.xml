@@ -1,0 +1,246 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Inventory.WebAPI</name>
+    </assembly>
+    <members>
+        <member name="T:Inventory.WebAPI.Configurations.CorsConfig">
+            <summary>
+            Extension methods for setting up CORS Configurations.
+            </summary>
+        </member>
+        <member name="F:Inventory.WebAPI.Configurations.CorsConfig.Policy">
+            <summary>
+            CORS Policy name of custom configured policy
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Configurations.CorsConfig.AddCors(Microsoft.Extensions.DependencyInjection.IServiceCollection,Microsoft.Extensions.Configuration.IConfiguration)">
+            <summary>
+            Registers CORS allowed domains from appsettings.json under "CORS:AllowedHosts"
+            </summary>
+            <param name="services">The <see cref="T:Microsoft.Extensions.DependencyInjection.IServiceCollection"/>.</param>
+            <param name="configuration">The <see cref="T:Microsoft.Extensions.Configuration.IConfiguration"/>.</param>
+        </member>
+        <member name="T:Inventory.WebAPI.Configurations.DatabaseIntializer">
+            <summary>
+            This class creates database if it doesn't exist and initializes database with seed data
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Configurations.DatabaseIntializer.InitDatabase(Microsoft.AspNetCore.Builder.IApplicationBuilder,Microsoft.AspNetCore.Hosting.IWebHostEnvironment)">
+            <summary>
+            Creates database if it doesn't exist and initializes database with seed data
+            </summary>
+        </member>
+        <member name="T:Inventory.WebAPI.Configurations.ExceptionMiddleware">
+            <summary>
+            Global Exception Handeller Middleware
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Configurations.ExceptionMiddleware.#ctor(Microsoft.AspNetCore.Http.RequestDelegate)">
+            <summary>
+            Middleware Constructor
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Configurations.ExceptionMiddleware.InvokeAsync(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Pass execution to next level
+            </summary>
+        </member>
+        <member name="T:Inventory.WebAPI.Controllers.CommonAttributesController">
+            <summary>
+            Product Category Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.CommonAttributesController.#ctor(Inventory.Domain.Abstraction.ICommonAttributeService)">
+            <summary>
+            Product Category Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.CommonAttributesController.GetAsync(System.String)">
+            <summary>
+            Retrieves all common attributes of a particular type
+            </summary>
+            <param name="attrType">Organization Id or unique identifier which is the primary key of the organization</param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.CommonAttributesController.AddAsync(Inventory.Data.Models.CommonAttributeModel)">
+            <summary>
+            Add new common attribute
+            </summary>
+            <param name="commonAttr"><see cref="T:Inventory.Data.Models.CommonAttributeModel"/></param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.CommonAttributesController.UpdateAsync(Inventory.Data.Models.CommonAttributeModel)">
+            <summary>
+            Update an existing common attribute
+            </summary>
+            <param name="category"><see cref="T:Inventory.Data.Models.CommonAttributeModel"/></param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.CommonAttributesController.RemoveAsync(System.Int32)">
+            <summary>
+            Remove a common attribute by attribute id
+            </summary>
+            <param name="attrId"><see cref="T:System.Int32"/></param>
+        </member>
+        <member name="T:Inventory.WebAPI.Controllers.Product.CategoryController">
+            <summary>
+            Product Category Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.CategoryController.#ctor(Inventory.Domain.Abstraction.Product.ICategoryService)">
+            <summary>
+            Product Category Module Constructor
+            </summary>
+            <param name="categoryService">An implementation of ICategoryService injected by IOC Controller</param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.CategoryController.GetAsync(System.Int32)">
+            <summary>
+            Retrieves all categories and subcategories under organization
+            </summary>
+            <param name="orgId">Organization Id or unique identifier which is the primary key of the organization</param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.CategoryController.AddAsync(Inventory.Data.Models.Product.CategoryModel)">
+            <summary>
+            Add new product catagory under organization
+            </summary>
+            <param name="category"><see cref="T:Inventory.Data.Models.Product.CategoryModel"/></param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.CategoryController.UpdateAsync(Inventory.Data.Models.Product.CategoryModel)">
+            <summary>
+            Update an existing product catagory under organization
+            </summary>
+            <param name="category"><see cref="T:Inventory.Data.Models.Product.CategoryModel"/></param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.CategoryController.RemoveAsync(System.Int32)">
+            <summary>
+            Remove an existing category by category id
+            </summary>
+            <param name="categoryId"><see cref="T:System.Int32"/></param>
+        </member>
+        <member name="T:Inventory.WebAPI.Controllers.Product.ProductController">
+            <summary>
+            Product Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductController.#ctor(Inventory.Domain.Abstraction.Product.IProductService)">
+            <summary>
+            Product Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductController.GetPagedAsync(RedBook.Core.Models.PagedModel{Inventory.Data.Models.Product.ProductModel},System.Int32)">
+            <summary>
+            Retrieves paged list of products under organization
+            </summary>
+            <param name="orgId">Unique identifier of Organization</param>
+            <param name="pagedModel">Pagination structure</param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductController.GetListByOrgIdAsync(System.Int32)">
+            <summary>
+            Retrieves list of products under organization for dropdown
+            </summary>
+            <param name="orgId">Unique identifier of Organization</param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductController.AddAsync(Inventory.Data.Models.Product.ProductModel)">
+            <summary>
+            Add new product under organization
+            </summary>
+            <param name="productModel"><see cref="T:Inventory.Data.Models.Product.ProductModel"/></param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductController.UpdateAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Update an existing product subcategory under organization
+            </summary>
+            <param name="productId">Unique identifier of Product</param>
+            <param name="productModel"><see cref="T:Inventory.Data.Models.Product.ProductModel"/></param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductController.RemoveAsync(System.Int32)">
+            <summary>
+            Remove an existing product by product id
+            </summary>
+            <param name="productId"><see cref="T:System.Int32"/></param>
+        </member>
+        <member name="T:Inventory.WebAPI.Controllers.Product.ProductVariantController">
+            <summary>
+            Product Variant Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductVariantController.#ctor(Inventory.Domain.Abstraction.Product.IProductVariantService)">
+            <summary>
+            Product Variant Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductVariantController.GetList(System.Int32)">
+            <summary>
+            Retrieves list of product variants under specific product
+            </summary>
+            <param name="ProductId">Unique identifier of Product</param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductVariantController.AddList(System.Int32,System.Collections.Generic.IEnumerable{Inventory.Data.Models.Product.ProductVariantModel})">
+            <summary>
+            Synchronizes list of product variants under specific product
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductVariantController.UpdateAsync(System.Int32,System.Collections.Generic.Dictionary{System.String,System.Object})">
+            <summary>
+            Update specific variant informations
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.ProductVariantController.DeleteAsync(System.Int32)">
+            <summary>
+            Soft delete variant information
+            </summary>
+        </member>
+        <member name="T:Inventory.WebAPI.Controllers.Product.SubcategoryController">
+            <summary>
+            Product Subcategory Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.SubcategoryController.#ctor(Inventory.Domain.Abstraction.Product.ISubcategoryService)">
+            <summary>
+            Product Subcategory Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.SubcategoryController.GetAsync(System.Int32)">
+            <summary>
+            Retrieves all categories and subcategories under category
+            </summary>
+            <param name="categoryId">Category Id or unique identifier which is the primary key of the organization</param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.SubcategoryController.AddAsync(Inventory.Data.Models.Product.CategoryModel)">
+            <summary>
+            Add new product subcategory under category
+            </summary>
+            <param name="category"><see cref="T:Inventory.Data.Models.Product.CategoryModel"/></param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.SubcategoryController.UpdateAsync(Inventory.Data.Models.Product.CategoryModel)">
+            <summary>
+            Update an existing product subcategory under category
+            </summary>
+            <param name="category"><see cref="T:Inventory.Data.Models.Product.CategoryModel"/></param>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Product.SubcategoryController.RemoveAsync(System.Int32)">
+            <summary>
+            Remove an existing category/subcategory by category id
+            </summary>
+            <param name="categoryId"><see cref="T:System.Int32"/></param>
+        </member>
+        <member name="T:Inventory.WebAPI.Controllers.Purchase.InvoiceDetailsController">
+            <summary>
+            Product Purchase Invoice Details Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Purchase.InvoiceDetailsController.#ctor(Inventory.Domain.Abstraction.Purchase.IInvoiceDetailsService)">
+            <summary>
+            Product Purchase Invoice Details Module
+            </summary>
+        </member>
+        <member name="T:Inventory.WebAPI.Controllers.Purchase.PurchaseController">
+            <summary>
+            Product Purchase Invoice Module
+            </summary>
+        </member>
+        <member name="M:Inventory.WebAPI.Controllers.Purchase.PurchaseController.#ctor(Inventory.Domain.Abstraction.Purchase.IInvoiceService)">
+            <summary>
+            Product Purchase Invoice Module
+            </summary>
+        </member>
+    </members>
+</doc>

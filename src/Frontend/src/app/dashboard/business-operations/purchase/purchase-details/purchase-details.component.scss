@@ -1,0 +1,37 @@
+#InvoiceDisplay {
+    min-width: 60vw;
+}
+
+#InvoiceDisplay thead th {
+    padding: 1rem;
+    text-align: left;
+    font-size: var(--smart-table-header-font-size);
+    font-weight: var(--smart-table-header-font-weight);
+    line-height: var(--smart-table-header-line-height);
+}
+
+#InvoiceDisplay tbody tr:nth-child(2n) {
+    background-color: var(--background-basic-color-2);
+}
+
+#InvoiceDisplay table {
+    color: var(--text-basic-color);
+    border: 1px solid var(--divider-color);
+    font-family: var(--smart-table-header-font-family);
+}
+
+#InvoiceDisplay .row-color-1 {
+    background-color: var(--background-basic-color-1);
+}
+
+#InvoiceDisplay .row-color-2 {
+    background-color: var(--background-basic-color-2);
+}
+
+#InvoiceDisplay tbody tr:hover,
+#InvoiceDisplay thead tr:hover {
+  cursor: pointer;
+  transition: 0.5s;
+  color: var(--text-basic-color);
+  background-color: var(--background-basic-color-3);
+}

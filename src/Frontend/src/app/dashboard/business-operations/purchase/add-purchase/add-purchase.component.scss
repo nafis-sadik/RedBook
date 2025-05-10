@@ -1,0 +1,88 @@
+#InvoiceForm{
+  max-width: 60vw;
+}
+
+#InvoiceForm .float-right{
+  float: right;
+}
+
+// Table over all style
+#InvoiceForm table{
+  color: var(--text-basic-color);
+  border: 1px solid var(--divider-color);
+  font-family: var(--smart-table-header-font-family);
+}
+
+#InvoiceForm table td, #InvoiceForm table th{
+  padding: .5rem .5rem;
+  border: 1px solid var(--divider-color);
+}
+
+#InvoiceForm .row-color-1{
+  background-color: var(--background-basic-color-1);
+}
+
+#InvoiceForm .row-color-2{
+  background-color: var(--background-basic-color-2);
+}
+
+#InvoiceForm tbody tr:hover, #InvoiceForm thead tr:hover{
+  cursor: pointer;
+  transition: 0.5s;
+  color: var(--text-basic-color);
+  background-color: var(--background-basic-color-3);
+}
+
+#InvoiceForm tbody tr:nth-child(2n){
+  background-color: var(--background-basic-color-2);
+}
+
+#InvoiceForm nb-stepper .header{
+  padding-left:20px;
+  padding-right:20px;
+}
+
+#OrderMasterForm {
+  max-width: 60vw;
+}
+
+// Table head styles
+#PagedTable thead th {
+  padding: 1rem;
+  font-size: var(--smart-table-header-font-size);
+  font-weight: var(--smart-table-header-font-weight);
+  line-height: var(--smart-table-header-line-height);
+  background-color: var(--background-basic-color-2);
+}
+
+// Table row styles
+#PagedTable tbody tr td:nth-child(-n+3),
+#PagedTable tbody tr td:nth-last-child(-n+2){
+  padding: 1rem;
+}
+
+#PagedTable tbody tr:nth-child(2n) {
+  background-color: var(--background-basic-color-2);
+}
+
+// Table over all style
+#PagedTable table {
+  color: var(--text-basic-color);
+  border: 1px solid var(--divider-color);
+  font-family: var(--smart-table-header-font-family);
+}
+
+#PagedTable tbody tr:hover,
+#PagedTable thead th:hover {
+  cursor: pointer;
+  transition: 0.5s;
+  color: var(--text-basic-color);
+  background-color: var(--background-basic-color-3);
+}
+
+#PagedTable .caption th {
+  background-color: var(--background-basic-color-3);
+}
+#PagedTable .caption th:nth-child(2n) {
+  background-color: var(--background-basic-color-4);
+}

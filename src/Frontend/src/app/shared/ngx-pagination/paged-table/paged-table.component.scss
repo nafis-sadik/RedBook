@@ -1,0 +1,55 @@
+// Table head styles
+#PagedTable .table-actions {
+  width: 100px;
+}
+
+#PagedTable thead th {
+  padding: 1rem;
+  text-align: left;
+  font-size: var(--smart-table-header-font-size);
+  font-weight: var(--smart-table-header-font-weight);
+  line-height: var(--smart-table-header-line-height);
+}
+
+// Table row styles
+#PagedTable .edit,
+#PagedTable .delete {
+  margin: 0.5rem;
+}
+
+#PagedTable .edit:hover {
+  transition: 0.5s;
+  color: var(--color-primary-default);
+}
+
+#PagedTable .delete:hover {
+  transition: 0.5s;
+  color: red;
+}
+
+#PagedTable tbody tr:nth-child(2n) {
+  background-color: var(--background-basic-color-2);
+}
+
+// Table over all style
+#PagedTable table {
+  color: var(--text-basic-color);
+  border: 1px solid var(--divider-color);
+  font-family: var(--smart-table-header-font-family);
+}
+
+#PagedTable .row-color-1 {
+  background-color: var(--background-basic-color-1);
+}
+
+#PagedTable .row-color-2 {
+  background-color: var(--background-basic-color-2);
+}
+
+#PagedTable tbody tr:hover,
+#PagedTable thead tr:hover {
+  cursor: pointer;
+  transition: 0.5s;
+  color: var(--text-basic-color);
+  background-color: var(--background-basic-color-3);
+}

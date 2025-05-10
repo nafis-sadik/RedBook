@@ -1,0 +1,17 @@
+<section id="Products">
+  <div class="container-fluid p-0">
+    <div class="row">
+      <div class="col-md-2">
+        <div class="menu-container">
+          <ul>
+            <li *ngFor="let menuItem of organizationList" class="outletItems" 
+              (click)="selectOutlet(menuItem.organizationId, $event)">{{ menuItem.organizationName }}</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-10">
+        <ngx-pagination [paginationModel]="pagedProductModel" class="d-none"></ngx-pagination>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,17 @@
+.left-div{
+    border-right: var(--card-divider-width) var(--card-divider-style) var(--card-divider-color);
+}
+
+.right-div{
+    background-color: white;
+    color: black;
+    font-weight: 600;
+    width: 4in; /* 4 inches */
+    height: 2in; /* 2 inches */
+    border: var(--card-border-width) var(--card-border-style) var(--card-border-color);
+    border-radius: var(--card-border-radius);
+}
+
+#barcode{
+    width: 3.98in !important; /* 4 inches */
+}

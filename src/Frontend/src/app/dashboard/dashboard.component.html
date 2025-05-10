@@ -1,0 +1,55 @@
+<nb-layout id="DashboardLayout">
+  <nb-layout-header fixed>
+    <section class="nav-top-bar-container">
+      <div class="left-cluster">
+        <nb-icon ghost nbButton hero status="basic" (click)="toggle()" icon="menu-2"></nb-icon>
+        <span>Redbook</span>
+        <nb-select class="d-none d-md-block" placeholder="{{selectedTheme}}" (selectedChange)="setTheme($event)"
+                   (ngModel)="selectedTheme"
+                   [(selected)]="selectedTheme">
+          <nb-option *ngFor="let theme of themes" [value]="theme">{{theme}}</nb-option>
+        </nb-select>
+      </div>
+      <div class="spacer"></div>
+      <div class="right-cluster">
+        <nb-user size="large"
+                 name={{displayName}}
+                 title={{displayRoles}}
+                 (click)="flipProfilePanelVisibility()"
+                 picture="/assets/pro-pic.jpg">
+        </nb-user>
+      </div>
+    </section>
+    <section id="ProfilePanel" *ngIf="isMobileView">
+      <nb-card>
+        <div class="d-block d-md-none themes">
+          <span>Theme Selection</span>
+          <nb-select
+                     placeholder="{{selectedTheme}}"
+                     (selectedChange)="setTheme($event)"
+                     (ngModel)="selectedTheme"
+                     [(selected)]="selectedTheme">
+            <nb-option *ngFor="let theme of themes" [value]="theme">{{theme}}</nb-option>
+          </nb-select>
+        </div>
+        <button nbButton hero status="primary" (click)="logout()">
+          <nb-icon icon="log-out"></nb-icon>
+          Logout
+        </button>
+      </nb-card>
+    </section>
+  </nb-layout-header>
+  <nb-layout-column>
+    <router-outlet></router-outlet>
+  </nb-layout-column>
+  <nb-layout-footer class="footer">All rights reserved by <a href="#">Blume Digital Corporation</a></nb-layout-footer>
+</nb-layout>
+<section id="SideBar">
+  <nb-menu [items]="menuOptions" autoCollapse="true">
+  </nb-menu>
+</section>
+<div id="Overlay" (click)="toggle()" class="d-none"></div>
+<div id="LoadingScreen" class="d-block collapsed">
+  <div class="loader"></div>
+  <div class="loading-text">Loading</div>
+</div>
