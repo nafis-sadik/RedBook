@@ -18,7 +18,7 @@ namespace Identity.WebAPI.Configurations
             using (var scope = app.ApplicationServices.CreateScope())
             {
                 RedbookIdentityContext context = scope.ServiceProvider.GetRequiredService<RedbookIdentityContext>();
-
+                
                 if (context.Database.GetPendingMigrations().Any())
                     context.Database.Migrate();
 
