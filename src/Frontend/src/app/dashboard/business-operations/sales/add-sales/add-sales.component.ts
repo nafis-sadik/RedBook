@@ -80,7 +80,7 @@ export class AddSalesComponent {
     }
   }
 
-  syncCustomerInfo(event: NbStepChangeEvent): void {
+  syncCustomerInfo(event: MouseEvent): void {
     if (this.selectOrganization > 0) {
       this.customerModel.orgId = this.selectOrganization;
       this.customerService.addCustomer(this.customerModel)
