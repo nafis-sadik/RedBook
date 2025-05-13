@@ -25,7 +25,6 @@
 #######################
 # Frontend Specific #
 #######################
-**/.vscode/
 **/node_modules/
 **/dist/
 **/.angular/
