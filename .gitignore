@@ -108,3 +108,5 @@ docker-compose.override.yml
 **/docker-compose*.yml
 **/Dockerfile*
 **/.dockerignore
+
+**/github-personal-access-token.txt
