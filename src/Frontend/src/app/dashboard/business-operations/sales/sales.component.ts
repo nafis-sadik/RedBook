@@ -7,6 +7,7 @@ import { SalesInvoiceModel } from '../../Models/sales-invoice.model';
 import { DashboardService } from '../../services/dashboard.service';
 import { OrganizationService } from '../../services/organization.service';
 import { SalesService } from '../../services/sell.service';
+import { CustomerModel } from '../../Models/customer.model';
 
 @Component({
   selector: 'app-sales',
@@ -43,7 +44,7 @@ export class SalesComponent implements OnInit {
         
         dashboardService.ngDialogService.open(AddSalesComponent, {
           context: {
-            allowCustomerFormEdit: this.isUpdateOperation,
+            customerModel: new CustomerModel(),
             selectOrganization: this.dashboardService.selectedOutletId
           }
         });
@@ -56,11 +57,11 @@ export class SalesComponent implements OnInit {
 
     if(this.pagedSalesModel.addNewElementButtonConfig) {
       this.pagedSalesModel.addNewElementButtonConfig.onAdd = () => {
-        this.isUpdateOperation = true;
+        this.isUpdateOperation = false;
         
         dashboardService.ngDialogService.open(AddSalesComponent, {
           context: {
-            allowCustomerFormEdit: this.isUpdateOperation,
+            customerModel: new CustomerModel(),
             selectOrganization: this.dashboardService.selectedOutletId
           }
         });
