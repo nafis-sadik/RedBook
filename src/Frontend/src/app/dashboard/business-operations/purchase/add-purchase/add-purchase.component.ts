@@ -188,6 +188,7 @@ export class AddPurchaseComponent implements OnInit {
 
   selectProduct(selectedProdId: number): void {
     this.selectedProdId = selectedProdId;
+    this.selectedVariantId = 0;
     this.variantList = this.productList.find(x => x.productId == selectedProdId)?.productVariants ?? [];
   }
   

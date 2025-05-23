@@ -116,6 +116,7 @@ export class ProductsDetailsFormComponent implements OnInit {
       this.saveMethod(this.productModel);
       this.dialogRef.close();
     }
+    
     else this.toasterService.danger('Please fill all required fields.', 'Error');
   }
 

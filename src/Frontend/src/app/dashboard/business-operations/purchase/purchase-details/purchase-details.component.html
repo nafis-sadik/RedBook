@@ -81,8 +81,15 @@
                   </tr>
                   <tr>
                     <td></td>
+                    <td class="text-left" colspan="8">Invoice Discount</td>
+                    <td class="text-center">{{ invoiceModel.totalDiscount }}</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
                     <td class="text-left" colspan="8">Total</td>
-                    <td class="text-center">{{ netTotal }}</td>
+                    <td class="text-center">{{ invoiceModel.invoiceTotal }}</td>
+                    <td></td>
                   </tr>
                 </tbody>
               </table>

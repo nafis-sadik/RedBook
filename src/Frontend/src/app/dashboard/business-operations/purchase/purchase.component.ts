@@ -115,7 +115,7 @@ export class PurchaseComponent implements OnInit {
       },
       (error) => {
         console.log('error', error);
-      }).add(() => {        
+      }).add(() => {
         if(this.loaderContainer && this.loaderContainer.classList.contains('d-block')){
           this.loaderContainer.classList.remove('d-block');
           this.loaderContainer.classList.add('d-none');

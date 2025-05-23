@@ -3,14 +3,14 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "ng serve",
+      "name": "ng serve --host 0.0.0.0",
       "type": "chrome",
       "request": "launch",
       "preLaunchTask": "npm: start",
       "url": "http://localhost:4200/"
     },
     {
-      "name": "ng test",
+      "name": "ng test --host 0.0.0.0",
       "type": "chrome",
       "request": "launch",
       "preLaunchTask": "npm: test",

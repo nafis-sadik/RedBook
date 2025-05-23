@@ -13,7 +13,6 @@ import { PurchaseDetailsService } from 'src/app/dashboard/services/purchase-deta
 export class PurchaseDetailsComponent implements OnInit {
   @Input() invoiceModel: PurchaseInvoiceModel;
   @Input() outletName: string;
-  netTotal: number = 0;
 
   constructor(private invoiceDetailsService: PurchaseDetailsService, private dialogService: NbDialogService) { }
   @ViewChildren('barcode') barcodeElements!: QueryList<ElementRef>;
@@ -22,11 +21,9 @@ export class PurchaseDetailsComponent implements OnInit {
       .getPurchaseDetailsList(this.invoiceModel.invoiceId)
       .subscribe(invoiceDetails => {
         this.invoiceModel.purchaseDetails = invoiceDetails;
-        this.netTotal = 0;
         for(let index = 0; index < invoiceDetails.length; index++){
           invoiceDetails[index].totalCostPrice = invoiceDetails[index].quantity * invoiceDetails[index].purchasePrice;
           invoiceDetails[index].totalCostPrice -= invoiceDetails[index].purchaseDiscount;
-          this.netTotal += invoiceDetails[index].totalCostPrice;
         }
       });
   }
