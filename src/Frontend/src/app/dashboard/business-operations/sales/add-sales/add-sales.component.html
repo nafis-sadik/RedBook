@@ -10,9 +10,10 @@
       </div>
     </nb-card-header>
     <nb-card-body>
-      <nb-stepper #stepper [linear]="linearMode">
-        <nb-step label="Client Details">
-          <form #clientDetails="ngForm" [formGroup]="clientDetailsForm" class="step-container">
+      <!-- <nb-stepper orientation="horizontal" #SalesMemo disableStepNavigation> -->
+      <nb-stepper orientation="horizontal" #SalesMemo>
+        <nb-step label="Customer Information">
+          <form #customerDetails="ngForm" [formGroup]="customerDetailsForm" class="step-container">
             <div class="container-fluid">
               <div class="row">
                 <div class="col-md-4">
@@ -20,44 +21,54 @@
                   <div class="input-group">
                     <input fullWidth nbInput
                            placeholder="Customer Name"
-                           formControlName="customerName">
+                           formControlName="customerName"
+                           [value]="customerModel.customerName">
                   </div>
                   <div class="input-group">
-                    <div *ngIf="(clientDetailsForm.get('customerName')?.touched || clientDetailsForm.get('customerName')?.dirty) && clientDetailsForm.get('customerName')?.invalid"
+                    <div *ngIf="(customerDetailsForm.get('customerName')?.touched || customerDetailsForm.get('customerName')?.dirty) && customerDetailsForm.get('customerName')?.invalid"
                          class="validationError"></div>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <label class="mb-2 mt-4 p-0">Customer Phone Number</label>
                   <div class="input-group">
-                    <input fullWidth nbInput type="number"
-                           placeholder="Customer Phone Number"
-                           formControlName="customerPhoneNumber"
-                           [nbAutocomplete]="autoControl">
-                    <nb-autocomplete #autoControl>
-                      <nb-option *ngFor="let customerContactNumber of customerContactNumbers"
-                                 [value]="customerContactNumber">
-                        {{ customerContactNumber }}
-                      </nb-option>
-                    </nb-autocomplete>
+                    <nb-form-field>
+                      <input nbInput type="number"
+                            placeholder="Customer Phone Number"
+                            formControlName="customerPhoneNumber"
+                            [value]="customerModel.contactNumber"
+                            [nbAutocomplete]="autoControl">
+                      <button nbButton nbSuffix status="primary" status="primary" (click)="typingPhoneNumber()">
+                        <nb-icon icon="search"></nb-icon>
+                      </button>
+                      <nb-autocomplete #autoControl>
+                        <nb-option *ngFor="let customerContactNumber of customerContactNumbers"
+                                  [value]="customerContactNumber">
+                          {{ customerContactNumber }}
+                        </nb-option>
+                      </nb-autocomplete>
+                    </nb-form-field>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <label class="mb-2 mt-4 p-0">Customer Email</label>
                   <div class="input-group">
-                    <input fullWidth nbInput type="email"
+                    <input fullWidth nbInput 
+                           type="email"
                            placeholder="Email"
-                           formControlName="email">
+                           formControlName="email"
+                           [value]="customerModel.email">
                   </div>
                 </div>
               </div>
               <div class="row">
                 <div class="col-md-12">
-                  <label class="mb-2 mt-4 p-0">Delivery Location</label>
+                  <label class="mb-2 mt-4 p-0">Delivery Address</label>
                   <div class="input-group">
                     <input fullWidth nbInput
-                           placeholder="Delivery Location"
-                           formControlName="deliveryLocation">
+                           placeholder="Delivery Address"
+                           formControlName="deliveryLocation"
+                           [value]="customerModel.address">
                   </div>
                 </div>
                 <div class="col-md-12">
@@ -65,11 +76,13 @@
                   <div class="input-group">
                     <textarea fullWidth nbInput
                               placeholder="Terms & Conditions"
-                              formControlName="remarks"></textarea>
+                              formControlName="remarks"
+                              [value]="customerModel.remarks"></textarea>
                   </div>
                 </div>
-                <div class="col-md-12 mt-5">
-                  <button nbButton hero type="button" status="primary" class="float-right" nbStepperNext (click)="syncCustomerInfo($event)">next</button>
+                <div class="d-flex justify-content-between mt-5">
+                  <button nbButton hero type="button" status="danger" class="float-right" (click)="syncCustomerInfo(true)">Skip</button>
+                  <button nbButton hero type="button" status="success" class="float-right" (click)="syncCustomerInfo(false)">Save & Continue</button>
                 </div>
               </div>
             </div>
@@ -82,10 +95,11 @@
               <div class="row">
                 <div class="col-md-12">
                   <label class="mb-2 mt-4 p-0">Select Product</label>
-                  <nb-select fullWidth multiple required
+                  <nb-select fullWidth required
                              placeholder="Select Product"
-                             [(selected)]="memoProductIds"
+                             [(selected)]="memoProductId"
                              (selectedChange)="selectProductToSell($event)">
+                    <nb-option value=0>Select Product</nb-option>
                     <nb-option *ngFor="let product of outletProductList" value={{product.productId}}>
                       {{ product.productName }}</nb-option>
                   </nb-select>
@@ -101,35 +115,32 @@
                         <th class="ng-star-inserted">Net Total</th>
                       </tr>
                     </thead>
-                    <!-- <tbody>
-                      <tr *ngFor="let product of salesModel.ProductsSold; let i = index">
-                        <td>{{ product.ProductId }}</td>
-                        <td>{{ product.ProductName }}</td>
+                    <tbody>
+                      <tr *ngFor="let product of selectedProductList; let i = index">
+                        <td>{{ product.productId }}</td>
+                        <td>{{ product.productName }}</td>
                         <td>
-                          {{product.Quantity}}
                           <input fullWidth nbInput required
                                  placeholder="Purchase Quantity"
-                                 [(ngModel)]="product.Quantity"
+                                 [(ngModel)]="product.quantity"
                                  name="salesModel.ProductsSold[{{i}}]"
-                                 [value]="product.Quantity"
+                                 [value]="product.quantity"
                                  (change)="updateProductNetTotalAmount()">
                         </td>
                         <td>
-                          {{product.PurchasePrice}}
                           <input fullWidth nbInput required
                                  placeholder="Purchase Price"
-                                 [(ngModel)]="product.RetailPrice"
                                  name="product.PurchasePrice[{{i}}]"
-                                 [value]="product.RetailPrice"
+                                 [value]="product.retailPrice"
                                  (change)="updateProductNetTotalAmount()">
                         </td>
-                        <td>{{ product.ProductNetTotalPrice }}</td>
+                        <td>{{ product.quantity * product.retailPrice }}</td>
                       </tr>
                       <tr>
                         <td colspan="4"><b>Net Total</b></td>
-                        <td><b>{{ salesModel.NetTotal }}</b></td>
+                        <td><b>{{ invoicePrice }}</b></td>
                       </tr>
-                    </tbody> -->
+                    </tbody>
                   </table>
                 </div>
                 <div class="col-md-12 mt-5">
@@ -214,7 +225,7 @@
               <div class="row">
                 <h3 style="text-align: center;">Invoice Saved Successfully!</h3>
                 <button nbButton hero type="button" status="primary" class="float-right"
-                        (click)="stepper.reset()">Done</button>
+                        (click)="SalesMemo.reset()">Done</button>
               </div>
             </div>
           </div>
