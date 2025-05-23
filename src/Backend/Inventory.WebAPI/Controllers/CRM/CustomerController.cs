@@ -16,28 +16,31 @@ namespace Inventory.WebAPI.Controllers.CRM
         [Route("SearchSimilarNumbers")]
         public async Task<IActionResult> SearchSimilarContactNumberFromPurchaseHistory([FromBody] Dictionary<string, object> payload)
         {
-            if (payload.ContainsKey("contactNumber") && payload.ContainsKey("orgId"))
-            {
-                string? contactNumber = payload["contactNumber"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(contactNumber))
-                {
-                    if(int.TryParse(payload["orgId"].ToString(), out int orgIdOut))
-                    {
-                        int orgId = orgIdOut;
-                        return Ok(await _customerServices.SearchByContactNumberFromPurchaseHistory(new string(contactNumber), orgId));
-                    }
-                }
+            if (payload.ContainsKey("searchString") && payload.ContainsKey("orgId")) {
+                string? searchString = payload["searchString"]?.ToString();
+                if (!string.IsNullOrWhiteSpace(searchString) && int.TryParse(payload["orgId"].ToString(), out int orgIdOut))
+                    return Ok(await _customerServices.SearchByContactNumberFromPurchaseHistory(new string(searchString), orgIdOut));
             }
 
-            throw new ArgumentException("Payload data must have 'contactNumber' & 'orgId'");
+            throw new ArgumentException("Payload data must have 'searchString' & 'orgId'");
         }
 
         [HttpPost]
         [Route("SearchCustomer")]
-        public async Task<IActionResult> FindCustomerByContactNumber([FromBody] string contactNumber, int orgId)
-            => Ok(_customerServices.FindCustomerByContactNumber(contactNumber, orgId));
+        public async Task<IActionResult> FindCustomerByContactNumber([FromBody] Dictionary<string, object> payload)
+        {
+            if (payload.ContainsKey("searchString") && payload.ContainsKey("orgId"))
+            {
+                string? searchString = payload["searchString"]?.ToString();
+                if (!string.IsNullOrWhiteSpace(searchString) && int.TryParse(payload["orgId"].ToString(), out int orgIdOut))
+                    return Ok(await _customerServices.FindCustomerByContactNumber(searchString, orgIdOut));
+            }
+
+            throw new ArgumentException("Payload data must have 'searchString' & 'orgId'");
+        }
 
         [HttpPost]
-        public async Task<IActionResult> SyncCustomerInfo(CustomerModel model) => Ok(await _customerServices.SyncCustomerInfoAsync(model));
+        public async Task<IActionResult> SyncCustomerInfo(CustomerModel model)
+            => Ok(await _customerServices.SyncCustomerInfoAsync(model));
     }
 }
