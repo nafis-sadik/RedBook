@@ -11,7 +11,6 @@ using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using RedBook.Core;
 
 
@@ -37,43 +36,43 @@ namespace Inventory.Domain.Implementation.Product
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _productRepo = _repositoryFactory.GetRepository<Data.Entities.Product>();
-                var productVariantRepo = _repositoryFactory.GetRepository<ProductVariant>();
+                //var productVariantRepo = _repositoryFactory.GetRepository<ProductVariant>();
 
-                Data.Entities.Product product = Mapper.Map<Data.Entities.Product>(productModel);
-                product.CreateBy = User.UserId;
-                product.CreateDate = DateTime.UtcNow;
-                product.ProductVariants.Clear();
-                foreach(ProductVariantModel variant in productModel.ProductVariants)
-                {
-                    product.ProductVariants.Add(new ProductVariant
-                    {
-                        VariantName = variant.VariantName,
-                        Attributes = variant.Attributes,
-                        SKU = variant.SKU,
-                        StockQuantity = 0,
-                        CreateBy = User.UserId,
-                        CreateDate = DateTime.UtcNow,
-                        BarCode = Guid.NewGuid().ToString(),
-                        IsActive = true
-                    });
-                }
-                product = await _productRepo.InsertAsync(product);
+                bool productExists = await _productRepo.UnTrackableQuery()
+                    .AnyAsync(product => 
+                        product.ProductName.ToLower().Equals(productModel.ProductName.ToLower())
+                        && product.OrganizationId == productModel.OrganizationId
+                    );
 
-                IEnumerable<ProductVariant> variantList = Mapper.Map<IEnumerable<ProductVariant>>(productModel.ProductVariants);
-                foreach (ProductVariant entity in variantList)
+                if (productExists)
+                    throw new ArgumentException($"Product {productModel.ProductName} already exists for your organization.");
+
+                Data.Entities.Product productEntity = Mapper.Map<Data.Entities.Product>(productModel);
+                productEntity.CreateBy = User.UserId;
+                productEntity.CreateDate = DateTime.UtcNow;
+                productEntity.UpdateBy = null;
+                productEntity.UpdateDate = null;
+
+                foreach (ProductVariant variant in productEntity.ProductVariants)
                 {
-                    entity.CreateBy = User.UserId;
-                    entity.CreateDate = DateTime.UtcNow;
-                    entity.UpdateBy = null;
-                    entity.UpdateDate = null;
-                    entity.IsActive = true;
+                    variant.CreateBy = User.UserId;
+                    variant.CreateDate = DateTime.UtcNow;
+                    variant.UpdateBy = null;
+                    variant.UpdateDate = null;
+                    variant.BarCode = Guid.NewGuid().ToString();
+                    variant.IsActive = true;
+
+                    variant.Product = productEntity;
                 }
 
-                await productVariantRepo.BulkInsertAsync(variantList);
+                IEnumerable<ProductVariant> variantList = productEntity.ProductVariants;
+                productEntity = await _productRepo.InsertAsync(productEntity);
+
+                //await productVariantRepo.BulkInsertAsync(variantList);
 
                 await _repositoryFactory.SaveChangesAsync();
 
-                return Mapper.Map<ProductModel>(product);
+                return Mapper.Map<ProductModel>(productEntity);
             }
         }
 

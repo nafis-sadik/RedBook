@@ -58,6 +58,7 @@ namespace Inventory.Domain.Implementation.Purchase
                     ChalanNumber = i.ChalanNumber,
                     ChalanDate = i.ChalanDate,
                     InvoiceTotal = i.InvoiceTotal,
+                    TotalDiscount = i.TotalDiscount,
                     VendorName = i.Vendor == null? "" : i.Vendor.VendorName,
                     TotalPaid = i.PurchasePaymentRecords.Sum(pay => pay.PaymentAmount)
                 }).ToListAsync();
@@ -83,12 +84,17 @@ namespace Inventory.Domain.Implementation.Purchase
 
         public async Task<PurchaseInvoiceModel> AddNewAsync(PurchaseInvoiceModel model)
         {
+            PurchaseInvoice purchaseMasterEntity = new PurchaseInvoice();
             using (var factory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _purchaseInvoiceRepo = factory.GetRepository<PurchaseInvoice>();
                 // Validate uniqueness of purchase invoice
                 bool inRecord = await _purchaseInvoiceRepo.UnTrackableQuery()
-                    .AnyAsync(invoice => invoice.OrganizationId == model.OrganizationId && invoice.ChalanNumber.ToLower().Equals(model.ChalanNumber.ToLower()));
+                    .AnyAsync(invoice => 
+                        invoice.OrganizationId == model.OrganizationId
+                        && invoice.ChalanNumber.ToLower().Equals(model.ChalanNumber.ToLower())
+                    );
+                
                 if (inRecord)
                     throw new ArgumentException($"You already have an invoice with invoice id {model.ChalanNumber}");
 
@@ -104,23 +110,16 @@ namespace Inventory.Domain.Implementation.Purchase
                     throw new ArgumentException($"Invoice total mismatched");
 
                 // Insert master table record
-                PurchaseInvoice purchaseMaster = Mapper.Map<PurchaseInvoice>(model);
-                purchaseMaster.CreateDate = DateTime.UtcNow;
-                purchaseMaster.CreateBy = User.UserId;
+                purchaseMasterEntity = Mapper.Map<PurchaseInvoice>(model);
+                purchaseMasterEntity.CreateDate = DateTime.UtcNow;
+                purchaseMasterEntity.CreateBy = User.UserId;
 
-                foreach (PurchaseInvoiceDetails purchaseDetails in purchaseMaster.Purchases) {
-                    purchaseDetails.CreateBy = User.UserId;
-                    purchaseDetails.CreateDate = DateTime.UtcNow;
-                    purchaseDetails.BarCode = Guid.NewGuid().ToString();
-                    purchaseDetails.CurrentStockQuantity = purchaseDetails.Quantity;
-                }
-
-                purchaseMaster = await _purchaseInvoiceRepo.InsertAsync(purchaseMaster);
+                purchaseMasterEntity = await _purchaseInvoiceRepo.InsertAsync(purchaseMasterEntity);
 
                 await factory.SaveChangesAsync();
-
-                return Mapper.Map<PurchaseInvoiceModel>(purchaseMaster);
             }
+
+            return Mapper.Map<PurchaseInvoiceModel>(purchaseMasterEntity);
         }
 
         public async Task<PurchaseInvoiceModel> UpdateAsync(int id, Dictionary<string, object> updates)
@@ -139,12 +138,7 @@ namespace Inventory.Domain.Implementation.Purchase
             }
         }
 
-        public async Task DeleteAsync(int id)
-        {
-            await UpdateAsync(id, new Dictionary<string, object>
-            {
-                { "IsDeleted", false }
-            });
-        }
+        public async Task DeleteAsync(int id) 
+            => await UpdateAsync(id, new Dictionary<string, object> { { "IsDeleted", false } });
     }
 }

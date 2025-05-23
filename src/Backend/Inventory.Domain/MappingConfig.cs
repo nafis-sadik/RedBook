@@ -15,7 +15,9 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.PurchaseDetails, src => src.MapFrom(opt => opt.Purchases))
                 .ReverseMap();
 
-            CreateMap<PurchaseInvoiceDetails, PurchaseInvoiceDetailsModel>().ReverseMap();
+            CreateMap<PurchaseInvoiceDetails, PurchaseInvoiceDetailsModel>()
+                .ForMember(dest => dest.Quantity, opt => opt.MapFrom(opt => opt.Quantity))
+                .ReverseMap();
 
             CreateMap<Category, CategoryModel>()
                 .ForMember(dest => dest.OrganizationId, opt => opt.MapFrom(opt => opt.OrganizationId))
@@ -25,6 +27,10 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.ParentCategory, opt => opt.Ignore());
 
             CreateMap<ProductVariantModel, ProductVariant>()
+                .ForMember(dest => dest.BarCode, opt => opt.MapFrom(opt => opt.BarCode))
+                .ForMember(dest => dest.SKU, opt => opt.MapFrom(opt => opt.SKU))
+                .ForMember(dest => dest.Attributes, opt => opt.MapFrom(opt => opt.Attributes))
+                .ForMember(dest => dest.StockQuantity, opt => opt.MapFrom(opt => opt.StockQuantity))
                 .ForMember(dest => dest.CreateBy, opt => opt.Ignore())
                 .ForMember(dest => dest.CreateDate, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdateBy, opt => opt.Ignore())

@@ -10,7 +10,7 @@ namespace Inventory.WebAPI.Controllers.Purchase
     [Authorize]
     [ApiController]
     [Route("api/PurchaseDetails")]
-    public class InvoiceDetailsController(IInvoiceDetailsService invoiceDetailsService) : ControllerBase
+    public class PurchaseDetailsController(IInvoiceDetailsService invoiceDetailsService) : ControllerBase
     {
         private readonly IInvoiceDetailsService _invoiceDetailsService = invoiceDetailsService;
 

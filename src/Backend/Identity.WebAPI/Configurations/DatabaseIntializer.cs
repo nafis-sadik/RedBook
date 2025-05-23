@@ -175,6 +175,7 @@ namespace Identity.WebAPI.Configurations
             #endregion
 
             List<Route> routes = new List<Route>();
+
             #region UI Routes (Menu)
             if (!context.Routes.Any())
             {
