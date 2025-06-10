@@ -27,8 +27,8 @@
             // Generic
             public const string Success = "Operation Successful";
             public const string Failed = "Operation Failed";
-            public const string KeyExists = " Already Exists, Please try something a different";
-            public const string Exception = "An error occurred while executing operation. Please contact support team.";
+            public const string KeyExists = "This item already exists,The item you are trying to save already exists";
+            public const string Exception = "It's not your, it's us!,A critical error occured behind the scene which wasn't your fault. Our experts are looking into it.";
             public const string InvalidInput = "An invalid parameter was passed. Please contact support team.";
             public const string ResourceNotFound = "Resource Not Found";
 

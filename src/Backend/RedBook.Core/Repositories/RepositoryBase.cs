@@ -7,8 +7,6 @@ using System.Text.Json;
 using CaseExtensions;
 using System.Text;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;

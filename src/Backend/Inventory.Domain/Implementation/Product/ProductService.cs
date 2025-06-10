@@ -130,13 +130,14 @@ namespace Inventory.Domain.Implementation.Product
                                         .Where(variant => variant.IsActive && variant.ProductId == product.ProductId)
                                         .Select(variant => new ProductVariantModel
                                         {
-                                            ProductId = product.ProductId,
                                             VariantId = variant.VariantId,
                                             VariantName = variant.VariantName,
+                                            ProductId = product.ProductId,
+                                            ProductName = variant.Product.ProductName,
                                             SKU = variant.SKU,
                                             BarCode = variant.BarCode,
                                             Attributes = variant.Attributes,
-                                            StockQuantity = variant.StockQuantity
+                                            StockQuantity = variant.StockQuantity,
                                         }).ToList()
                     })
                     .ToArrayAsync();
@@ -158,10 +159,13 @@ namespace Inventory.Domain.Implementation.Product
                     {
                         ProductId= x.ProductId,
                         ProductName = x.ProductName,
-                        ProductVariants = x.ProductVariants.Where(variant => variant.IsActive).Select(variant => new ProductVariantModel
+                        ProductVariants = x.ProductVariants.Where(variant => variant.IsActive)
+                        .Select(variant => new ProductVariantModel
                         {
                             VariantId = variant.VariantId,
                             VariantName = variant.VariantName,
+                            ProductId = variant.ProductId,
+                            ProductName = variant.Product.ProductName
                         }).ToList()
                     })
                     .ToListAsync();

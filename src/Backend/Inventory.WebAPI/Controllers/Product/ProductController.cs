@@ -27,7 +27,8 @@ namespace Inventory.WebAPI.Controllers.Product
         [SwaggerResponse(statusCode: 200, type: typeof(PagedModel<ProductModel>), description: "Retrieves paged list of products under organization")]
         [SwaggerResponse(statusCode: 401, type: typeof(string), description: "Unauthorized Request")]
         [SwaggerResponse(statusCode: 400, type: typeof(string), description: "Requested operation caused an internal error, read message from the response body.")]
-        public async Task<IActionResult> GetPagedAsync([FromQuery] PagedModel<ProductModel> pagedModel, int orgId) => Ok(await _productService.GetPagedAsync(pagedModel, orgId));
+        public async Task<IActionResult> GetPagedAsync([FromQuery] PagedModel<ProductModel> pagedModel, int orgId)
+            => Ok(await _productService.GetPagedAsync(pagedModel, orgId));
 
         /// <summary>
         /// Retrieves list of products under organization for dropdown

@@ -24,6 +24,8 @@ namespace Inventory.Domain.Implementation.CRM
 
         public async Task<CustomerModel?> SyncCustomerInfoAsync(CustomerModel model)
         {
+            if (string.IsNullOrEmpty(model.ContactNumber) && string.IsNullOrEmpty(model.Email))
+                throw new ArgumentException($"Your customer must provide contact number or email address");
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _customerRepo = _repositoryFactory.GetRepository<Customer>();
@@ -48,13 +50,23 @@ namespace Inventory.Domain.Implementation.CRM
                     await _repositoryFactory.SaveChangesAsync();
                     CustomerModel response = Mapper.Map<CustomerModel>(customerEntity);
                     response.OrgId = model.OrgId;
+                    CustomerDetails? customerDetailsEntity = customerEntity.CustomerDetails.FirstOrDefault();
+                    if(customerDetailsEntity != null)
+                    {
+                        response.CustomerName = customerDetailsEntity.CustomerName;
+                        response.Address = customerDetailsEntity.Address;
+                        response.Remarks = customerDetailsEntity.Remarks;
+                    }
+
                     return response;
                 }
                 else 
                 {
                     CustomerDetails? customerDetails = await _customerDetailsRepo.TrackableQuery()
-                        .Where(customerDetails => customerDetails.CustomerId == customerId && customerDetails.OrgId == model.OrgId)
-                        .FirstOrDefaultAsync();
+                        .Where(customerDetails => 
+                            customerDetails.CustomerId == customerId 
+                            && customerDetails.OrgId == model.OrgId
+                        ).FirstOrDefaultAsync();
 
                     if(customerDetails == null)
                     {
@@ -66,7 +78,7 @@ namespace Inventory.Domain.Implementation.CRM
                             Address = model.Address,
                             Remarks = model.Remarks,
                         });
-                    } 
+                    }
                     else
                     {
                         customerDetails.CustomerName = model.CustomerName;
@@ -76,7 +88,7 @@ namespace Inventory.Domain.Implementation.CRM
 
                     await _repositoryFactory.SaveChangesAsync();
 
-                    model = new CustomerModel
+                    return new CustomerModel
                     {
                         CustomerId = customerId,
                         OrgId = customerDetails.OrgId,
@@ -86,24 +98,28 @@ namespace Inventory.Domain.Implementation.CRM
                         Address = customerDetails.Address,
                         Remarks = customerDetails.Remarks,
                     };
-
-                    return model;
                 }
             }
         }
 
-        public async Task<string[]> SearchByContactNumberFromPurchaseHistory(string contactNumber, int orgId)
+        public async Task<string[]> SearchByContactNumberFromPurchaseHistory(string searchString, int orgId)
         {
+            searchString = searchString.Trim().Replace(" ", string.Empty);
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
                 var _salesRepo = _repositoryFactory.GetRepository<SalesInvoice>();
 
                 // After implementation of gRPC, we need to verify if this user have the right role and the right
-                string[] tempres = await _salesRepo.UnTrackableQuery().Where(sales =>
-                        sales.OrganizationId == orgId
-                        && sales.Customer != null
-                        && sales.Customer.ContactNumber.ToLower().Contains(contactNumber.ToLower())
-                    ).Select(sales => sales.Customer.ContactNumber).ToArrayAsync();
+                var query = _salesRepo.UnTrackableQuery()
+                    .Where(sales => sales.OrganizationId == orgId && sales.Customer != null);
+
+                if (searchString.Contains('@'))
+                    query = query.Where(sales => sales.Customer.Email.ToLower().Contains(searchString.ToLower()));
+
+                else
+                    query = query.Where(sales => sales.Customer.ContactNumber.Contains(searchString));
+
+                string[] tempres = await query.Select(sales => sales.Customer.ContactNumber).ToArrayAsync();
 
                 return tempres.Length <= 0 ?
                 [
@@ -115,7 +131,7 @@ namespace Inventory.Domain.Implementation.CRM
             }
         }
 
-        public async Task<CustomerModel?> FindCustomerByContactNumber(string contactNumber, int orgId)
+        public async Task<CustomerModel?> FindCustomerByContactNumber(string searchString, int orgId)
         {
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
@@ -123,11 +139,15 @@ namespace Inventory.Domain.Implementation.CRM
 
                 // After implementation of gRPC, we need to verify if this user have the right role and the right
 
-                return await _customerDetailsRepo.UnTrackableQuery()
-                    .Where(customerDetails =>
-                        customerDetails.OrgId == orgId
-                        && customerDetails.Customer.ContactNumber.ToLower().Equals(contactNumber.ToLower())
-                    ).Select(customerDetails => new CustomerModel
+                var query = _customerDetailsRepo.UnTrackableQuery().Where(customerDetails => customerDetails.OrgId == orgId);
+
+                if (searchString.Contains('@'))
+                    query = query.Where(sales => sales.Customer.Email.ToLower().Contains(searchString.ToLower()));
+
+                else
+                    query = query.Where(sales => sales.Customer.ContactNumber.Contains(searchString));
+
+                return await query.Select(customerDetails => new CustomerModel
                     {
                         CustomerId = customerDetails.CustomerId,
                         CustomerName = customerDetails.CustomerName,
