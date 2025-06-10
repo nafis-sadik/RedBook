@@ -1,9 +1,15 @@
-import { Component, Input } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NbStepChangeEvent } from '@nebular/theme';
+import { ChangeDetectorRef, Component, Input, ViewChild } from '@angular/core';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NbDialogService, NbStepperComponent } from '@nebular/theme';
 import { CustomerModel } from 'src/app/dashboard/Models/customer.model';
 import { ProductModel } from 'src/app/dashboard/Models/product.model';
+import { SalesInvoiceDetailsModel } from 'src/app/dashboard/Models/sales-invoice-details.model';
+import { SalesInvoiceModel } from 'src/app/dashboard/Models/sales-invoice.model';
 import { CustomerService } from 'src/app/dashboard/services/customer.services';
+import { InventoryService } from 'src/app/dashboard/services/inventory.service';
+import { ProductService } from 'src/app/dashboard/services/products.service';
+import { LotSelectionComponent } from './lot-selection/lot-selection.component';
+import { PurchaseInvoiceDetailsModel } from 'src/app/dashboard/Models/purchase-invoice-details.model';
 
 @Component({
   selector: 'app-add-sales',
@@ -12,153 +18,176 @@ import { CustomerService } from 'src/app/dashboard/services/customer.services';
 })
 
 export class AddSalesComponent {
+  @ViewChild('SalesMemo') salesMemoStepper: NbStepperComponent;
+  
   @Input() selectOrganization: number = 0;
 
-  // Customer forms 
-  @Input() allowCustomerFormEdit: boolean = false;
-  clientDetailsForm: FormGroup;
-  customerModel: CustomerModel = new CustomerModel();
+  // Customer forms
+  @Input() customerModel: CustomerModel;
+  customerDetailsForm: FormGroup;
   customerContactNumbers: Array<string> = [];
 
-  linearMode = true;
+  // Sales form
+  productDetailsForm: FormGroup;
+  productList: Array<ProductModel> = [];
 
-  outletProductList: Array<ProductModel> = [];
+  orderDetailsForm: FormGroup;
+  get orderDetailsFormArray(): FormArray { return this.orderDetailsForm.get('salesDetails') as FormArray; }
+  orderInvoiceModel: SalesInvoiceModel = new SalesInvoiceModel();        
 
-  // salesModel: ISalesModel;
-  memoProductIds: number[] = [];
+  constructor(
+    private formBuilder: FormBuilder, 
+    private customerService: CustomerService, 
+    private productService: ProductService,
+    private inventoryService: InventoryService,
+    private diagService: NbDialogService,
+    private cdRef: ChangeDetectorRef
+  ) { }
 
-  // selectedProductsForSale: IInvoiceProductModel[];
-
-  constructor(private formBuilder: FormBuilder, private customerService: CustomerService) {
-    // this.selectedProductsForSale = [];
-
-    // this.salesModel = {
-    //   id: 0,
-    //   MemoNumber: "",
-    //   NetTotal: 0,
-    //   PaymentAmount: 0,
-    //   SalesDate: new Date,
-    //   ProductsSold: this.selectedProductsForSale,
-    //   CustomerName: '',
-    //   DeliveryLocation: '',
-    //   CustomerPhoneNumber: '',
-    //   Terms: '',
-    //   PaymentHistory: []
-    // }
-
-    // this.salesModel.PaymentHistory = addSalesService.getPaymentsByMemoId(dashboardService.selectedOutletId);
+  ngOnInit(): void {
+    this.customerModel = new CustomerModel();
+    this.customerModel.orgId = this.selectOrganization;
     this.initializeCustomerForm();
+    this.initializeOrderForm();
   }
 
   initializeCustomerForm(): void {
-    this.clientDetailsForm = this.formBuilder.group({
-      customerName: ['', [Validators.maxLength(100)]],
-      customerPhoneNumber: ['', [Validators.required, Validators.minLength(10)]],
-      email: ['', [Validators.email]],
-      deliveryLocation: [''],
-      remarks: [''],
-    });
-
-    if (this.allowCustomerFormEdit) {
-      this.clientDetailsForm.disable();
-    }
-    else {
-      this.clientDetailsForm.valueChanges.subscribe(formData => {
-        this.customerModel.customerName = formData.customerName;
-        this.customerModel.contactNumber = String(formData.customerPhoneNumber);
-        this.customerModel.email = formData.email;
-        this.customerModel.address = formData.deliveryLocation;
-        this.customerModel.remarks = formData.remarks;
-
-        if (this.customerModel.contactNumber.length >= 8 && this.selectOrganization > 0) {
-          this.customerService.getCustomerByContactNumber(this.customerModel.contactNumber, this.selectOrganization)
-            .subscribe((similarCustomerContactNumbers: Array<string>) => {
-              this.customerContactNumbers = similarCustomerContactNumbers;
-            });
-        }
+    if(this.customerModel != null){
+      this.customerDetailsForm = this.formBuilder.group({
+        customerName: [this.customerModel.customerName, [Validators.maxLength(100)]],
+        customerPhoneNumber: [this.customerModel.contactNumber, [Validators.required, Validators.minLength(10)]],
+        email: [this.customerModel.email, [Validators.email]],
+        deliveryLocation: [this.customerModel.address],
+        remarks: [this.customerModel.remarks],
       });
+    }
+    
+    this.customerDetailsForm.valueChanges.subscribe(formData => {
+      if (this.customerModel == null) return;
+
+      this.customerModel.customerName = formData.customerName;
+      this.customerModel.contactNumber = String(formData.customerPhoneNumber);
+      this.customerModel.email = formData.email;
+      this.customerModel.address = formData.deliveryLocation;
+      this.customerModel.remarks = formData.remarks;
+
+      if (this.customerModel.contactNumber.length >= 8 && this.selectOrganization > 0) {
+        this.customerService.getCustomerByContactNumber(this.customerModel.contactNumber, this.selectOrganization)
+          .subscribe((similarCustomerContactNumbers: Array<string>) => {
+            this.customerContactNumbers = similarCustomerContactNumbers;
+          });
+      }
+    });
+  }
+
+  syncCustomerInfo(skip: boolean): void {
+    if(!skip) {
+      this.customerService.addCustomer(this.customerModel)
+      .subscribe((response: CustomerModel) => {
+        this.customerModel = response;
+        this.salesMemoStepper.next();
+      });
+    } else {
+      this.customerModel = new CustomerModel();
+      this.customerModel.customerId = 0;
+      this.salesMemoStepper.next();
     }
   }
 
-  syncCustomerInfo(event: MouseEvent): void {
-    if (this.selectOrganization > 0) {
-      this.customerModel.orgId = this.selectOrganization;
-      this.customerService.addCustomer(this.customerModel)
-        .subscribe((response: CustomerModel) => {
-          console.log('Response (CustomerModel)', response);
-          this.customerModel = response;
-          this.initializeProductDetailsForm();
+  selectedOrderDetails: SalesInvoiceDetailsModel = new SalesInvoiceDetailsModel();
+  initializeOrderForm(): void {
+    this.orderDetailsForm = this.formBuilder.group({
+      totalDiscount: [0, [Validators.required, Validators.min(0)]],
+      salesDetails: this.formBuilder.array([], [Validators.required, Validators.min(1)]),
+    });
+
+    this.orderDetailsForm.valueChanges.subscribe(formData => {
+      this.orderInvoiceModel.salesDetails = formData.salesDetails;
+      this.orderInvoiceModel.totalDiscount = formData.totalDiscount;
+      this.orderInvoiceModel.invoiceTotal = 0;
+      this.orderInvoiceModel.salesDetails.forEach((salesDetailObj: SalesInvoiceDetailsModel) => {
+        salesDetailObj.totalCostPrice = salesDetailObj.quantity * salesDetailObj.retailPrice;
+        salesDetailObj.totalCostPrice -= salesDetailObj.retailDiscount;
+        this.orderInvoiceModel.invoiceTotal += salesDetailObj.totalCostPrice;
+      });
+      this.orderInvoiceModel.invoiceTotal -= this.orderInvoiceModel.totalDiscount;
+    });
+    this.productService.getProductList(this.selectOrganization)
+      .subscribe(prodArr => this.productList = prodArr);
+  }
+
+  selectProduct(selectedProdId: number): void {
+    this.selectedOrderDetails.productId = Number(selectedProdId);
+    let selectedProd: ProductModel | undefined = this.productList.find(x => x.productId == this.selectedOrderDetails.productId);
+    if(selectedProd == undefined || selectedProd == null) return;
+
+    this.selectedOrderDetails.variants = this.productList.find(x => x.productId == this.selectedOrderDetails.productId)?.productVariants ?? [];
+    this.selectedOrderDetails.productVariantId = 0;
+    this.cdRef.detectChanges();
+  }
+
+  selectVariant(selectedVariantId: number): void {
+    let selectedVariant = this.selectedOrderDetails.variants.find(x => x.variantId == Number(selectedVariantId));
+    if(selectedVariant == undefined) return;
+    let selectedProd = this.productList.find(x => x.productId == this.selectedOrderDetails.productId);
+    if(selectedProd == undefined) return;
+
+    this.selectedOrderDetails.productId = selectedProd.productId;
+    this.selectedOrderDetails.productName = selectedProd.productName;
+    this.selectedOrderDetails.productVariantId = selectedVariantId;
+    this.selectedOrderDetails.productVariantName = selectedVariant.variantName;
+  }
+
+  addToCart(): void {
+    if(this.selectedOrderDetails.productVariantId > 0){
+      this.inventoryService.getVariantInventory(this.selectedOrderDetails.productVariantId)
+        .subscribe((lotsAvailable: Array<PurchaseInvoiceDetailsModel>) => {
+          this.diagService.open(LotSelectionComponent,{            
+              context: {
+                availableLots: lotsAvailable,
+                selectionCallback: (lot: PurchaseInvoiceDetailsModel) => {
+                  this.selectedOrderDetails.lot = lot;
+                  this.selectedOrderDetails.lotId = lot.recordId;
+                  this.selectedOrderDetails.maxQuantity = lot.quantity;
+                  this.selectedOrderDetails.maxRetailPrice = lot.retailPrice;
+                  this.selectedOrderDetails.minRetailPrice = lot.retailPrice - lot.maxRetailDiscount;
+
+                  this.orderDetailsFormArray.push(this.formBuilder.group({
+                    productId: [this.selectedOrderDetails.productId],
+                    productName: [this.selectedOrderDetails.productName],
+                    productVariantId: [this.selectedOrderDetails.productVariantId],
+                    productVariantName: [this.selectedOrderDetails.productVariantName],
+                    quantity: [1, [Validators.required, Validators.min(1), Validators.max(lot.quantity)]],
+                    retailPrice: [lot.retailPrice, [Validators.required, Validators.min(this.selectedOrderDetails.minRetailPrice), Validators.max(this.selectedOrderDetails.maxRetailPrice)]],
+                  }));
+
+                  this.selectedOrderDetails = new SalesInvoiceDetailsModel();
+                }
+              }
+            }
+          );
+          console.log(lotsAvailable);
         });
     }
+    
+    this.cdRef.detectChanges();
   }
 
   initializePaymentDetailsForm() {
     throw new Error('Method not implemented.');
   }
 
-  updateProductNetTotalAmount(): void {
-    // this.salesModel.NetTotal = 0;
-    // this.salesModel.ProductsSold.forEach(product=>{
-    //   product.ProductNetTotalPrice = product.Quantity * product.RetailPrice;
-    //   this.salesModel.NetTotal += product.ProductNetTotalPrice;
-    // });
-  }
+  typingPhoneNumber(): void {
+    this.customerDetailsForm.disable();
+    let typedPhoneNumber: string = this.customerModel.contactNumber;
 
-  initializeProductDetailsForm(): void {
-    // this.salesModel.ProductsSold = [];
-    // this.outletProductList = this.productService.getProductList(this.dashboardService.selectedOutletId);
-  }
-
-  selectProductToSell(selectedProductIds: number[]): void {
-    // This contains the previously selected object that are still selected
-    // So, if the product was previously selected and now has been unselected, that is being removed here
-    // let previouslySelectedItem: IInvoiceProductModel[] = [];
-    // this.selectedProductsForSale.forEach(product => {
-    //   selectedProductIds.forEach(productId => {
-    //     if(product.ProductId == productId){
-    //       previouslySelectedItem.push(product);
-    //     }
-    //   })
-    // });
-
-    // Load previously selected item removing the unselected items
-    // this.selectedProductsForSale = previouslySelectedItem;
-
-    // This shall add newly added products based on product selection from ui
-    let newlyAddedProductId: number[] = [];
-    let itemFound: boolean = false;
-    selectedProductIds.forEach(productId => {
-      itemFound = false;
-      // previouslySelectedItem.forEach(product => {
-      //   console.log(productId, product.ProductId, productId == product.ProductId)
-      //   if(productId == product.ProductId){
-      //     itemFound = true;
-      //   }
-      // })
-      console.log(productId, itemFound)
-      if (!itemFound) {
-        newlyAddedProductId.push(productId);
-      }
-    });
-
-    if (newlyAddedProductId.length > 0) {
-      newlyAddedProductId.forEach(() => {
-        this.outletProductList.forEach(() => {
-          // if(productId == product.productId)
-          // this.selectedProductsForSale.push({
-          //   ProductId: product.productId,
-          //   ProductName: product.productName,
-          //   ProductNetTotalPrice: 0,
-          //   PurchasePrice: product.purchasePrice,
-          //   Quantity: 0,
-          //   RetailPrice: product.retailPrice
-          // });
-        })
-      })
+    if(typedPhoneNumber.length > 8 || typedPhoneNumber.includes('@')){
+      this.customerService.searchCustomer(typedPhoneNumber, this.selectOrganization)
+        .subscribe((customerData: CustomerModel) => {
+          this.customerDetailsForm.enable();
+          this.customerModel = customerData;
+          this.cdRef.detectChanges();
+        });
     }
-
-    // this.salesModel.ProductsSold = this.selectedProductsForSale;
-
-    this.updateProductNetTotalAmount();
   }
 }

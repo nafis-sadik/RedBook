@@ -1,68 +1,88 @@
-import { SalesItemModel } from "./sales-item.model";
+import { SalesInvoiceDetailsModel } from "./sales-invoice-details.model";
+import { SalesPaymentModel } from "./sales-payment.model";
 
 export class SalesInvoiceModel {
-    /**
-     * Sales record Id
-     * @type {Number}
-     */
-    id: number;
+  /**
+   * The unique identifier for the sales invoice.
+   * @type {number}
+   */
+  invoiceId: number = 0;
 
-    /**
-     * Sales invoice/Cash memo number
-     * @type {string}
-     */
-    MemoNumber: string;
+  /**
+   * Purchase date for this invoice.
+   * @type {string}
+   */
+  salesDate: string = '';
 
-    /**
-     * Customer name
-     * @type {string}
-     */
-    CustomerName: string
+  /**
+   * Person or entity, you are purchasing from.
+   * @type {string}
+   */
+  customerName: string = '';
 
-    /**
-     * Customer Phone Number
-     * @type {string}
-     */
-    CustomerPhoneNumber: string
+  /**
+   * The total sales price for the invoice.
+   * @type {number}
+   */
+  invoiceTotal: number = 0;
 
-    /**
-     * Delivary Address or google map location
-     * @type {string}
-     */
-    DeliveryLocation: string
+  /**
+   * The total amount of mmoney paid to this vendor against this invoice.
+   * @type {number}
+   */
+  totalPaid: number = 0;
 
-    /**
-     * Net total of cash memo
-     * @type {number}
-     */
-    NetTotal: number;
+  /**
+   * The total discount value on the invoice.
+   * @type {number}
+   */
+  totalDiscount: number = 0;
 
-    /**
-     * Amount paid by the customer
-     * @type {number}
-     */
-    PaymentAmount: number;
+  /**
+   * Current status of payment for this invoice
+   * @type {string}
+   */
+  paymentStatus: string = '';
 
-    /**
-     * Net total of cash memo
-     * @type {Date | string}
-     */
-    SalesDate: Date | string;
+  /**
+   * The unique identifier for the organization associated with the sales invoice.
+   * @type {number}
+   */
+  organizationId: number = 0;
 
-    /**
-     * Products and quantity sold against this memo
-     * @type { SalesItemModel[] }
-     */
-    ProductsSold: SalesItemModel[]
+  /**
+   * The unique identifier for the sales invoice.
+   * @type {string}
+   */
+  invoiceNumber: string = '';
 
-    /**
-     * Terms and conditions against this sales
-     * @type { string }
-     */
-    Terms: string;
-    // /**
-    //  * Payment history of invoice
-    //  * @type {PaymentModel[]}
-    //  */
-    // PaymentHistory: PaymentModel[];
+  /**
+   * The remarks associated with the sales invoice.
+   * @type {string}
+   */
+  remarks: string = '';
+
+  /**
+   * The terms and conditions associated with the sales invoice.
+   * @type {string}
+   */
+  terms: string = '';
+
+  /**
+   * The unique identifier for the vendor associated with the sales invoice.
+   * @type {number}
+   */
+  customerId: number | null = null;
+
+  /**
+   * An array of sales details associated with the sales invoice.
+   * @type {Array<SalesInvoiceDetailsModel>}
+   */
+  salesDetails: Array<SalesInvoiceDetailsModel> = [];
+
+  /**
+   * Payment records associated with the sales invoice.
+   * @type {Array<SalesPaymentModel>}
+   */
+  paymentRecords: Array<SalesPaymentModel> = [];
 }

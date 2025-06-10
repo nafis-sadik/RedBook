@@ -7,69 +7,41 @@ import { SalesInvoiceModel } from "../Models/sales-invoice.model";
 
 export class SalesService {
   getSalesList(outletId: number, pageNumber: number, pageLength: number, searchString: string): SalesInvoiceModel[] {
-    let sourceData: SalesInvoiceModel[];
-    if(outletId == 1){
-      sourceData = [
+    let sourceData: SalesInvoiceModel[] = [
         {
-          id: 1,
-          MemoNumber: 'KG-1728',
-          NetTotal: 150000,
-          PaymentAmount: 0,
-          SalesDate: new Date().toISOString().slice(0, 10),
-          ProductsSold: [],
-          CustomerName: '',
-          DeliveryLocation: '',
-          CustomerPhoneNumber: '',
-          Terms: '',
-          // PaymentHistory: []
+          invoiceId: 1,
+          invoiceNumber: 'KG-1728',
+          invoiceTotal: 150000,
+          totalPaid: 0,
+          salesDate: new Date().toISOString().slice(0, 10),
+          customerName: '',
+          terms: '',
+          customerId: 5,
+          organizationId: 6,
+          paymentRecords: [],
+          paymentStatus: "Partially paid",
+          remarks: "beda kangta ase",
+          salesDetails: [],
+          totalDiscount: 0
         },
         {
-          id: 2,
-          MemoNumber: 'KG-1729',
-          NetTotal: 180000,
-          PaymentAmount: 0,
-          SalesDate: new Date().toISOString().slice(0, 10),
-          ProductsSold: [],
-          CustomerName: '',
-          DeliveryLocation: '',
-          CustomerPhoneNumber: '',
-          Terms: '',
-          // PaymentHistory: []
+          invoiceId: 1,
+          invoiceNumber: 'KG-1729',
+          invoiceTotal: 180000,
+          totalPaid: 0,
+          salesDate: new Date().toISOString().slice(0, 10),
+          customerName: '',
+          terms: '',
+          customerId: 5,
+          organizationId: 6,
+          paymentRecords: [],
+          paymentStatus: "Partially paid",
+          remarks: "beda kangta ase",
+          salesDetails: [],
+          totalDiscount: 0
         }
       ];
-    } else if (outletId == 2) {
-      sourceData = [
-        {
-          id: 1,
-          MemoNumber: 'FM-1728',
-          NetTotal: 2000,
-          PaymentAmount: 0,
-          SalesDate: new Date().toISOString().slice(0, 10),
-          ProductsSold: [],
-          CustomerName: '',
-          DeliveryLocation: '',
-          CustomerPhoneNumber: '',
-          Terms: '',
-          // PaymentHistory: []
-        },
-        {
-          id: 2,
-          MemoNumber: 'FM-1729',
-          NetTotal: 1800,
-          PaymentAmount: 0,
-          SalesDate: new Date().toISOString().slice(0, 10),
-          ProductsSold: [],
-          CustomerName: '',
-          DeliveryLocation: '',
-          CustomerPhoneNumber: '',
-          Terms: '',
-          // PaymentHistory: []
-        }
-      ];
-    } else {
-      sourceData = []
-    }
-
+      
     return sourceData;
   }
 
