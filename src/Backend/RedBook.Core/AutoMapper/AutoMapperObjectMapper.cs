@@ -2,14 +2,9 @@
 
 namespace RedBook.Core.AutoMapper
 {
-    public class AutoMapperObjectMapper : IObjectMapper
+    public class AutoMapperObjectMapper(IMapper mapper) : IObjectMapper
     {
-        private readonly IMapper mapper;
-
-        public AutoMapperObjectMapper(IMapper mapper)
-        {
-            this.mapper = mapper;
-        }
+        private readonly IMapper mapper = mapper;
 
         public TDestination Map<TDestination>(object source)
         {

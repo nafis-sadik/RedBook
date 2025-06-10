@@ -35,7 +35,7 @@
         /// <summary>
         /// The quantity of the product associated with the purchase details.
         /// </summary>
-        public int Quantity { get; set; } = 0;
+        public decimal Quantity { get; set; } = 0;
 
         /// <summary>
         /// The unit price of the product associated with the purchase details.
