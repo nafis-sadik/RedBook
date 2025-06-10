@@ -34,20 +34,5 @@ namespace RedBook.Core.Models
                 return _httpContext.Request.Headers["Origin"].ToString();
             }
         }
-
-        //public int[] RoleIds
-        //{
-        //    get
-        //    {
-        //        string? roleIds = _contextReference.Claims.FirstOrDefault(x => x.Type.Equals("UserRoleIds", StringComparison.InvariantCultureIgnoreCase))?.Value;
-        //        if (!string.IsNullOrEmpty(roleIds))
-        //        {
-        //            string[] strArray = roleIds.Split(',');
-        //            return Array.ConvertAll(strArray, int.Parse);
-        //        }
-        //        else
-        //            throw new ArgumentException(CommonConstants.HttpResponseMessages.InvalidToken);
-        //    }
-        //}
     }
 }
