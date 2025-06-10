@@ -91,55 +91,110 @@
 
         <nb-step [stepControl]="productDetails" label="Product Details">
           <form #productDetails="ngForm" class="step-container">
-            <div class="container-fluid input-group">
+            <div class="container-fluid">
               <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-4">
                   <label class="mb-2 mt-4 p-0">Select Product</label>
                   <nb-select fullWidth required
                              placeholder="Select Product"
-                             [(selected)]="memoProductId"
-                             (selectedChange)="selectProductToSell($event)">
-                    <nb-option value=0>Select Product</nb-option>
-                    <nb-option *ngFor="let product of outletProductList" value={{product.productId}}>
+                             [(selected)]="selectedOrderDetails.productId"
+                             (selectedChange)="selectProduct($event)">
+                    <nb-option [value]=0>Select Product</nb-option>
+                    <nb-option *ngFor="let product of productList" [value]="product.productId">
                       {{ product.productName }}</nb-option>
                   </nb-select>
                 </div>
-                <div class="col-md-12">
+                <div class="col-md-4">
+                  <label class="mb-2 mt-4 p-0">Select Variant</label>
+                  <nb-select fullWidth required
+                             placeholder="Select Variant"
+                             [(selected)]="selectedOrderDetails.productVariantId"
+                             (selectedChange)="selectVariant($event)">
+                    <nb-option [value]=0>Select Variant</nb-option>
+                    <nb-option *ngFor="let variant of selectedOrderDetails.variants" [value]="variant.variantId"> {{ variant.variantName }}</nb-option>
+                  </nb-select>
+                </div>                
+                <div class="col-md-4">
+                  <label class="mb-2 mt-4 p-0">&nbsp;</label>
+                  <input 
+                    nbButton fullWidth hero status="primary"
+                    type="button" 
+                    value="Add Product" 
+                    class="btn btn-primary"
+                    (click)="addToCart()">
+                </div>
+              </div>
+              <div class="row">
+                <div [formGroup]="orderDetailsForm" class="col-md-12">
                   <table class="mt-4" style="width:100%">
                     <thead>
                       <tr class="align-bottom row-color-2">
-                        <th class="ng-star-inserted">Product Id</th>
+                        <th class="ng-star-inserted">#</th>
                         <th class="ng-star-inserted">Product Name</th>
+                        <th class="ng-star-inserted">Variant Name</th>
+                        <th class="ng-star-inserted">Minimum Retail Price</th>
+                        <th class="ng-star-inserted">Maximum Retail Price</th>
                         <th class="ng-star-inserted">Quantity</th>
                         <th class="ng-star-inserted">Price</th>
-                        <th class="ng-star-inserted">Net Total</th>
+                        <th class="ng-star-inserted">Total</th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let product of selectedProductList; let i = index">
-                        <td>{{ product.productId }}</td>
-                        <td>{{ product.productName }}</td>
-                        <td>
-                          <input fullWidth nbInput required
-                                 placeholder="Purchase Quantity"
-                                 [(ngModel)]="product.quantity"
-                                 name="salesModel.ProductsSold[{{i}}]"
-                                 [value]="product.quantity"
-                                 (change)="updateProductNetTotalAmount()">
-                        </td>
-                        <td>
-                          <input fullWidth nbInput required
-                                 placeholder="Purchase Price"
-                                 name="product.PurchasePrice[{{i}}]"
-                                 [value]="product.retailPrice"
-                                 (change)="updateProductNetTotalAmount()">
-                        </td>
-                        <td>{{ product.quantity * product.retailPrice }}</td>
-                      </tr>
-                      <tr>
-                        <td colspan="4"><b>Net Total</b></td>
-                        <td><b>{{ invoicePrice }}</b></td>
-                      </tr>
+                      <ng-container formArrayName="salesDetails" *ngFor="let rowFormGroup of orderDetailsFormArray.controls; let i = index">
+                        <tr [formGroupName]="i">
+                          <td>{{ i + 1 }}</td>
+                          <td>{{ orderInvoiceModel.salesDetails[i].productName }}</td>
+                          <td>{{ orderInvoiceModel.salesDetails[i].productVariantName }}</td>
+                          <td>{{ orderInvoiceModel.salesDetails[i].retailPrice - orderInvoiceModel.salesDetails[i].retailDiscount }}</td>
+                          <td>{{ orderInvoiceModel.salesDetails[i].retailPrice }}</td>
+                          <td>
+                            <input fullWidth nbInput required
+                                  placeholder="Quantity"
+                                  formControlName='quantity'
+                                  [value]="orderInvoiceModel.salesDetails[i].quantity">
+                            <div *ngIf="(rowFormGroup.get('quantity')?.touched || rowFormGroup.get('quantity')?.dirty) && rowFormGroup.get('quantity')?.invalid">
+                               <div *ngIf="rowFormGroup.get('quantity')?.hasError('required')" class="validationErrorMsg">
+                                  Quantity is required.
+                                </div>
+                                <div *ngIf="rowFormGroup.get('quantity')?.hasError('min')" class="validationErrorMsg">
+                                  Quantity must be at least 1.
+                                </div>
+                                <div *ngIf="rowFormGroup.get('quantity')?.hasError('max')" class="validationErrorMsg">
+                                  Quantity cannot exceed {{ orderInvoiceModel.salesDetails[i].maxQuantity }}.
+                                </div>
+                            </div>
+                          </td>
+                          <td>
+                            <input fullWidth nbInput required
+                                  placeholder="Retail Price"
+                                  formControlName='retailPrice'
+                                  [disabled]="orderInvoiceModel.salesDetails[i].retailDiscount <= 0"
+                                  [value]="orderInvoiceModel.salesDetails[i].retailPrice">
+                            <div *ngIf="(rowFormGroup.get('retailPrice')?.touched || rowFormGroup.get('retailPrice')?.dirty) && rowFormGroup.get('retailPrice')?.invalid">                              
+                               <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('required')" class="validationErrorMsg">
+                                  Retail price is required.
+                                </div>
+                                <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('min')" class="validationErrorMsg">
+                                  Retail price must be at least {{ orderInvoiceModel.salesDetails[i].minRetailPrice }}.
+                                </div>
+                                <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('max')" class="validationErrorMsg">
+                                  Retail price cannot exceed {{ orderInvoiceModel.salesDetails[i].maxRetailPrice }}.
+                                </div>
+                            </div>
+                          </td>
+                          <td>{{ orderInvoiceModel.salesDetails[i].quantity * orderInvoiceModel.salesDetails[i].retailPrice }}</td>
+                        </tr>
+                        <tr>
+                          <td colspan="5"><b>Total Discount</b></td>
+                          <td>
+                            <input fullWidth nbInput required placeholder="Discount" [value]="orderInvoiceModel.totalDiscount">
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colspan="5"><b>Net Total</b></td>
+                          <td><b>{{ orderInvoiceModel.invoiceTotal }}</b></td>
+                        </tr>
+                      </ng-container>
                     </tbody>
                   </table>
                 </div>

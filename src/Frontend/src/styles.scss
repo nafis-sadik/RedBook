@@ -76,6 +76,12 @@ nb-radio :hover{
   font-size: 0.7rem;
 }
 
+.validationErrorMsg{
+  font-style: italic;
+  color: var(--card-header-danger-background-color);
+  font-size: 0.7rem;
+}
+
 .tooltip-style{
   color: var(--text-primary-focus-color);
   border: 1px solid var(--text-primary-focus-color);

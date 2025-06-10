@@ -1,10 +1,15 @@
 import { ChangeDetectorRef, Component, Input, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NbStepperComponent } from '@nebular/theme';
+import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { NbDialogService, NbStepperComponent } from '@nebular/theme';
 import { CustomerModel } from 'src/app/dashboard/Models/customer.model';
 import { ProductModel } from 'src/app/dashboard/Models/product.model';
+import { SalesInvoiceDetailsModel } from 'src/app/dashboard/Models/sales-invoice-details.model';
+import { SalesInvoiceModel } from 'src/app/dashboard/Models/sales-invoice.model';
 import { CustomerService } from 'src/app/dashboard/services/customer.services';
+import { InventoryService } from 'src/app/dashboard/services/inventory.service';
 import { ProductService } from 'src/app/dashboard/services/products.service';
+import { LotSelectionComponent } from './lot-selection/lot-selection.component';
+import { PurchaseInvoiceDetailsModel } from 'src/app/dashboard/Models/purchase-invoice-details.model';
 
 @Component({
   selector: 'app-add-sales',
@@ -24,17 +29,18 @@ export class AddSalesComponent {
 
   // Sales form
   productDetailsForm: FormGroup;
-  outletProductList: Array<ProductModel> = [];
-  selectedProductList: Array<ProductModel> = [];
-  invoicePrice: number = 0;
+  productList: Array<ProductModel> = [];
 
-  // salesModel: ISalesModel;
-  memoProductId: number = 0;
+  orderDetailsForm: FormGroup;
+  get orderDetailsFormArray(): FormArray { return this.orderDetailsForm.get('salesDetails') as FormArray; }
+  orderInvoiceModel: SalesInvoiceModel = new SalesInvoiceModel();        
 
   constructor(
     private formBuilder: FormBuilder, 
     private customerService: CustomerService, 
     private productService: ProductService,
+    private inventoryService: InventoryService,
+    private diagService: NbDialogService,
     private cdRef: ChangeDetectorRef
   ) { }
 
@@ -42,6 +48,7 @@ export class AddSalesComponent {
     this.customerModel = new CustomerModel();
     this.customerModel.orgId = this.selectOrganization;
     this.initializeCustomerForm();
+    this.initializeOrderForm();
   }
 
   initializeCustomerForm(): void {
@@ -78,41 +85,96 @@ export class AddSalesComponent {
       this.customerService.addCustomer(this.customerModel)
       .subscribe((response: CustomerModel) => {
         this.customerModel = response;
-        this.initializeProductDetailsForm();
         this.salesMemoStepper.next();
       });
     } else {
       this.customerModel = new CustomerModel();
+      this.customerModel.customerId = 0;
       this.salesMemoStepper.next();
-      this.initializeProductDetailsForm();
     }
   }
 
-  initializeProductDetailsForm(): void {
-    alert(this.selectOrganization);
+  selectedOrderDetails: SalesInvoiceDetailsModel = new SalesInvoiceDetailsModel();
+  initializeOrderForm(): void {
+    this.orderDetailsForm = this.formBuilder.group({
+      totalDiscount: [0, [Validators.required, Validators.min(0)]],
+      salesDetails: this.formBuilder.array([], [Validators.required, Validators.min(1)]),
+    });
+
+    this.orderDetailsForm.valueChanges.subscribe(formData => {
+      this.orderInvoiceModel.salesDetails = formData.salesDetails;
+      this.orderInvoiceModel.totalDiscount = formData.totalDiscount;
+      this.orderInvoiceModel.invoiceTotal = 0;
+      this.orderInvoiceModel.salesDetails.forEach((salesDetailObj: SalesInvoiceDetailsModel) => {
+        salesDetailObj.totalCostPrice = salesDetailObj.quantity * salesDetailObj.retailPrice;
+        salesDetailObj.totalCostPrice -= salesDetailObj.retailDiscount;
+        this.orderInvoiceModel.invoiceTotal += salesDetailObj.totalCostPrice;
+      });
+      this.orderInvoiceModel.invoiceTotal -= this.orderInvoiceModel.totalDiscount;
+    });
     this.productService.getProductList(this.selectOrganization)
-      .subscribe(prodArr => this.outletProductList = prodArr);
+      .subscribe(prodArr => this.productList = prodArr);
   }
 
-  selectProductToSell(selectedProductId: number): void {
-    let selectedProd: ProductModel | undefined = this.outletProductList.find(x => x.productId == selectedProductId);
+  selectProduct(selectedProdId: number): void {
+    this.selectedOrderDetails.productId = Number(selectedProdId);
+    let selectedProd: ProductModel | undefined = this.productList.find(x => x.productId == this.selectedOrderDetails.productId);
     if(selectedProd == undefined || selectedProd == null) return;
 
-    this.selectedProductList.push(selectedProd);
+    this.selectedOrderDetails.variants = this.productList.find(x => x.productId == this.selectedOrderDetails.productId)?.productVariants ?? [];
+    this.selectedOrderDetails.productVariantId = 0;
     this.cdRef.detectChanges();
-    this.updateProductNetTotalAmount();
+  }
+
+  selectVariant(selectedVariantId: number): void {
+    let selectedVariant = this.selectedOrderDetails.variants.find(x => x.variantId == Number(selectedVariantId));
+    if(selectedVariant == undefined) return;
+    let selectedProd = this.productList.find(x => x.productId == this.selectedOrderDetails.productId);
+    if(selectedProd == undefined) return;
+
+    this.selectedOrderDetails.productId = selectedProd.productId;
+    this.selectedOrderDetails.productName = selectedProd.productName;
+    this.selectedOrderDetails.productVariantId = selectedVariantId;
+    this.selectedOrderDetails.productVariantName = selectedVariant.variantName;
+  }
+
+  addToCart(): void {
+    if(this.selectedOrderDetails.productVariantId > 0){
+      this.inventoryService.getVariantInventory(this.selectedOrderDetails.productVariantId)
+        .subscribe((lotsAvailable: Array<PurchaseInvoiceDetailsModel>) => {
+          this.diagService.open(LotSelectionComponent,{            
+              context: {
+                availableLots: lotsAvailable,
+                selectionCallback: (lot: PurchaseInvoiceDetailsModel) => {
+                  this.selectedOrderDetails.lot = lot;
+                  this.selectedOrderDetails.lotId = lot.recordId;
+                  this.selectedOrderDetails.maxQuantity = lot.quantity;
+                  this.selectedOrderDetails.maxRetailPrice = lot.retailPrice;
+                  this.selectedOrderDetails.minRetailPrice = lot.retailPrice - lot.maxRetailDiscount;
+
+                  this.orderDetailsFormArray.push(this.formBuilder.group({
+                    productId: [this.selectedOrderDetails.productId],
+                    productName: [this.selectedOrderDetails.productName],
+                    productVariantId: [this.selectedOrderDetails.productVariantId],
+                    productVariantName: [this.selectedOrderDetails.productVariantName],
+                    quantity: [1, [Validators.required, Validators.min(1), Validators.max(lot.quantity)]],
+                    retailPrice: [lot.retailPrice, [Validators.required, Validators.min(this.selectedOrderDetails.minRetailPrice), Validators.max(this.selectedOrderDetails.maxRetailPrice)]],
+                  }));
+
+                  this.selectedOrderDetails = new SalesInvoiceDetailsModel();
+                }
+              }
+            }
+          );
+          console.log(lotsAvailable);
+        });
+    }
+    
+    this.cdRef.detectChanges();
   }
 
   initializePaymentDetailsForm() {
     throw new Error('Method not implemented.');
-  }
-
-  updateProductNetTotalAmount(): void {
-    // this.salesModel.NetTotal = 0;
-    // this.salesModel.ProductsSold.forEach(product=>{
-    //   product.ProductNetTotalPrice = product.Quantity * product.RetailPrice;
-    //   this.salesModel.NetTotal += product.ProductNetTotalPrice;
-    // });
   }
 
   typingPhoneNumber(): void {

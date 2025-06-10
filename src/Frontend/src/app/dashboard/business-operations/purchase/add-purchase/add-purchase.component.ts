@@ -151,7 +151,7 @@ export class AddPurchaseComponent implements OnInit {
     });
   }
 
-   get orderDetailsFormArray(): FormArray { return this.orderDetailsForm.get('purchaseDetails') as FormArray; }
+  get orderDetailsFormArray(): FormArray { return this.orderDetailsForm.get('purchaseDetails') as FormArray; }
   
   addProduct(): void {
     let selectedProduct = this.productList.find(x => x.productId == this.selectedProdId);

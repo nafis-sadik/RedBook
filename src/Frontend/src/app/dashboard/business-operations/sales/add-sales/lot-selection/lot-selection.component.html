@@ -1,0 +1,33 @@
+<section id="LotSelection">
+  <nb-card>
+    <nb-card-header>
+        Select Purchase Lot
+    </nb-card-header>
+    <nb-card-body>
+        <table class="mt-4" style="width:100%">
+            <thead>
+                <tr class="align-bottom row-color-2">
+                    <th class="ng-star-inserted">#</th>
+                    <th class="ng-star-inserted">Variant Name</th>
+                    <th class="ng-star-inserted">Minimum Retail Price</th>
+                    <th class="ng-star-inserted">Maximum Retail Price</th>
+                    <th class="ng-star-inserted">Stock Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let lot of availableLots">
+                    <td><input class="form-check-input" type="radio" name="lot" [id]="lot.recordId" [value]="lot.recordId"></td>
+                    <td>{{ lot.productVariantName }}</td>
+                    <td>{{ lot.retailPrice - lot.maxRetailDiscount }}</td>
+                    <td>{{ lot.retailPrice }}</td>
+                    <td>{{ lot.quantity }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </nb-card-body>
+    <nb-card-footer class="d-flex justify-content-between">
+        <button nbButton status="danger" type="button" (click)="cancel()">Cancel</button>
+        <button nbButton status="success" type="button" (click)="select()">Select</button>
+    </nb-card-footer>
+  </nb-card>
+</section>
