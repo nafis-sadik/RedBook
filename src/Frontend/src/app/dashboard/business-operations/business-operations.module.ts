@@ -28,6 +28,7 @@ import { VendorsComponent } from './vendors/vendors.component';
 import { AddVendorsComponent } from './vendors/add-vendors/add-vendors.component';
 import { SalesComponent } from './sales/sales.component';
 import { AddSalesComponent } from './sales/add-sales/add-sales.component';
+import { LotSelectionComponent } from './sales/add-sales/lot-selection/lot-selection.component';
 
 
 @NgModule({
@@ -40,6 +41,7 @@ import { AddSalesComponent } from './sales/add-sales/add-sales.component';
     AddPurchaseComponent,
     PurchaseDetailsComponent,
     BusinessOperationsComponent,
+    LotSelectionComponent
   ],
   imports: [
     CommonModule,
