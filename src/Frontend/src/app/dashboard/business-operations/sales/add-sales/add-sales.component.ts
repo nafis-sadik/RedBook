@@ -102,14 +102,15 @@ export class AddSalesComponent {
     });
 
     this.orderDetailsForm.valueChanges.subscribe(formData => {
-      this.orderInvoiceModel.salesDetails = formData.salesDetails;
       this.orderInvoiceModel.totalDiscount = formData.totalDiscount;
       this.orderInvoiceModel.invoiceTotal = 0;
-      this.orderInvoiceModel.salesDetails.forEach((salesDetailObj: SalesInvoiceDetailsModel) => {
-        salesDetailObj.totalCostPrice = salesDetailObj.quantity * salesDetailObj.retailPrice;
-        salesDetailObj.totalCostPrice -= salesDetailObj.retailDiscount;
-        this.orderInvoiceModel.invoiceTotal += salesDetailObj.totalCostPrice;
-      });
+      for(let i = 0; i < this.orderInvoiceModel.salesDetails.length; i++){
+        this.orderInvoiceModel.salesDetails[i].quantity = formData.salesDetails[i].quantity;
+        this.orderInvoiceModel.salesDetails[i].retailPrice = formData.salesDetails[i].retailPrice;
+        this.orderInvoiceModel.salesDetails[i].totalCostPrice = this.orderInvoiceModel.salesDetails[i].quantity * this.orderInvoiceModel.salesDetails[i].retailPrice;
+        this.orderInvoiceModel.salesDetails[i].totalCostPrice -= this.orderInvoiceModel.salesDetails[i].retailDiscount;
+        this.orderInvoiceModel.invoiceTotal += this.orderInvoiceModel.salesDetails[i].totalCostPrice;
+      }
       this.orderInvoiceModel.invoiceTotal -= this.orderInvoiceModel.totalDiscount;
     });
     this.productService.getProductList(this.selectOrganization)
@@ -142,7 +143,7 @@ export class AddSalesComponent {
     if(this.selectedOrderDetails.productVariantId > 0){
       this.inventoryService.getVariantInventory(this.selectedOrderDetails.productVariantId)
         .subscribe((lotsAvailable: Array<PurchaseInvoiceDetailsModel>) => {
-          this.diagService.open(LotSelectionComponent,{            
+          this.diagService.open(LotSelectionComponent,{
               context: {
                 availableLots: lotsAvailable,
                 selectionCallback: (lot: PurchaseInvoiceDetailsModel) => {
@@ -151,6 +152,7 @@ export class AddSalesComponent {
                   this.selectedOrderDetails.maxQuantity = lot.quantity;
                   this.selectedOrderDetails.maxRetailPrice = lot.retailPrice;
                   this.selectedOrderDetails.minRetailPrice = lot.retailPrice - lot.maxRetailDiscount;
+                  this.orderInvoiceModel.salesDetails.push(this.selectedOrderDetails);
 
                   this.orderDetailsFormArray.push(this.formBuilder.group({
                     productId: [this.selectedOrderDetails.productId],
@@ -158,19 +160,25 @@ export class AddSalesComponent {
                     productVariantId: [this.selectedOrderDetails.productVariantId],
                     productVariantName: [this.selectedOrderDetails.productVariantName],
                     quantity: [1, [Validators.required, Validators.min(1), Validators.max(lot.quantity)]],
-                    retailPrice: [lot.retailPrice, [Validators.required, Validators.min(this.selectedOrderDetails.minRetailPrice), Validators.max(this.selectedOrderDetails.maxRetailPrice)]],
-                  }));
-
+                    retailPrice: [
+                        {
+                          value: lot.retailPrice, 
+                          disabled: this.selectedOrderDetails.maxRetailPrice == this.selectedOrderDetails.minRetailPrice
+                        },
+                        [
+                          Validators.required, 
+                          Validators.min(this.selectedOrderDetails.minRetailPrice), 
+                          Validators.max(this.selectedOrderDetails.maxRetailPrice)]
+                        ]
+                      }));
+                      
                   this.selectedOrderDetails = new SalesInvoiceDetailsModel();
                 }
               }
             }
           );
-          console.log(lotsAvailable);
         });
     }
-    
-    this.cdRef.detectChanges();
   }
 
   initializePaymentDetailsForm() {

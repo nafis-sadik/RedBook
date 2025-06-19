@@ -132,9 +132,10 @@
                         <th class="ng-star-inserted">#</th>
                         <th class="ng-star-inserted">Product Name</th>
                         <th class="ng-star-inserted">Variant Name</th>
+                        <th class="ng-star-inserted">Stock Quantity</th>
+                        <th class="ng-star-inserted">Quantity</th>
                         <th class="ng-star-inserted">Minimum Retail Price</th>
                         <th class="ng-star-inserted">Maximum Retail Price</th>
-                        <th class="ng-star-inserted">Quantity</th>
                         <th class="ng-star-inserted">Price</th>
                         <th class="ng-star-inserted">Total</th>
                       </tr>
@@ -145,8 +146,7 @@
                           <td>{{ i + 1 }}</td>
                           <td>{{ orderInvoiceModel.salesDetails[i].productName }}</td>
                           <td>{{ orderInvoiceModel.salesDetails[i].productVariantName }}</td>
-                          <td>{{ orderInvoiceModel.salesDetails[i].retailPrice - orderInvoiceModel.salesDetails[i].retailDiscount }}</td>
-                          <td>{{ orderInvoiceModel.salesDetails[i].retailPrice }}</td>
+                          <td> {{ orderInvoiceModel.salesDetails[i].maxQuantity }} </td>
                           <td>
                             <input fullWidth nbInput required
                                   placeholder="Quantity"
@@ -164,11 +164,12 @@
                                 </div>
                             </div>
                           </td>
+                          <td>{{ orderInvoiceModel.salesDetails[i].minRetailPrice }}</td>
+                          <td>{{ orderInvoiceModel.salesDetails[i].maxRetailPrice }}</td>
                           <td>
                             <input fullWidth nbInput required
                                   placeholder="Retail Price"
                                   formControlName='retailPrice'
-                                  [disabled]="orderInvoiceModel.salesDetails[i].retailDiscount <= 0"
                                   [value]="orderInvoiceModel.salesDetails[i].retailPrice">
                             <div *ngIf="(rowFormGroup.get('retailPrice')?.touched || rowFormGroup.get('retailPrice')?.dirty) && rowFormGroup.get('retailPrice')?.invalid">                              
                                <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('required')" class="validationErrorMsg">
@@ -184,17 +185,20 @@
                           </td>
                           <td>{{ orderInvoiceModel.salesDetails[i].quantity * orderInvoiceModel.salesDetails[i].retailPrice }}</td>
                         </tr>
+                      </ng-container>
                         <tr>
-                          <td colspan="5"><b>Total Discount</b></td>
+                          <td colspan="8"><b>Total Discount</b></td>
                           <td>
-                            <input fullWidth nbInput required placeholder="Discount" [value]="orderInvoiceModel.totalDiscount">
+                            <input fullWidth nbInput required 
+                                  placeholder="Discount" 
+                                  formControlName='totalDiscount'
+                                  [value]="orderInvoiceModel.totalDiscount">
                           </td>
                         </tr>
                         <tr>
-                          <td colspan="5"><b>Net Total</b></td>
+                          <td colspan="8"><b>Net Total</b></td>
                           <td><b>{{ orderInvoiceModel.invoiceTotal }}</b></td>
                         </tr>
-                      </ng-container>
                     </tbody>
                   </table>
                 </div>
@@ -277,7 +281,7 @@
         <nb-step [hidden]="true">
           <div class="container-fluid">
             <div class="step-container">
-              <div class="row">
+              <div class="row">`
                 <h3 style="text-align: center;">Invoice Saved Successfully!</h3>
                 <button nbButton hero type="button" status="primary" class="float-right"
                         (click)="SalesMemo.reset()">Done</button>
