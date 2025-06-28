@@ -5,14 +5,9 @@ namespace Inventory.WebAPI.Controllers.Sales
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class InventoryController : ControllerBase
+    public class InventoryController(IInventoryService inventoryService) : ControllerBase
     {
-        private readonly IInventoryService _inventoryService;
-
-        public InventoryController(IInventoryService inventoryService)
-        {
-            _inventoryService = inventoryService;
-        }
+        private readonly IInventoryService _inventoryService = inventoryService;
 
         [HttpGet]
         [Route("Variant/{variantId}")]

@@ -15,14 +15,14 @@ namespace Inventory.Domain.Implementation.CRM
     public class CustomerServices : ServiceBase, ICustomerServices
     {
         public CustomerServices(
-            ILogger<ProductService> logger,
+            ILogger<CustomerServices> logger,
             IObjectMapper mapper,
             IClaimsPrincipalAccessor claimsPrincipalAccessor,
             IUnitOfWorkManager unitOfWork,
             IHttpContextAccessor httpContextAccessor
         ) : base(logger, mapper, claimsPrincipalAccessor, unitOfWork, httpContextAccessor) { }
 
-        public async Task<CustomerModel?> SyncCustomerInfoAsync(CustomerModel model)
+        public async Task<CustomerModel> SyncCustomerInfoAsync(CustomerModel model)
         {
             if (string.IsNullOrEmpty(model.ContactNumber) && string.IsNullOrEmpty(model.Email))
                 throw new ArgumentException($"Your customer must provide contact number or email address");

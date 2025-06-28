@@ -20,7 +20,7 @@ public partial class SalesInvoiceDetails
     [ForeignKey("Variant")]
     public int VariantId { get; set; }
 
-    [ForeignKey("PurchaseInvoice")]
+    [ForeignKey("PurchaseInvoiceDetails")]
     public int PurchaseId { get; set; }
 
     public decimal Quantity { get; set; }
@@ -40,7 +40,7 @@ public partial class SalesInvoiceDetails
 
     public virtual SalesInvoice Invoice { get; set; }
 
-    public virtual PurchaseInvoice PurchaseInvoice { get; set; }
+    public virtual PurchaseInvoiceDetails PurchaseInvoiceDetails { get; set; }
 
     public virtual ProductVariant Variant { get; set; }
 }
