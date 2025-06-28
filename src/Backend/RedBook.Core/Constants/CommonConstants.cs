@@ -45,7 +45,7 @@
             public const string MailExists = "Account with this Email Id already exists, Try resting password";
             public const string InvalidToken = "Http request was sent using invalid token";
 
-            // Access control
+            // Access control - Tuk tuk
             public const string NotAllowed = "You not allowed to perform this operation";
             public const string AdminAccessRequired = "Only admin user can perform this peration";
         }
