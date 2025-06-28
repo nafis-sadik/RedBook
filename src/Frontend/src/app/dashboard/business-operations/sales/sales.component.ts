@@ -33,26 +33,23 @@ export class SalesComponent implements OnInit {
 
     if(this.pagedSalesModel.tableConfig){
       this.pagedSalesModel.tableConfig.tableMaping = {
-        "Memo No": "MemoNumber",
-        "Net Total": "NetTotal",
-        "Paid Amount": "PaidAmount",
-        "Sales Date": "SalesDate",
+        "Memo No": "invoiceNumber",
+        "Customer Name": "customerName",
+        "Invoice Total": "invoiceTotal",
+        "Paymeny Status": "paymentStatus",
+        "Paid Amount": "totalPaid",
+        "Sales Date": "salesDate",
       };
 
-      this.pagedSalesModel.tableConfig.onEdit = () => {
-        this.isUpdateOperation = true;
-        
-        dashboardService.ngDialogService.open(AddSalesComponent, {
-          context: {
-            customerModel: new CustomerModel(),
-            selectOrganization: this.dashboardService.selectedOutletId
-          }
-        });
-      };
+      this.pagedSalesModel.tableConfig.onEdit = null;
 
       this.pagedSalesModel.tableConfig.onDelete = () => {
         console.log('onDelete');
       };
+
+      this.pagedSalesModel.tableConfig.onView = (data: any) => {
+        console.log('on view', data);
+      }
     }
 
     if(this.pagedSalesModel.addNewElementButtonConfig) {
@@ -103,13 +100,45 @@ export class SalesComponent implements OnInit {
     });
 
     // Get data from service
-    let pageLength: number = this.pagedSalesModel.pagingConfig? this.pagedSalesModel.pagingConfig.pageLength : 5;
-    let searchString: string = this.pagedSalesModel.searchingConfig? this.pagedSalesModel.searchingConfig.searchString : "";
-
-    // Set data to observable view model to render in UI
-    if(this.pagedSalesModel.tableConfig)
-      this.pagedSalesModel.tableConfig.sourceData = this.salesService.getSalesList(outletId, 1, pageLength, searchString);
+    if(this.pagedSalesModel.pagingConfig){
+      this.pagedSalesModel.pagingConfig.pageNumber = 1;
+    }
     
-    this.ngxPaginationService.set(this.pagedSalesModel);
+    this.loadPagedData();
+  }
+
+  loadPagedData() {
+    this.pagedSalesModel.organizationId = this.dashboardService.selectedOutletId;
+    this.salesService.getSalesPaged(this.pagedSalesModel)
+      .subscribe((response: any) => {
+        console.log('response', response);
+        if (this.pagedSalesModel.tableConfig) {
+          this.pagedSalesModel.tableConfig.sourceData = response.sourceData;
+
+          this.pagedSalesModel.tableConfig.sourceData.forEach((salesInvoiceData: SalesInvoiceModel) => {
+            if(salesInvoiceData.customer)
+              salesInvoiceData.customerName = salesInvoiceData.customer.customerName;
+          })
+        
+          this.pagedSalesModel.tableConfig.sourceData.forEach(invoice => {
+            // Parse the UTC date string to a Date object
+            let utcDate = new Date(invoice.salesDate.toString());
+
+            // Convert the UTC date to local time
+            let localDate = new Date(utcDate.toLocaleString());
+
+            // Format the local date as needed (e.g., ISO string)
+            invoice.salesDate = localDate.toDateString();
+          });
+        }
+
+        if(this.pagedSalesModel.pagingConfig) {
+          this.pagedSalesModel.pagingConfig.pageNumber = response.pageNumber;
+          this.pagedSalesModel.pagingConfig.pageLength = response.pageLength;
+          this.pagedSalesModel.pagingConfig.totalItems = response.totalItems;
+        }
+
+        this.ngxPaginationService.set(this.pagedSalesModel);
+      });
   }
 }

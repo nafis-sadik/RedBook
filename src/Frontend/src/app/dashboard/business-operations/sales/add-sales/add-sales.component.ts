@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, Input, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NbDialogService, NbStepperComponent } from '@nebular/theme';
+import { NbDialogService, NbStepperComponent, NbToastrService } from '@nebular/theme';
 import { CustomerModel } from 'src/app/dashboard/Models/customer.model';
 import { ProductModel } from 'src/app/dashboard/Models/product.model';
 import { SalesInvoiceDetailsModel } from 'src/app/dashboard/Models/sales-invoice-details.model';
@@ -10,6 +10,7 @@ import { InventoryService } from 'src/app/dashboard/services/inventory.service';
 import { ProductService } from 'src/app/dashboard/services/products.service';
 import { LotSelectionComponent } from './lot-selection/lot-selection.component';
 import { PurchaseInvoiceDetailsModel } from 'src/app/dashboard/Models/purchase-invoice-details.model';
+import { SalesService } from 'src/app/dashboard/services/sell.service';
 
 @Component({
   selector: 'app-add-sales',
@@ -23,7 +24,7 @@ export class AddSalesComponent {
   @Input() selectOrganization: number = 0;
 
   // Customer forms
-  @Input() customerModel: CustomerModel;
+  @Input() customerModel: CustomerModel | null;
   customerDetailsForm: FormGroup;
   customerContactNumbers: Array<string> = [];
 
@@ -41,6 +42,8 @@ export class AddSalesComponent {
     private productService: ProductService,
     private inventoryService: InventoryService,
     private diagService: NbDialogService,
+    private salesService: SalesService,
+    private toastr: NbToastrService,
     private cdRef: ChangeDetectorRef
   ) { }
 
@@ -81,16 +84,17 @@ export class AddSalesComponent {
   }
 
   syncCustomerInfo(skip: boolean): void {
-    if(!skip) {
+    if(!skip && this.customerModel != null) {
       this.customerService.addCustomer(this.customerModel)
       .subscribe((response: CustomerModel) => {
         this.customerModel = response;
         this.salesMemoStepper.next();
       });
     } else {
-      this.customerModel = new CustomerModel();
-      this.customerModel.customerId = 0;
+      this.customerModel = null;
+      this.salesMemoStepper.linear = false;
       this.salesMemoStepper.next();
+      this.salesMemoStepper.linear = true;
     }
   }
 
@@ -106,7 +110,11 @@ export class AddSalesComponent {
       this.orderInvoiceModel.invoiceTotal = 0;
       for(let i = 0; i < this.orderInvoiceModel.salesDetails.length; i++){
         this.orderInvoiceModel.salesDetails[i].quantity = formData.salesDetails[i].quantity;
-        this.orderInvoiceModel.salesDetails[i].retailPrice = formData.salesDetails[i].retailPrice;
+        if(this.orderInvoiceModel.salesDetails[i].maxRetailPrice != this.orderInvoiceModel.salesDetails[i].minRetailPrice){
+          this.orderInvoiceModel.salesDetails[i].retailPrice = formData.salesDetails[i].retailPrice;
+        } else {
+          this.orderInvoiceModel.salesDetails[i].retailPrice = this.orderInvoiceModel.salesDetails[i].minRetailPrice;
+        }
         this.orderInvoiceModel.salesDetails[i].totalCostPrice = this.orderInvoiceModel.salesDetails[i].quantity * this.orderInvoiceModel.salesDetails[i].retailPrice;
         this.orderInvoiceModel.salesDetails[i].totalCostPrice -= this.orderInvoiceModel.salesDetails[i].retailDiscount;
         this.orderInvoiceModel.invoiceTotal += this.orderInvoiceModel.salesDetails[i].totalCostPrice;
@@ -147,32 +155,51 @@ export class AddSalesComponent {
               context: {
                 availableLots: lotsAvailable,
                 selectionCallback: (lot: PurchaseInvoiceDetailsModel) => {
-                  this.selectedOrderDetails.lot = lot;
-                  this.selectedOrderDetails.lotId = lot.recordId;
-                  this.selectedOrderDetails.maxQuantity = lot.quantity;
-                  this.selectedOrderDetails.maxRetailPrice = lot.retailPrice;
-                  this.selectedOrderDetails.minRetailPrice = lot.retailPrice - lot.maxRetailDiscount;
-                  this.orderInvoiceModel.salesDetails.push(this.selectedOrderDetails);
+                  let existingLot: SalesInvoiceDetailsModel | undefined = this.orderInvoiceModel.salesDetails.find(x => x.lotId == lot.recordId);
+                  if(existingLot == undefined){
+                    this.selectedOrderDetails.lot = lot;
+                    this.selectedOrderDetails.lotId = lot.recordId;
+                    this.selectedOrderDetails.maxQuantity = lot.quantity;
+                    this.selectedOrderDetails.maxRetailPrice = lot.retailPrice;
+                    this.selectedOrderDetails.minRetailPrice = lot.retailPrice - lot.maxRetailDiscount;
+                    
+                    this.orderInvoiceModel.salesDetails.push(this.selectedOrderDetails);
 
-                  this.orderDetailsFormArray.push(this.formBuilder.group({
-                    productId: [this.selectedOrderDetails.productId],
-                    productName: [this.selectedOrderDetails.productName],
-                    productVariantId: [this.selectedOrderDetails.productVariantId],
-                    productVariantName: [this.selectedOrderDetails.productVariantName],
-                    quantity: [1, [Validators.required, Validators.min(1), Validators.max(lot.quantity)]],
-                    retailPrice: [
-                        {
-                          value: lot.retailPrice, 
-                          disabled: this.selectedOrderDetails.maxRetailPrice == this.selectedOrderDetails.minRetailPrice
-                        },
-                        [
-                          Validators.required, 
-                          Validators.min(this.selectedOrderDetails.minRetailPrice), 
-                          Validators.max(this.selectedOrderDetails.maxRetailPrice)]
-                        ]
-                      }));
-                      
-                  this.selectedOrderDetails = new SalesInvoiceDetailsModel();
+                    this.orderDetailsFormArray.push(this.formBuilder.group({
+                      productId: [this.selectedOrderDetails.productId],
+                      productName: [this.selectedOrderDetails.productName],
+                      productVariantId: [this.selectedOrderDetails.productVariantId],
+                      productVariantName: [this.selectedOrderDetails.productVariantName],
+                      quantity: [1, [Validators.required, Validators.min(1), Validators.max(lot.quantity)]],
+                      retailPrice: [
+                          {
+                            value: lot.retailPrice, 
+                            disabled: this.selectedOrderDetails.maxRetailPrice == this.selectedOrderDetails.minRetailPrice
+                          },
+                          [
+                            Validators.required, 
+                            Validators.min(this.selectedOrderDetails.minRetailPrice), 
+                            Validators.max(this.selectedOrderDetails.maxRetailPrice)
+                          ]
+                        ]}));
+                        
+                    this.selectedOrderDetails = new SalesInvoiceDetailsModel();
+                  }
+                  else {
+                    let targetCartObj = this.orderInvoiceModel.salesDetails.find(x => x.lotId == existingLot?.lotId);
+                    if(!targetCartObj) return;
+                    let indexOfItem: number = this.orderInvoiceModel.salesDetails.indexOf(targetCartObj);
+                    let row = document.querySelectorAll('#CartPage table tbody tr').item(indexOfItem);
+                    row.classList.add('highlight-active');
+                    setTimeout(() => {
+                      row.classList.add('highlight-fade-out');      // start transition
+                      row.classList.remove('highlight-active');     // remove highlight
+
+                      setTimeout(() => {
+                        row.classList.remove('highlight-fade-out'); // clean up
+                      }, 1000); // match transition duration
+                    }, 2000); // wait before fading
+                  }
                 }
               }
             }
@@ -181,12 +208,39 @@ export class AddSalesComponent {
     }
   }
 
+  removeFromCart(index: number): void {
+    // Remove from FormArray
+    this.orderDetailsFormArray.removeAt(index);
+
+    // Remove from orderInvoiceModel.salesDetails array
+    if (index > -1 && index < this.orderInvoiceModel.salesDetails.length) {
+      this.orderInvoiceModel.salesDetails.splice(index, 1);
+    }
+  }
+
   initializePaymentDetailsForm() {
-    throw new Error('Method not implemented.');
+    if(this.orderDetailsForm.valid){
+      this.orderInvoiceModel.organizationId = this.selectOrganization;
+      this.salesService.saveSell(this.orderInvoiceModel)
+        .subscribe(
+          (invoice: SalesInvoiceModel) => {
+            this.orderInvoiceModel = invoice;
+            this.salesMemoStepper.next();
+          },
+          (err) => {
+            console.log(err);
+            this.toastr.danger(err);            
+          }
+        )
+    }
+    else {
+      this.toastr.warning('Invalid invoice', 'Unable to save');
+    }
   }
 
   typingPhoneNumber(): void {
     this.customerDetailsForm.disable();
+    if(this.customerModel == null) { this.customerModel = new CustomerModel(); }
     let typedPhoneNumber: string = this.customerModel.contactNumber;
 
     if(typedPhoneNumber.length > 8 || typedPhoneNumber.includes('@')){

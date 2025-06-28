@@ -94,3 +94,24 @@ nb-radio :hover{
 .tooltip-style:hover{
   cursor: pointer;
 }
+
+/* Initial highlight */
+.highlight-active {
+  background-color: var(--button-filled-warning-background-color);
+  animation: fadeOutHighlight 2s forwards;
+}
+
+@keyframes fadeOutHighlight {
+  0% {
+    background-color: var(--button-filled-warning-background-color);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+/* Smooth fading transition */
+.highlight-fade-out {
+  transition: background-color 1s ease-out;
+  background-color: transparent; /* or original row color */
+}

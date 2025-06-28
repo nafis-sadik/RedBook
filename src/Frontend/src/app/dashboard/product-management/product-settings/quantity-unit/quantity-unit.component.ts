@@ -36,6 +36,7 @@ export class QuantityUnitComponent {
       attributeName: '',
       attributeType: ''
     }
+    
     this.selectedBrand = {
       attributeId: 0,
       attributeName: '',

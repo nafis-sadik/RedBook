@@ -77,7 +77,15 @@ export class SalesInvoiceDetailsModel {
      * @type {number}
      */
     totalCostPrice: number = 0;
-    lotId: number = 0;
+    /**
+     * Purchase Invoice Id of this variant
+     * @type {number}
+     */
+    lotId: number = 0;    
+    /**
+     * Purchase Invoice object of this variant
+     * @type {PurchaseInvoiceDetailsModel}
+     */
     lot: PurchaseInvoiceDetailsModel = new PurchaseInvoiceDetailsModel()
     /**
      * Array of product variants of the selected product. (Required for viewing on UI, not necessary for API)

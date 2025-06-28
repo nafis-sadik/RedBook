@@ -1,0 +1,109 @@
+<section id="InvoiceDisplay">
+  <nb-card>
+    <nb-tabset>
+      <nb-tab tabTitle="Invoice">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-3">
+              <label class="mb-2 mt-4 p-0 label">
+                <b>Reference #</b>
+                <span nbTooltipStatus="primary" nbTooltip="Invoice/Chalan Number (Id of this purchase)"
+                      class="tooltip-style">?</span>
+              </label>
+              <div class="input-group">
+                {{ invoiceModel.invoiceNumber }}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="mb-2 mt-4 p-0 label">
+                <b>Vendor / Supplier</b>
+              </label>
+              <div class="input-group">
+                {{ invoiceModel.customerName }}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="mb-2 mt-4 p-0 label">
+                <b>Purchase Date</b>
+              </label>
+              <div class="input-group">
+                {{ invoiceModel.salesDate }}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="mb-2 mt-4 p-0 label">
+                <b>Invoice Total</b>
+                <span nbTooltipStatus="primary" nbTooltip="Total amount of money the vendor shall recieve agains this invoice"
+                      class="tooltip-style">?</span>
+              </label>
+              <div class="input-group">
+                {{ invoiceModel.invoiceTotal }}
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <label class="mb-2 mt-4 p-0 label">Products</label>
+              <table class="table table-bordered align-middle">
+                <thead>
+                  <tr class="align-bottom row-color-2">
+                    <th class="ng-star-inserted text-center">#</th>
+                    <th class="ng-star-inserted text-center">Product Name</th>
+                    <th class="ng-star-inserted text-center">Variant Name</th>
+                    <th class="ng-star-inserted text-center">Quantity</th>
+                    <th class="ng-star-inserted text-center">Purchase<br>Price</th>
+                    <th class="ng-star-inserted text-center">Purchase<br>Discount</th>
+                    <th class="ng-star-inserted text-center">Retail<br>Price</th>
+                    <th class="ng-star-inserted text-center">Max Retail<br>Discount</th>
+                    <th class="ng-star-inserted text-center">Retail<br>Vat Rate</th>
+                    <th class="ng-star-inserted text-center">Total<br>Price</th>
+                    <th class="ng-star-inserted text-center">Download<br>Barcode</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let product of invoiceModel.salesDetails;let i = index">
+                    <td class="text-center">{{ i + 1 }}</td>
+                    <td class="text-center">{{ product.productName }}</td>
+                    <td class="text-center">{{ product.productVariantName }}</td>
+                    <td class="text-center">{{ product.quantity }}</td>
+                    <td class="text-center">{{ product.retailPrice }}</td>
+                    <td class="text-center">{{ product.retailDiscount }}</td>
+                    <td class="text-center">{{ product.retailPrice }}</td>
+                    <td class="text-center">0</td>
+                    <td class="text-center">{{ product.vatRate }}%</td>
+                    <td class="text-center">{{ product.totalCostPrice }}</td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td class="text-left" colspan="8">Invoice Discount</td>
+                    <td class="text-center">{{ invoiceModel.totalDiscount }}</td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td></td>
+                    <td class="text-left" colspan="8">Total</td>
+                    <td class="text-center">{{ invoiceModel.invoiceTotal }}</td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <label class="mb-2 mt-4 p-0 label">Terms</label>
+              {{ invoiceModel.terms }}
+            </div>
+            <div class="col-md-6">
+              <label class="mb-2 mt-4 p-0 label">Remarks</label>
+              {{ invoiceModel.remarks }}
+            </div>
+          </div>
+        </div>
+      </nb-tab>
+      <nb-tab tabTitle="Payments">
+        <p>List of <strong>Payments</strong>.</p>
+      </nb-tab>
+    </nb-tabset>
+  </nb-card>
+</section>

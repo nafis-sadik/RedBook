@@ -1,3 +1,4 @@
+import { CustomerModel } from "./customer.model";
 import { SalesInvoiceDetailsModel } from "./sales-invoice-details.model";
 import { SalesPaymentModel } from "./sales-payment.model";
 
@@ -13,12 +14,6 @@ export class SalesInvoiceModel {
    * @type {string}
    */
   salesDate: string = '';
-
-  /**
-   * Person or entity, you are purchasing from.
-   * @type {string}
-   */
-  customerName: string = '';
 
   /**
    * The total sales price for the invoice.
@@ -69,10 +64,16 @@ export class SalesInvoiceModel {
   terms: string = '';
 
   /**
-   * The unique identifier for the vendor associated with the sales invoice.
-   * @type {number}
+   * Person or entity name of the customer
+   * @type {string}
    */
-  customerId: number | null = null;
+  customerName: string = 'Guest User';
+
+  /**
+   * Person or entity details object of the customer
+   * @type {string}
+   */
+  customer: CustomerModel | null = null;
 
   /**
    * An array of sales details associated with the sales invoice.
