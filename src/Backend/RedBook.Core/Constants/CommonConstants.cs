@@ -22,6 +22,13 @@
             public const char Pending = 'P';
         }
 
+        public static class PaymentStatus
+        {
+            public const string Paid = "Paid";
+            public const string Unpaid = "Unpaid";
+            public const string PartiallyPaid = "Partially Paid";
+        }
+
         public static class HttpResponseMessages
         {
             // Generic

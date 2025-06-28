@@ -1,19 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Inventory.Data.Models.CRM
 {
     public class CustomerModel
     {
+        [Required]
         public int CustomerId { get; set; }
+
         public int OrgId { get; set; }
-        public string CustomerName { get; set; }
-        public string ContactNumber { get; set; }
-        public string Email { get; set; }
-        public string Address { get; set; }
-        public string Remarks { get; set; }
+
+        [Required]
+        public string CustomerName { get; set; } = string.Empty;
+
+        public string ContactNumber { get; set; } = string.Empty;
+
+        public string Email { get; set; } = string.Empty;
+
+        public string Address { get; set; } = string.Empty;
+
+        public string Remarks { get; set; } = string.Empty;
     }
 }
