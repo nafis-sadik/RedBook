@@ -1,4 +1,6 @@
-﻿namespace Inventory.Data.Models.Sales
+﻿using Inventory.Data.Models.Purchase;
+
+namespace Inventory.Data.Models.Sales
 {
     public class SalesInvoiceDetailsModel
     {
@@ -40,7 +42,7 @@
         /// <summary>
         /// The quantity of the variant sold under this invoice.
         /// </summary>
-        public int Quantity { get; set; } = 0;
+        public decimal Quantity { get; set; } = 0;
 
         /// <summary>
         /// The quantity of the product associated with the purchase details.
@@ -81,5 +83,10 @@
         /// Purchase Invoice Id of this variant
         /// </summary>
         public int LotId { get; set; } = 0;
+
+        /// <summary>
+        /// Purchase Invoice Id of this variant
+        /// </summary>
+        public PurchaseInvoiceDetailsModel? Lot { get; set; }
     }
 }

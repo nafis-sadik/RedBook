@@ -34,16 +34,17 @@
                   <div class="input-group">
                     <nb-form-field>
                       <input nbInput type="number"
-                            placeholder="Customer Phone Number"
-                            formControlName="customerPhoneNumber"
-                            [value]="customerModel?.contactNumber"
-                            [nbAutocomplete]="autoControl">
-                      <button nbButton nbSuffix status="primary" status="primary" (click)="typingPhoneNumber()">
+                             placeholder="Customer Phone Number"
+                             formControlName="customerPhoneNumber"
+                             [value]="customerModel?.contactNumber"
+                             id="ContactNumber"
+                             [nbAutocomplete]="autoControl">
+                      <button nbButton nbSuffix status="primary" status="primary" (click)="searchSimilarPhoneNumbers()">
                         <nb-icon icon="search"></nb-icon>
                       </button>
-                      <nb-autocomplete #autoControl>
+                      <nb-autocomplete #autoControl (selectedChange)="selectPhoneNumber($event)">
                         <nb-option *ngFor="let customerContactNumber of customerContactNumbers"
-                                  [value]="customerContactNumber">
+                                   [value]="customerContactNumber">
                           {{ customerContactNumber }}
                         </nb-option>
                       </nb-autocomplete>
@@ -53,7 +54,7 @@
                 <div class="col-md-4">
                   <label class="mb-2 mt-4 p-0">Customer Email</label>
                   <div class="input-group">
-                    <input fullWidth nbInput 
+                    <input fullWidth nbInput
                            type="email"
                            placeholder="Email"
                            formControlName="email"
@@ -81,8 +82,10 @@
                   </div>
                 </div>
                 <div class="d-flex justify-content-between mt-5">
-                  <button nbButton hero type="button" status="danger" class="float-right" (click)="syncCustomerInfo(true)">Skip</button>
-                  <button nbButton hero type="button" status="success" class="float-right" (click)="syncCustomerInfo(false)">Save & Continue</button>
+                  <button nbButton hero type="button" status="danger" class="float-right"
+                          (click)="syncCustomerInfo(true)">Skip</button>
+                  <button nbButton hero type="button" status="success" class="float-right"
+                          (click)="syncCustomerInfo(false)">Save & Continue</button>
                 </div>
               </div>
             </div>
@@ -111,17 +114,18 @@
                              [(selected)]="selectedOrderDetails.productVariantId"
                              (selectedChange)="selectVariant($event)">
                     <nb-option [value]=0>Select Variant</nb-option>
-                    <nb-option *ngFor="let variant of selectedOrderDetails.variants" [value]="variant.variantId"> {{ variant.variantName }}</nb-option>
+                    <nb-option *ngFor="let variant of selectedOrderDetails.variants" [value]="variant.variantId"> {{
+                      variant.variantName }}</nb-option>
                   </nb-select>
-                </div>                
+                </div>
                 <div class="col-md-4">
                   <label class="mb-2 mt-4 p-0">&nbsp;</label>
-                  <input 
-                    nbButton fullWidth hero status="primary"
-                    type="button" 
-                    value="Add Product" 
-                    class="btn btn-primary"
-                    (click)="addToCart()">
+                  <input
+                         nbButton fullWidth hero status="primary"
+                         type="button"
+                         value="Add Product"
+                         class="btn btn-primary"
+                         (click)="addToCart()">
                 </div>
               </div>
               <div class="row">
@@ -141,7 +145,8 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <ng-container formArrayName="salesDetails" *ngFor="let rowFormGroup of orderDetailsFormArray.controls; let i = index">
+                      <ng-container formArrayName="salesDetails"
+                                    *ngFor="let rowFormGroup of orderDetailsFormArray.controls; let i = index">
                         <tr [formGroupName]="i" class="deactive">
                           <td>
                             <button nbButton status="danger" type="button" (click)="removeFromCart(i)">
@@ -153,56 +158,60 @@
                           <td> {{ orderInvoiceModel.salesDetails[i].maxQuantity }} </td>
                           <td>
                             <input fullWidth nbInput required
-                                  placeholder="Quantity"
-                                  formControlName='quantity'
-                                  [value]="orderInvoiceModel.salesDetails[i].quantity">
-                            <div *ngIf="(rowFormGroup.get('quantity')?.touched || rowFormGroup.get('quantity')?.dirty) && rowFormGroup.get('quantity')?.invalid">
-                               <div *ngIf="rowFormGroup.get('quantity')?.hasError('required')" class="validationErrorMsg">
-                                  Quantity is required.
-                                </div>
-                                <div *ngIf="rowFormGroup.get('quantity')?.hasError('min')" class="validationErrorMsg">
-                                  Quantity must be at least 1.
-                                </div>
-                                <div *ngIf="rowFormGroup.get('quantity')?.hasError('max')" class="validationErrorMsg">
-                                  Quantity cannot exceed {{ orderInvoiceModel.salesDetails[i].maxQuantity }}.
-                                </div>
+                                   placeholder="Quantity"
+                                   formControlName='quantity'
+                                   [value]="orderInvoiceModel.salesDetails[i].quantity">
+                            <div
+                                 *ngIf="(rowFormGroup.get('quantity')?.touched || rowFormGroup.get('quantity')?.dirty) && rowFormGroup.get('quantity')?.invalid">
+                              <div *ngIf="rowFormGroup.get('quantity')?.hasError('required')"
+                                   class="validationErrorMsg">
+                                Quantity is required.
+                              </div>
+                              <div *ngIf="rowFormGroup.get('quantity')?.hasError('min')" class="validationErrorMsg">
+                                Quantity must be at least 1.
+                              </div>
+                              <div *ngIf="rowFormGroup.get('quantity')?.hasError('max')" class="validationErrorMsg">
+                                Quantity cannot exceed {{ orderInvoiceModel.salesDetails[i].maxQuantity }}.
+                              </div>
                             </div>
                           </td>
                           <td>{{ orderInvoiceModel.salesDetails[i].minRetailPrice }}</td>
                           <td>{{ orderInvoiceModel.salesDetails[i].maxRetailPrice }}</td>
                           <td>
                             <input fullWidth nbInput required
-                                  placeholder="Retail Price"
-                                  formControlName='retailPrice'
-                                  [value]="orderInvoiceModel.salesDetails[i].retailPrice">
-                            <div *ngIf="(rowFormGroup.get('retailPrice')?.touched || rowFormGroup.get('retailPrice')?.dirty) && rowFormGroup.get('retailPrice')?.invalid">                              
-                               <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('required')" class="validationErrorMsg">
-                                  Retail price is required.
-                                </div>
-                                <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('min')" class="validationErrorMsg">
-                                  Retail price must be at least {{ orderInvoiceModel.salesDetails[i].minRetailPrice }}.
-                                </div>
-                                <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('max')" class="validationErrorMsg">
-                                  Retail price cannot exceed {{ orderInvoiceModel.salesDetails[i].maxRetailPrice }}.
-                                </div>
+                                   placeholder="Retail Price"
+                                   formControlName='retailPrice'
+                                   [value]="orderInvoiceModel.salesDetails[i].retailPrice">
+                            <div
+                                 *ngIf="(rowFormGroup.get('retailPrice')?.touched || rowFormGroup.get('retailPrice')?.dirty) && rowFormGroup.get('retailPrice')?.invalid">
+                              <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('required')"
+                                   class="validationErrorMsg">
+                                Retail price is required.
+                              </div>
+                              <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('min')" class="validationErrorMsg">
+                                Retail price must be at least {{ orderInvoiceModel.salesDetails[i].minRetailPrice }}.
+                              </div>
+                              <div *ngIf="rowFormGroup.get('retailPrice')?.hasError('max')" class="validationErrorMsg">
+                                Retail price cannot exceed {{ orderInvoiceModel.salesDetails[i].maxRetailPrice }}.
+                              </div>
                             </div>
                           </td>
                           <td>{{ orderInvoiceModel.salesDetails[i].totalCostPrice }}</td>
                         </tr>
                       </ng-container>
-                        <tr>
-                          <td colspan="8"><b>Total Discount</b></td>
-                          <td>
-                            <input fullWidth nbInput required 
-                                  placeholder="Discount" 
-                                  formControlName='totalDiscount'
-                                  [value]="orderInvoiceModel.totalDiscount">
-                          </td>
-                        </tr>
-                        <tr>
-                          <td colspan="8"><b>Net Total</b></td>
-                          <td><b>{{ orderInvoiceModel.invoiceTotal }}</b></td>
-                        </tr>
+                      <tr>
+                        <td colspan="8"><b>Total Discount</b></td>
+                        <td>
+                          <input fullWidth nbInput required
+                                 placeholder="Discount"
+                                 formControlName='totalDiscount'
+                                 [value]="orderInvoiceModel.totalDiscount">
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colspan="8"><b>Net Total</b></td>
+                        <td><b>{{ orderInvoiceModel.invoiceTotal }}</b></td>
+                      </tr>
                     </tbody>
                   </table>
                 </div>

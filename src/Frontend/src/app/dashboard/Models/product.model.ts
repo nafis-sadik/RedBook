@@ -1,6 +1,6 @@
 import { ProductVariantModel } from "./product-variant.model";
 
-export class ProductModel{
+export class ProductModel {
     /**
      * Product Id
      * @type {number}
@@ -32,25 +32,10 @@ export class ProductModel{
      */
     subcategoryName: string;
     /**
-     * Product purchase price
-     * @type {number}
-     */
-    purchasePrice: number = 0;
-    /**
-     * Product retail price
-     * @type {number}
-     */
-    retailPrice: number = 0;
-    /**
      * Organization Unique Identifier
      * @type {number}
      */
     organizationId: number = 0;
-    /**
-     * Purchase/Sales/Inventory Quantity
-     * @type {number}
-     */
-    quantity: number = 0;
     /**
      * Quantity Type Attribute (i.e. Kg, Bottle, Packets, Liter etc)
      * @type {number}
@@ -66,5 +51,9 @@ export class ProductModel{
      * @type {string}
      */
     brandName: string = '';
+    /**
+     * List of variants under this product (Intended for passing data over API)
+     * @type {Array<ProductVariantModel>}
+     */
     productVariants: Array<ProductVariantModel> = [];
 }

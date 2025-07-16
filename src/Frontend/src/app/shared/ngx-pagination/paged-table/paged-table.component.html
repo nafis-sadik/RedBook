@@ -4,16 +4,14 @@
       <tr class="align-bottom row-color-2">
         <th>#</th>
         <th
-          *ngFor="let item of this.config.columnNames"
-          class="ng-star-inserted"
-        >
+            *ngFor="let item of this.config.columnNames"
+            class="ng-star-inserted">
           {{ item }}
         </th>
         <th
-          scope="col"
-          *ngIf="config?.onEdit || config?.onView || config?.onDelete"
-          class="table-actions"
-        >
+            scope="col"
+            *ngIf="config?.onEdit || config?.onView || config?.onDelete"
+            class="table-actions">
           <span><b>Actions</b></span>
         </th>
       </tr>
@@ -24,13 +22,10 @@
         <td *ngFor="let col of row">
           {{ col }}
         </td>
-        <td
-          scope="col"
-          *ngIf="config.onEdit || config.onView || config.onDelete"
-          class="table-actions"
-          [style.width]="config.actionColWidth"
-        >
-          <div class="d-block">
+        <td scope="col"
+            *ngIf="config.onEdit || config.onView || config.onDelete"
+            class="table-actions">
+          <div class="d-flex justify-content-between">
             <span *ngIf="config.onEdit" (click)="onEdit(i)">
               <nb-icon icon="edit-2-outline" class="edit"></nb-icon>
             </span>

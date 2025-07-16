@@ -8,6 +8,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { OrganizationService } from '../../services/organization.service';
 import { SalesService } from '../../services/sell.service';
 import { CustomerModel } from '../../Models/customer.model';
+import { SaleseDetailsComponent } from './sales-details/sales-details.component';
 
 @Component({
   selector: 'app-sales',
@@ -31,12 +32,12 @@ export class SalesComponent implements OnInit {
   ) {
     this.pagedSalesModel = dashboardService.getPagingConfig(AddSalesComponent, 'Sales Records', 'Add New Sales');
 
-    if(this.pagedSalesModel.tableConfig){
+    if (this.pagedSalesModel.tableConfig) {
       this.pagedSalesModel.tableConfig.tableMaping = {
         "Memo No": "invoiceNumber",
         "Customer Name": "customerName",
         "Invoice Total": "invoiceTotal",
-        "Paymeny Status": "paymentStatus",
+        "Payment Status": "paymentStatus",
         "Paid Amount": "totalPaid",
         "Sales Date": "salesDate",
       };
@@ -47,19 +48,25 @@ export class SalesComponent implements OnInit {
         console.log('onDelete');
       };
 
-      this.pagedSalesModel.tableConfig.onView = (data: any) => {
-        console.log('on view', data);
+      this.pagedSalesModel.tableConfig.onView = (model: SalesInvoiceModel) => {
+        console.log('on view', model);
+        dashboardService.ngDialogService.open(SaleseDetailsComponent, {
+          context: {
+            invoiceModel: model,
+            outletName: this.dashboardService.selectedOutletName
+          }
+        });
       }
     }
 
-    if(this.pagedSalesModel.addNewElementButtonConfig) {
+    if (this.pagedSalesModel.addNewElementButtonConfig) {
       this.pagedSalesModel.addNewElementButtonConfig.onAdd = () => {
         this.isUpdateOperation = false;
-        
+
         dashboardService.ngDialogService.open(AddSalesComponent, {
           context: {
             customerModel: new CustomerModel(),
-            selectOrganization: this.dashboardService.selectedOutletId
+            selectedOrg: this.dashboardService.selectedOutletId
           }
         });
       };
@@ -72,38 +79,38 @@ export class SalesComponent implements OnInit {
         this.outlets = orgList;
         this.cdRef.detectChanges();
       },
-      (error) => {
-        console.log('error', error);
-      }).add(() => {        
-        if(this.loaderContainer && this.loaderContainer.classList.contains('d-block')){
-          this.loaderContainer.classList.remove('d-block');
-          this.loaderContainer.classList.add('d-none');
-        }
-      });
+        (error) => {
+          console.log('error', error);
+        }).add(() => {
+          if (this.loaderContainer && this.loaderContainer.classList.contains('d-block')) {
+            this.loaderContainer.classList.remove('d-block');
+            this.loaderContainer.classList.add('d-none');
+          }
+        });
   }
 
-  selectOutlet(outletId: number, event: any): void{
+  selectOutlet(outletId: number, event: any): void {
     this.dashboardService.selectedOutletId = outletId;
 
     // Is display is hidden, make it visible
     let dataTableCard = Array.from(document.getElementsByTagName('ngx-pagination'))[0];
-    if(dataTableCard && dataTableCard.classList.contains('d-none'))
+    if (dataTableCard && dataTableCard.classList.contains('d-none'))
       dataTableCard.classList.remove('d-none');
 
     // Add active class to source element and remove from sibling elements
     let sourceElem = event.srcElement;
     Array.from(sourceElem.parentNode.children).forEach((element: any) => {
-      if(element != sourceElem)
+      if (element != sourceElem)
         element.classList.remove('active');
       else
         element.classList.add('active');
     });
 
     // Get data from service
-    if(this.pagedSalesModel.pagingConfig){
+    if (this.pagedSalesModel.pagingConfig) {
       this.pagedSalesModel.pagingConfig.pageNumber = 1;
     }
-    
+
     this.loadPagedData();
   }
 
@@ -116,10 +123,10 @@ export class SalesComponent implements OnInit {
           this.pagedSalesModel.tableConfig.sourceData = response.sourceData;
 
           this.pagedSalesModel.tableConfig.sourceData.forEach((salesInvoiceData: SalesInvoiceModel) => {
-            if(salesInvoiceData.customer)
+            if (salesInvoiceData.customer)
               salesInvoiceData.customerName = salesInvoiceData.customer.customerName;
           })
-        
+
           this.pagedSalesModel.tableConfig.sourceData.forEach(invoice => {
             // Parse the UTC date string to a Date object
             let utcDate = new Date(invoice.salesDate.toString());
@@ -132,7 +139,7 @@ export class SalesComponent implements OnInit {
           });
         }
 
-        if(this.pagedSalesModel.pagingConfig) {
+        if (this.pagedSalesModel.pagingConfig) {
           this.pagedSalesModel.pagingConfig.pageNumber = response.pageNumber;
           this.pagedSalesModel.pagingConfig.pageLength = response.pageLength;
           this.pagedSalesModel.pagingConfig.totalItems = response.totalItems;

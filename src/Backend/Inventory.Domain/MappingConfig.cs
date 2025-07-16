@@ -44,9 +44,7 @@ namespace Inventory.Domain
                 .ForMember(dest => dest.QuantityAttributeId, opt => opt.MapFrom(opt => opt.QuantityTypeId))
                 .ReverseMap()
                 .ForMember(dest => dest.CategoryId, opt => opt.MapFrom(opt => opt.Category.ParentCategory))
-                .ForMember(dest => dest.SubcategoryId, opt => opt.MapFrom(opt => opt.CategoryId))
-                .ForMember(dest => dest.PurchasePrice, opt => opt.Ignore())
-                .ForMember(dest => dest.RetailPrice, opt => opt.Ignore());
+                .ForMember(dest => dest.SubcategoryId, opt => opt.MapFrom(opt => opt.CategoryId));
 
             CreateMap<Vendor, VendorModel>().ReverseMap();
 

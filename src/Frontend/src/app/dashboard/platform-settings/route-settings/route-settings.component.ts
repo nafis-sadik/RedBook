@@ -55,8 +55,6 @@ export class RouteSettingsComponent implements OnInit {
             // location.reload();
           });
       }
-
-      this.pagedRouteModel.tableConfig.actionColWidth = '50px';
     }
 
     if (this.pagedRouteModel.addNewElementButtonConfig) {
@@ -132,7 +130,7 @@ export class RouteSettingsComponent implements OnInit {
         }
 
         this.ngxPaginationService.set(this.pagedRouteModel);
-        
+
         if (loaderContainer) {
           loaderContainer.classList.remove('d-block');
           loaderContainer.classList.add('d-none');

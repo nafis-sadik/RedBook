@@ -36,15 +36,7 @@ export class DashboardService {
         onEdit: null,
         onDelete: null,
         onView: null,
-        actionColWidth: '100px',
-        tableMaping: {
-          "Invoice Number": "InvoiceNo",
-          "Client Name": "ClientName",
-          "Issue Date": "IssueDate",
-          "Payment Status": "PaymentStatus",
-          "Invoice Total": "InvoiceTotal",
-          "Paid Amount": "PaidAmount"
-        },
+        tableMaping: {},
         sourceData: []
       },
       pagingConfig: {

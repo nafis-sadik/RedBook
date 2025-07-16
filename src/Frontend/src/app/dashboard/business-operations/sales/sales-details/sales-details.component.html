@@ -33,7 +33,8 @@
             <div class="col-md-3">
               <label class="mb-2 mt-4 p-0 label">
                 <b>Invoice Total</b>
-                <span nbTooltipStatus="primary" nbTooltip="Total amount of money the vendor shall recieve agains this invoice"
+                <span nbTooltipStatus="primary"
+                      nbTooltip="Total amount of money the vendor shall recieve agains this invoice"
                       class="tooltip-style">?</span>
               </label>
               <div class="input-group">
@@ -50,14 +51,13 @@
                     <th class="ng-star-inserted text-center">#</th>
                     <th class="ng-star-inserted text-center">Product Name</th>
                     <th class="ng-star-inserted text-center">Variant Name</th>
-                    <th class="ng-star-inserted text-center">Quantity</th>
                     <th class="ng-star-inserted text-center">Purchase<br>Price</th>
                     <th class="ng-star-inserted text-center">Purchase<br>Discount</th>
+                    <th class="ng-star-inserted text-center">Quantity</th>
                     <th class="ng-star-inserted text-center">Retail<br>Price</th>
-                    <th class="ng-star-inserted text-center">Max Retail<br>Discount</th>
+                    <th class="ng-star-inserted text-center">Retail<br>Discount</th>
                     <th class="ng-star-inserted text-center">Retail<br>Vat Rate</th>
                     <th class="ng-star-inserted text-center">Total<br>Price</th>
-                    <th class="ng-star-inserted text-center">Download<br>Barcode</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -65,25 +65,21 @@
                     <td class="text-center">{{ i + 1 }}</td>
                     <td class="text-center">{{ product.productName }}</td>
                     <td class="text-center">{{ product.productVariantName }}</td>
+                    <td class="text-center">{{ product.lot.purchasePrice }}</td>
+                    <td class="text-center">{{ product.lot.purchaseDiscount }}</td>
                     <td class="text-center">{{ product.quantity }}</td>
                     <td class="text-center">{{ product.retailPrice }}</td>
                     <td class="text-center">{{ product.retailDiscount }}</td>
-                    <td class="text-center">{{ product.retailPrice }}</td>
-                    <td class="text-center">0</td>
                     <td class="text-center">{{ product.vatRate }}%</td>
                     <td class="text-center">{{ product.totalCostPrice }}</td>
                   </tr>
                   <tr>
-                    <td></td>
-                    <td class="text-left" colspan="8">Invoice Discount</td>
+                    <td class="text-left" colspan="9">Invoice Discount</td>
                     <td class="text-center">{{ invoiceModel.totalDiscount }}</td>
-                    <td></td>
                   </tr>
                   <tr>
-                    <td></td>
-                    <td class="text-left" colspan="8">Total</td>
+                    <td class="text-left" colspan="9">Total</td>
                     <td class="text-center">{{ invoiceModel.invoiceTotal }}</td>
-                    <td></td>
                   </tr>
                 </tbody>
               </table>

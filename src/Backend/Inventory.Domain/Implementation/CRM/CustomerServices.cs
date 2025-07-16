@@ -1,5 +1,4 @@
 ﻿using Inventory.Domain.Abstraction.CRM;
-using Inventory.Domain.Implementation.Product;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using RedBook.Core.Domain;
@@ -107,27 +106,19 @@ namespace Inventory.Domain.Implementation.CRM
             searchString = searchString.Trim().Replace(" ", string.Empty);
             using (var _repositoryFactory = UnitOfWorkManager.GetRepositoryFactory())
             {
-                var _salesRepo = _repositoryFactory.GetRepository<SalesInvoice>();
+                var _customerDetailsRepo = _repositoryFactory.GetRepository<CustomerDetails>();
 
                 // After implementation of gRPC, we need to verify if this user have the right role and the right
-                var query = _salesRepo.UnTrackableQuery()
-                    .Where(sales => sales.OrganizationId == orgId && sales.Customer != null);
-
+                var query = _customerDetailsRepo.UnTrackableQuery()
+                    .Where(sales => sales.OrgId == orgId);
+                searchString = searchString.Substring(1, searchString.Length - 1);
                 if (searchString.Contains('@'))
                     query = query.Where(sales => sales.Customer.Email.ToLower().Contains(searchString.ToLower()));
-
                 else
                     query = query.Where(sales => sales.Customer.ContactNumber.Contains(searchString));
 
-                string[] tempres = await query.Select(sales => sales.Customer.ContactNumber).ToArrayAsync();
-
-                return tempres.Length <= 0 ?
-                [
-                    "00000000000",
-                    "11111111111",
-                    "22222222222",
-                    "33333333333"
-                ] : tempres;
+                var nums = await query.Select(sales => sales.Customer.ContactNumber).ToArrayAsync();
+                return nums;
             }
         }
 
@@ -138,7 +129,6 @@ namespace Inventory.Domain.Implementation.CRM
                 var _customerDetailsRepo = _repositoryFactory.GetRepository<CustomerDetails>();
 
                 // After implementation of gRPC, we need to verify if this user have the right role and the right
-
                 var query = _customerDetailsRepo.UnTrackableQuery().Where(customerDetails => customerDetails.OrgId == orgId);
 
                 if (searchString.Contains('@'))
@@ -147,16 +137,19 @@ namespace Inventory.Domain.Implementation.CRM
                 else
                     query = query.Where(sales => sales.Customer.ContactNumber.Contains(searchString));
 
-                return await query.Select(customerDetails => new CustomerModel
+                var customer = await query.Select(customerDetails => new CustomerModel
                     {
                         CustomerId = customerDetails.CustomerId,
                         CustomerName = customerDetails.CustomerName,
                         Address = customerDetails.Address,
                         ContactNumber = customerDetails.Customer.ContactNumber,
                         Email = customerDetails.Customer.Email,
-                        Remarks = customerDetails.Remarks
+                        Remarks = customerDetails.Remarks,
+                        OrgId = orgId
                     })
                     .FirstOrDefaultAsync();
+
+                return customer;
             }
         }
     }

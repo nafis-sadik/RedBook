@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, Input, ViewChild } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NbDialogService, NbStepperComponent, NbToastrService } from '@nebular/theme';
+import { NbAutocompleteComponent, NbDialogService, NbStepperComponent, NbToastrService } from '@nebular/theme';
 import { CustomerModel } from 'src/app/dashboard/Models/customer.model';
 import { ProductModel } from 'src/app/dashboard/Models/product.model';
 import { SalesInvoiceDetailsModel } from 'src/app/dashboard/Models/sales-invoice-details.model';
@@ -11,6 +11,7 @@ import { ProductService } from 'src/app/dashboard/services/products.service';
 import { LotSelectionComponent } from './lot-selection/lot-selection.component';
 import { PurchaseInvoiceDetailsModel } from 'src/app/dashboard/Models/purchase-invoice-details.model';
 import { SalesService } from 'src/app/dashboard/services/sell.service';
+import { consumerPollProducersForChange } from '@angular/core/primitives/signals';
 
 @Component({
   selector: 'app-add-sales',
@@ -20,8 +21,9 @@ import { SalesService } from 'src/app/dashboard/services/sell.service';
 
 export class AddSalesComponent {
   @ViewChild('SalesMemo') salesMemoStepper: NbStepperComponent;
-  
-  @Input() selectOrganization: number = 0;
+  @ViewChild('autoControl') autoComplete!: NbAutocompleteComponent<{ name: string }>;
+
+  @Input() selectedOrg: number = 0;
 
   // Customer forms
   @Input() customerModel: CustomerModel | null;
@@ -34,11 +36,11 @@ export class AddSalesComponent {
 
   orderDetailsForm: FormGroup;
   get orderDetailsFormArray(): FormArray { return this.orderDetailsForm.get('salesDetails') as FormArray; }
-  orderInvoiceModel: SalesInvoiceModel = new SalesInvoiceModel();        
+  orderInvoiceModel: SalesInvoiceModel = new SalesInvoiceModel();
 
   constructor(
-    private formBuilder: FormBuilder, 
-    private customerService: CustomerService, 
+    private formBuilder: FormBuilder,
+    private customerService: CustomerService,
     private productService: ProductService,
     private inventoryService: InventoryService,
     private diagService: NbDialogService,
@@ -49,22 +51,30 @@ export class AddSalesComponent {
 
   ngOnInit(): void {
     this.customerModel = new CustomerModel();
-    this.customerModel.orgId = this.selectOrganization;
-    this.initializeCustomerForm();
+    this.customerModel.orgId = this.selectedOrg;
+    this.initializeCustomerForm(this.customerModel);
     this.initializeOrderForm();
   }
 
-  initializeCustomerForm(): void {
-    if(this.customerModel != null){
-      this.customerDetailsForm = this.formBuilder.group({
-        customerName: [this.customerModel.customerName, [Validators.maxLength(100)]],
-        customerPhoneNumber: [this.customerModel.contactNumber, [Validators.required, Validators.minLength(10)]],
-        email: [this.customerModel.email, [Validators.email]],
-        deliveryLocation: [this.customerModel.address],
-        remarks: [this.customerModel.remarks],
+  initializeCustomerForm(customerModel: CustomerModel): void {
+    if (this.customerDetailsForm) {
+      this.customerDetailsForm.patchValue({
+        customerName: customerModel.customerName,
+        customerPhoneNumber: customerModel.contactNumber,
+        email: customerModel.email,
+        deliveryLocation: customerModel.address,
+        remarks: customerModel.remarks,
       });
+      return;
     }
-    
+    this.customerDetailsForm = this.formBuilder.group({
+      customerName: [customerModel.customerName, [Validators.maxLength(100)]],
+      customerPhoneNumber: [customerModel.contactNumber, [Validators.required, Validators.minLength(10)]],
+      email: [customerModel.email, [Validators.email]],
+      deliveryLocation: [customerModel.address],
+      remarks: [customerModel.remarks],
+    });
+
     this.customerDetailsForm.valueChanges.subscribe(formData => {
       if (this.customerModel == null) return;
 
@@ -74,8 +84,8 @@ export class AddSalesComponent {
       this.customerModel.address = formData.deliveryLocation;
       this.customerModel.remarks = formData.remarks;
 
-      if (this.customerModel.contactNumber.length >= 8 && this.selectOrganization > 0) {
-        this.customerService.getCustomerByContactNumber(this.customerModel.contactNumber, this.selectOrganization)
+      if (this.customerModel.contactNumber.length >= 8 && this.selectedOrg > 0) {
+        this.customerService.getCustomerByContactNumber(this.customerModel.contactNumber, this.selectedOrg)
           .subscribe((similarCustomerContactNumbers: Array<string>) => {
             this.customerContactNumbers = similarCustomerContactNumbers;
           });
@@ -84,12 +94,13 @@ export class AddSalesComponent {
   }
 
   syncCustomerInfo(skip: boolean): void {
-    if(!skip && this.customerModel != null) {
+    if (!skip && this.customerModel != null) {
       this.customerService.addCustomer(this.customerModel)
-      .subscribe((response: CustomerModel) => {
-        this.customerModel = response;
-        this.salesMemoStepper.next();
-      });
+        .subscribe((response: CustomerModel) => {
+          this.customerModel = response;
+          this.customerModel.orgId = this.selectedOrg;
+          this.salesMemoStepper.next();
+        });
     } else {
       this.customerModel = null;
       this.salesMemoStepper.linear = false;
@@ -108,9 +119,9 @@ export class AddSalesComponent {
     this.orderDetailsForm.valueChanges.subscribe(formData => {
       this.orderInvoiceModel.totalDiscount = formData.totalDiscount;
       this.orderInvoiceModel.invoiceTotal = 0;
-      for(let i = 0; i < this.orderInvoiceModel.salesDetails.length; i++){
+      for (let i = 0; i < this.orderInvoiceModel.salesDetails.length; i++) {
         this.orderInvoiceModel.salesDetails[i].quantity = formData.salesDetails[i].quantity;
-        if(this.orderInvoiceModel.salesDetails[i].maxRetailPrice != this.orderInvoiceModel.salesDetails[i].minRetailPrice){
+        if (this.orderInvoiceModel.salesDetails[i].maxRetailPrice != this.orderInvoiceModel.salesDetails[i].minRetailPrice) {
           this.orderInvoiceModel.salesDetails[i].retailPrice = formData.salesDetails[i].retailPrice;
         } else {
           this.orderInvoiceModel.salesDetails[i].retailPrice = this.orderInvoiceModel.salesDetails[i].minRetailPrice;
@@ -121,14 +132,14 @@ export class AddSalesComponent {
       }
       this.orderInvoiceModel.invoiceTotal -= this.orderInvoiceModel.totalDiscount;
     });
-    this.productService.getProductList(this.selectOrganization)
+    this.productService.getProductList(this.selectedOrg)
       .subscribe(prodArr => this.productList = prodArr);
   }
 
   selectProduct(selectedProdId: number): void {
     this.selectedOrderDetails.productId = Number(selectedProdId);
     let selectedProd: ProductModel | undefined = this.productList.find(x => x.productId == this.selectedOrderDetails.productId);
-    if(selectedProd == undefined || selectedProd == null) return;
+    if (selectedProd == undefined || selectedProd == null) return;
 
     this.selectedOrderDetails.variants = this.productList.find(x => x.productId == this.selectedOrderDetails.productId)?.productVariants ?? [];
     this.selectedOrderDetails.productVariantId = 0;
@@ -137,9 +148,9 @@ export class AddSalesComponent {
 
   selectVariant(selectedVariantId: number): void {
     let selectedVariant = this.selectedOrderDetails.variants.find(x => x.variantId == Number(selectedVariantId));
-    if(selectedVariant == undefined) return;
+    if (selectedVariant == undefined) return;
     let selectedProd = this.productList.find(x => x.productId == this.selectedOrderDetails.productId);
-    if(selectedProd == undefined) return;
+    if (selectedProd == undefined) return;
 
     this.selectedOrderDetails.productId = selectedProd.productId;
     this.selectedOrderDetails.productName = selectedProd.productName;
@@ -148,61 +159,62 @@ export class AddSalesComponent {
   }
 
   addToCart(): void {
-    if(this.selectedOrderDetails.productVariantId > 0){
+    if (this.selectedOrderDetails.productVariantId > 0) {
       this.inventoryService.getVariantInventory(this.selectedOrderDetails.productVariantId)
         .subscribe((lotsAvailable: Array<PurchaseInvoiceDetailsModel>) => {
-          this.diagService.open(LotSelectionComponent,{
-              context: {
-                availableLots: lotsAvailable,
-                selectionCallback: (lot: PurchaseInvoiceDetailsModel) => {
-                  let existingLot: SalesInvoiceDetailsModel | undefined = this.orderInvoiceModel.salesDetails.find(x => x.lotId == lot.recordId);
-                  if(existingLot == undefined){
-                    this.selectedOrderDetails.lot = lot;
-                    this.selectedOrderDetails.lotId = lot.recordId;
-                    this.selectedOrderDetails.maxQuantity = lot.quantity;
-                    this.selectedOrderDetails.maxRetailPrice = lot.retailPrice;
-                    this.selectedOrderDetails.minRetailPrice = lot.retailPrice - lot.maxRetailDiscount;
-                    
-                    this.orderInvoiceModel.salesDetails.push(this.selectedOrderDetails);
+          this.diagService.open(LotSelectionComponent, {
+            context: {
+              availableLots: lotsAvailable,
+              selectionCallback: (lot: PurchaseInvoiceDetailsModel) => {
+                let existingLot: SalesInvoiceDetailsModel | undefined = this.orderInvoiceModel.salesDetails.find(x => x.lotId == lot.recordId);
+                if (existingLot == undefined) {
+                  this.selectedOrderDetails.lot = lot;
+                  this.selectedOrderDetails.lotId = lot.recordId;
+                  this.selectedOrderDetails.maxQuantity = lot.quantity;
+                  this.selectedOrderDetails.maxRetailPrice = lot.retailPrice;
+                  this.selectedOrderDetails.minRetailPrice = lot.retailPrice - lot.maxRetailDiscount;
 
-                    this.orderDetailsFormArray.push(this.formBuilder.group({
-                      productId: [this.selectedOrderDetails.productId],
-                      productName: [this.selectedOrderDetails.productName],
-                      productVariantId: [this.selectedOrderDetails.productVariantId],
-                      productVariantName: [this.selectedOrderDetails.productVariantName],
-                      quantity: [1, [Validators.required, Validators.min(1), Validators.max(lot.quantity)]],
-                      retailPrice: [
-                          {
-                            value: lot.retailPrice, 
-                            disabled: this.selectedOrderDetails.maxRetailPrice == this.selectedOrderDetails.minRetailPrice
-                          },
-                          [
-                            Validators.required, 
-                            Validators.min(this.selectedOrderDetails.minRetailPrice), 
-                            Validators.max(this.selectedOrderDetails.maxRetailPrice)
-                          ]
-                        ]}));
-                        
-                    this.selectedOrderDetails = new SalesInvoiceDetailsModel();
-                  }
-                  else {
-                    let targetCartObj = this.orderInvoiceModel.salesDetails.find(x => x.lotId == existingLot?.lotId);
-                    if(!targetCartObj) return;
-                    let indexOfItem: number = this.orderInvoiceModel.salesDetails.indexOf(targetCartObj);
-                    let row = document.querySelectorAll('#CartPage table tbody tr').item(indexOfItem);
-                    row.classList.add('highlight-active');
+                  this.orderInvoiceModel.salesDetails.push(this.selectedOrderDetails);
+
+                  this.orderDetailsFormArray.push(this.formBuilder.group({
+                    productId: [this.selectedOrderDetails.productId],
+                    productName: [this.selectedOrderDetails.productName],
+                    productVariantId: [this.selectedOrderDetails.productVariantId],
+                    productVariantName: [this.selectedOrderDetails.productVariantName],
+                    quantity: [1, [Validators.required, Validators.min(1), Validators.max(lot.quantity)]],
+                    retailPrice: [
+                      {
+                        value: lot.retailPrice,
+                        disabled: this.selectedOrderDetails.maxRetailPrice == this.selectedOrderDetails.minRetailPrice
+                      },
+                      [
+                        Validators.required,
+                        Validators.min(this.selectedOrderDetails.minRetailPrice),
+                        Validators.max(this.selectedOrderDetails.maxRetailPrice)
+                      ]
+                    ]
+                  }));
+
+                  this.selectedOrderDetails = new SalesInvoiceDetailsModel();
+                }
+                else {
+                  let targetCartObj = this.orderInvoiceModel.salesDetails.find(x => x.lotId == existingLot?.lotId);
+                  if (!targetCartObj) return;
+                  let indexOfItem: number = this.orderInvoiceModel.salesDetails.indexOf(targetCartObj);
+                  let row = document.querySelectorAll('#CartPage table tbody tr').item(indexOfItem);
+                  row.classList.add('highlight-active');
+                  setTimeout(() => {
+                    row.classList.add('highlight-fade-out');      // start transition
+                    row.classList.remove('highlight-active');     // remove highlight
+
                     setTimeout(() => {
-                      row.classList.add('highlight-fade-out');      // start transition
-                      row.classList.remove('highlight-active');     // remove highlight
-
-                      setTimeout(() => {
-                        row.classList.remove('highlight-fade-out'); // clean up
-                      }, 1000); // match transition duration
-                    }, 2000); // wait before fading
-                  }
+                      row.classList.remove('highlight-fade-out'); // clean up
+                    }, 1000); // match transition duration
+                  }, 2000); // wait before fading
                 }
               }
             }
+          }
           );
         });
     }
@@ -219,8 +231,8 @@ export class AddSalesComponent {
   }
 
   initializePaymentDetailsForm() {
-    if(this.orderDetailsForm.valid){
-      this.orderInvoiceModel.organizationId = this.selectOrganization;
+    if (this.orderDetailsForm.valid) {
+      this.orderInvoiceModel.organizationId = this.selectedOrg;
       this.salesService.saveSell(this.orderInvoiceModel)
         .subscribe(
           (invoice: SalesInvoiceModel) => {
@@ -229,7 +241,7 @@ export class AddSalesComponent {
           },
           (err) => {
             console.log(err);
-            this.toastr.danger(err);            
+            this.toastr.danger(err);
           }
         )
     }
@@ -238,18 +250,45 @@ export class AddSalesComponent {
     }
   }
 
-  typingPhoneNumber(): void {
-    this.customerDetailsForm.disable();
-    if(this.customerModel == null) { this.customerModel = new CustomerModel(); }
-    let typedPhoneNumber: string = this.customerModel.contactNumber;
+  searchSimilarPhoneNumbers() {
+    if (this.customerModel == null) { return; }
 
-    if(typedPhoneNumber.length > 8 || typedPhoneNumber.includes('@')){
-      this.customerService.searchCustomer(typedPhoneNumber, this.selectOrganization)
-        .subscribe((customerData: CustomerModel) => {
-          this.customerDetailsForm.enable();
-          this.customerModel = customerData;
-          this.cdRef.detectChanges();
-        });
+    this.customerService.getCustomerByContactNumber(this.customerModel.contactNumber, this.selectedOrg)
+      .subscribe((similarCustomerContactNumbers: Array<string>) => {
+        this.customerContactNumbers = similarCustomerContactNumbers;
+      }, (error) => {
+        console.log('error : searchSimilarPhoneNumbers : ', error);
+      }, () => {
+        let field = document.getElementById('ContactNumber');
+        if (field) {
+          field.focus();
+        }
+
+        this.allowAutoCompleteEvent = true;
+      });
+  }
+
+  allowAutoCompleteEvent: boolean = true;
+  selectPhoneNumber(searchString: string): void {
+    if (this.allowAutoCompleteEvent) {
+      this.allowAutoCompleteEvent = false;
+      this.searchCustomer(searchString);
+      setTimeout(() => {
+        this.allowAutoCompleteEvent = true;
+      }, 100);
+    } else {
+      this.allowAutoCompleteEvent = true;
     }
+  }
+
+  searchCustomer(searchString: string): void {
+    if (!searchString || searchString.length <= 1) return;
+    this.customerService.searchCustomer(searchString, this.selectedOrg)
+      .subscribe((customerData: CustomerModel) => {
+        this.customerModel = customerData;
+        this.initializeCustomerForm(customerData);
+      }, (error) => {
+        console.log('error : searchCustomer : ', error);
+      }, () => { });
   }
 }

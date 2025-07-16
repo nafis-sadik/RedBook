@@ -1,4 +1,4 @@
-export class ProductVariantModel{
+export class ProductVariantModel {
     /**
      * Variant Id
      * @type {number}
@@ -16,13 +16,13 @@ export class ProductVariantModel{
      * @type {number}
      */
     stockQuantity: number;
-    
+
     /**
      * Stock Keeping Unit
      * @type {string}
      */
     sku: string = '';
-    
+
     /**
      * Attributes of the variant
      * @type {string}
@@ -34,4 +34,19 @@ export class ProductVariantModel{
      * @type {number}
      */
     productId: number;
+    /**
+     * Product purchase price
+     * @type {number}
+     */
+    purchasePrice: number = 0;
+    /**
+     * Product retail price
+     * @type {number}
+     */
+    retailPrice: number = 0;
+    /**
+     * Purchase/Sales/Inventory Quantity
+     * @type {number}
+     */
+    quantity: number = 0;
 }

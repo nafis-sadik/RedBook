@@ -1,8 +1,9 @@
-﻿using Inventory.Data.Entities;
+﻿//https://copilot.microsoft.com/shares/fZFmaCU7N2DgqLqPkg3A9
+using Inventory.Data.Entities;
 using Inventory.Data.Models.CRM;
 using Inventory.Data.Models.Sales;
-using Inventory.Domain.Abstraction;
 using Inventory.Domain.Abstraction.CRM;
+using Inventory.Domain.Abstraction.Sales;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -97,9 +98,9 @@ namespace Inventory.Domain.Implementation.Sales
                     );
                 }
 
-                int totalRecords = await baseQuery.CountAsync();
+                pagedInvoice.TotalItems = await baseQuery.CountAsync();
 
-                var pagedResults = await baseQuery
+                pagedInvoice.SourceData = await baseQuery
                     .Select(x => new SalesInvoiceModel
                     {
                         InvoiceId = x.SalesInvoice.InvoiceId,
@@ -112,6 +113,7 @@ namespace Inventory.Domain.Implementation.Sales
                             ContactNumber = x.Customer == null ? string.Empty : x.Customer.ContactNumber
                         },
                         SalesDate = x.SalesInvoice.CreateDate.ToLongDateString(),
+                        TotalDiscount = x.SalesInvoice.TotalDiscount,
                         InvoiceTotal = x.SalesInvoice.InvoiceTotal,
                         Terms = x.SalesInvoice.Terms,
                         Remarks = x.SalesInvoice.Remarks
@@ -120,8 +122,6 @@ namespace Inventory.Domain.Implementation.Sales
                     .Take(pagedInvoice.PageLength)
                     .ToListAsync();
 
-                pagedInvoice.SourceData = pagedResults;
-                pagedInvoice.TotalItems = totalRecords;
                 return pagedInvoice;
             }
         }

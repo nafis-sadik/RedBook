@@ -39,12 +39,6 @@ export declare interface IPaginationModel<T> {
      * @type {T | null}
      */
     sourceData: T[]
-    /**
-     * Default value:
-     * Description: width of column to be displayed in current page
-     * @type {string}
-     */
-    actionColWidth: string | null;
   } | null;
   /**
    * Configuration for pages

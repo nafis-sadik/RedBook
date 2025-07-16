@@ -21,7 +21,7 @@ export class PurchaseDetailsComponent implements OnInit {
       .getPurchaseDetailsList(this.invoiceModel.invoiceId)
       .subscribe(invoiceDetails => {
         this.invoiceModel.purchaseDetails = invoiceDetails;
-        for(let index = 0; index < invoiceDetails.length; index++){
+        for (let index = 0; index < invoiceDetails.length; index++) {
           invoiceDetails[index].totalCostPrice = invoiceDetails[index].quantity * invoiceDetails[index].purchasePrice;
           invoiceDetails[index].totalCostPrice -= invoiceDetails[index].purchaseDiscount;
         }

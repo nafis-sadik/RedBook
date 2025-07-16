@@ -1,6 +1,6 @@
 // Table head styles
 #PagedTable .table-actions {
-  width: 100px;
+  width: var(--action-width) !important;
 }
 
 #PagedTable thead th {

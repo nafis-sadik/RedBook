@@ -16,7 +16,7 @@ import { ProductVariantService } from '../../services/product-variant.service';
   styleUrls: ['./products.component.scss']
 })
 
-export class ProductsComponent implements OnInit{
+export class ProductsComponent implements OnInit {
   selectedOutletId: number;
   isUpdateOperation: boolean = false;
   pagedProductModel: IPaginationModel<ProductModel>;
@@ -38,7 +38,7 @@ export class ProductsComponent implements OnInit{
         if (this.pagedProductModel.pagingConfig) {
           this.pagedProductModel.pagingConfig.pageNumber = pagingConfigObj.pageNumber;
           this.pagedProductModel.pagingConfig.pageLength = pagingConfigObj.pageLength;
-          if(this.pagedProductModel.searchingConfig)
+          if (this.pagedProductModel.searchingConfig)
             this.pagedProductModel.searchingConfig.searchString = pagingConfigObj.searchString;
           this.fetchProductsOfOutlet(this.selectedOutletId);
         }
@@ -51,8 +51,6 @@ export class ProductsComponent implements OnInit{
         "Brand Name": "brandName",
         "Product Category": "categoryName",
         "Product Subcategory": "subcategoryName",
-        "Purchase Price": "purchasePrice",
-        "Retail Price": "retailPrice"
       };
 
       this.pagedProductModel.tableConfig.onEdit = (product: ProductModel) => {
@@ -62,9 +60,9 @@ export class ProductsComponent implements OnInit{
             selectedBusinessId: this.selectedOutletId,
             saveMethod: (product: ProductModel) => {
               this.productService.updateProduct(product)
-               .subscribe((response: ProductModel) => {
+                .subscribe((response: ProductModel) => {
                   this.pagedProductModel.tableConfig?.sourceData.forEach(product => {
-                    if(product.productId === response.productId) {
+                    if (product.productId === response.productId) {
                       Object.assign(product, response);
                       this.toastrService.success('Product Updated Successfully', 'Success');
                       return;
@@ -77,11 +75,16 @@ export class ProductsComponent implements OnInit{
           }
         });
       };
-      
+
       this.pagedProductModel.tableConfig.onDelete = () => { console.log('onDelete'); };
+
+      this.pagedProductModel.tableConfig.onView = null;
+      // this.pagedProductModel.tableConfig.onView = (data: any) => {
+      //   console.log('data', data);
+      // }
     }
 
-    if(this.pagedProductModel.addNewElementButtonConfig){
+    if (this.pagedProductModel.addNewElementButtonConfig) {
       this.pagedProductModel.addNewElementButtonConfig.onAdd = () => {
         dashboardService.ngDialogService.open(ProductsDetailsFormComponent, {
           context: {
@@ -89,7 +92,7 @@ export class ProductsComponent implements OnInit{
             selectedBusinessId: this.selectedOutletId,
             saveMethod: (product: ProductModel) => {
               product.organizationId = this.selectedOutletId;
-              
+
               this.productService.addProduct(product)
                 .subscribe((response: ProductModel) => {
                   this.pagedProductModel.tableConfig?.sourceData.push(response);
@@ -117,33 +120,33 @@ export class ProductsComponent implements OnInit{
         this.organizationList = orgList;
         this.cdRef.detectChanges();
       },
-      (error) => {
-        console.log('error', error);
-      }).add(() => {        
-        if(this.loaderContainer && this.loaderContainer.classList.contains('d-block')){
-          this.loaderContainer.classList.remove('d-block');
-          this.loaderContainer.classList.add('d-none');
-        }
-      });
+        (error) => {
+          console.log('error', error);
+        }).add(() => {
+          if (this.loaderContainer && this.loaderContainer.classList.contains('d-block')) {
+            this.loaderContainer.classList.remove('d-block');
+            this.loaderContainer.classList.add('d-none');
+          }
+        });
   }
 
-  fetchProductsOfOutlet(outletId: number){
+  fetchProductsOfOutlet(outletId: number) {
     // Fetch Products for selected outlet
     this.productService.getProductListPaged(outletId, this.pagedProductModel)
       .subscribe((pagedProducts: any) => {
         // Get pagination data to update table
-        if(this.pagedProductModel.tableConfig){
+        if (this.pagedProductModel.tableConfig) {
           this.pagedProductModel.tableConfig.sourceData = pagedProducts.sourceData;
           console.log('this.pagedProductModel.tableConfig.sourceData', this.pagedProductModel.tableConfig.sourceData);
         }
 
-        if(this.pagedProductModel.pagingConfig){
+        if (this.pagedProductModel.pagingConfig) {
           this.pagedProductModel.pagingConfig.pageNumber = pagedProducts.pageNumber;
           this.pagedProductModel.pagingConfig.pageLength = pagedProducts.pageLength;
           this.pagedProductModel.pagingConfig.totalItems = pagedProducts.totalItems;
         }
 
-        if(this.pagedProductModel.searchingConfig){
+        if (this.pagedProductModel.searchingConfig) {
           this.pagedProductModel.searchingConfig.searchString = pagedProducts.searchString;
         }
 
@@ -151,24 +154,24 @@ export class ProductsComponent implements OnInit{
       });
   }
 
-  selectOutlet(outletId: number, event: any): void{
+  selectOutlet(outletId: number, event: any): void {
     this.selectedOutletId = outletId;
 
     // Is display is hidden, make it visible
     let dataTableCard = Array.from(document.getElementsByTagName('ngx-pagination'))[0];
-    if(dataTableCard && dataTableCard.classList.contains('d-none'))
+    if (dataTableCard && dataTableCard.classList.contains('d-none'))
       dataTableCard.classList.remove('d-none');
 
     // Add active class to source element and remove from sibling elements
     let sourceElem = event.srcElement;
     Array.from(sourceElem.parentNode.children)
       .forEach((element: any) => {
-        if(element != sourceElem)
+        if (element != sourceElem)
           element.classList.remove('active');
         else
           element.classList.add('active');
       });
-    
+
     this.fetchProductsOfOutlet(outletId);
   }
 }

@@ -1,5 +1,5 @@
 ﻿using Inventory.Data.Models.Sales;
-using Inventory.Domain.Abstraction;
+using Inventory.Domain.Abstraction.Sales;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;
 

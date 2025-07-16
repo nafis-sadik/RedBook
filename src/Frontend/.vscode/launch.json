@@ -4,14 +4,14 @@
   "configurations": [
     {
       "name": "ng serve --host 0.0.0.0",
-      "type": "chrome",
+      "type": "msedge",
       "request": "launch",
       "preLaunchTask": "npm: start",
       "url": "http://localhost:4200/"
     },
     {
       "name": "ng test --host 0.0.0.0",
-      "type": "chrome",
+      "type": "msedge",
       "request": "launch",
       "preLaunchTask": "npm: test",
       "url": "http://localhost:9876/debug.html"

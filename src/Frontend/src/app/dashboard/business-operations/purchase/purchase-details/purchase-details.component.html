@@ -33,7 +33,8 @@
             <div class="col-md-3">
               <label class="mb-2 mt-4 p-0 label">
                 <b>Invoice Total</b>
-                <span nbTooltipStatus="primary" nbTooltip="Total amount of money the vendor shall recieve agains this invoice"
+                <span nbTooltipStatus="primary"
+                      nbTooltip="Total amount of money the vendor shall recieve agains this invoice"
                       class="tooltip-style">?</span>
               </label>
               <div class="input-group">
@@ -74,7 +75,8 @@
                     <td class="text-center">{{ product.totalCostPrice }}</td>
                     <td class="text-center">
                       <!-- <svg #barcode id="{{product.barCode}}"></svg> -->
-                      <button nbButton hero nbTooltipStatus="primary" nbTooltip="Download Barcode" status="primary" type="button" (click)="viewBarcode(product)">
+                      <button nbButton hero nbTooltipStatus="primary" nbTooltip="Download Barcode" status="primary"
+                              type="button" (click)="viewBarcode(product)">
                         <nb-icon icon="download"></nb-icon>
                       </button>
                     </td>

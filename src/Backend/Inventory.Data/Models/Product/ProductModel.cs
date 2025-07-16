@@ -24,12 +24,6 @@ namespace Inventory.Data.Models.Product
 
         public string BrandName { get; set; }
 
-        public float PurchasePrice { get; set; }
-
-        public float RetailPrice { get; set; }
-
-        public int Quantity { get; set; }
-
         public int QuantityTypeId { get; set; }
 
         public IEnumerable<ProductVariantModel> ProductVariants { get; set; }

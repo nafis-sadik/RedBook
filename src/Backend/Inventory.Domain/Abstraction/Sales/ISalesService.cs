@@ -1,7 +1,7 @@
 ﻿using Inventory.Data.Models.Sales;
 using RedBook.Core.Models;
 
-namespace Inventory.Domain.Abstraction
+namespace Inventory.Domain.Abstraction.Sales
 {
     public interface ISalesService
     {

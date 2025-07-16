@@ -112,33 +112,10 @@ namespace Inventory.Domain.Implementation.Product
                         SubcategoryName = product.Category.CatagoryName,
                         CategoryId = product.Category.ParentCategoryId == null? 0 : product.Category.ParentCategoryId.Value,
                         CategoryName = product.Category.ParentCategoryId == null ? "Empty Category Name" : product.Category.ParentCategory.CatagoryName.ToString(),
-                        PurchasePrice = (float)_purchaseDetailsRepo.UnTrackableQuery()
-                                        .Where(purchaseDetails => purchaseDetails.ProductVariantId == product.ProductId)
-                                        .OrderByDescending(purchaseDetails => purchaseDetails.CreateDate)
-                                        .Select(purchaseDetails => purchaseDetails.PurchasePrice)
-                                        .FirstOrDefault(),
-                        RetailPrice = (float)_purchaseDetailsRepo.UnTrackableQuery()
-                                        .Where(purchaseDetails => purchaseDetails.ProductVariantId == product.ProductId)
-                                        .OrderByDescending(purchaseDetails => purchaseDetails.CreateDate)
-                                        .Select(purchaseDetails => purchaseDetails.RetailPrice)
-                                        .FirstOrDefault(),
                         OrganizationId = product.OrganizationId,
                         BrandName = product.BrandAttribute.AttributeName,
                         BrandId = product.BrandId,
                         QuantityTypeId = product.QuantityAttributeId,
-                        ProductVariants = _purchaseVariantRepo.UnTrackableQuery()
-                                        .Where(variant => variant.IsActive && variant.ProductId == product.ProductId)
-                                        .Select(variant => new ProductVariantModel
-                                        {
-                                            VariantId = variant.VariantId,
-                                            VariantName = variant.VariantName,
-                                            ProductId = product.ProductId,
-                                            ProductName = variant.Product.ProductName,
-                                            SKU = variant.SKU,
-                                            BarCode = variant.BarCode,
-                                            Attributes = variant.Attributes,
-                                            StockQuantity = variant.StockQuantity,
-                                        }).ToList()
                     })
                     .ToArrayAsync();
 
