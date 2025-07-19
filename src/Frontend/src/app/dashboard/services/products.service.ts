@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { environment } from "src/environments/environment.development";
+import { environment } from "src/environments/environment";
 import { Observable, map } from "rxjs";
 import { IPaginationModel } from "src/app/shared/ngx-pagination/Models/IPaginationModel";
 import { ProductModel } from "../Models/product.model";
@@ -26,15 +26,6 @@ export class ProductService {
     return this.http
       .get<IPaginationModel<ProductModel>>(`${environment.baseUrlInventory}/api/Product/${outletId}`, { params: paramsObject })
       .pipe(map(response => response));
-    // if(pagedProductModel.searchingConfig?.searchString){
-    //   return this.http
-    //       .get<any>(`${this.baseUrl}/api/Product/${outletId}?PageNumber=${pagedProductModel.pagingConfig?.pageNumber}&PageLength=${pagedProductModel.pagingConfig?.pageLength}&SearchString=${pagedProductModel.searchingConfig?.searchString}`)
-    //       .pipe(map(response => response ));
-    // } else {
-    //   return this.http
-    //       .get<any>(`${this.baseUrl}/api/Product/${outletId}?PageNumber=${pagedProductModel.pagingConfig?.pageNumber}&PageLength=${pagedProductModel.pagingConfig?.pageLength}`)
-    //       .pipe(map(response => response ));
-    // }
   }
 
   addProduct(productModel: ProductModel): Observable<ProductModel> {

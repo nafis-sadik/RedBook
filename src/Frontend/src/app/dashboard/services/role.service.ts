@@ -1,13 +1,13 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { environment } from "src/environments/environment.development";
+import { environment } from "src/environments/environment";
 import { Observable, map } from "rxjs";
 import { RoleModel } from "../Models/role.model";
 
-@Injectable({ 
+@Injectable({
     providedIn: 'root',
 })
-export class RoleService{
+export class RoleService {
     baseUrl = environment.baseUrlUMS;
 
     constructor(private http: HttpClient) { }
@@ -36,7 +36,7 @@ export class RoleService{
             .pipe(map((response) => response));
     }
 
-    mapRolesWithRoute(roleId: number, routeId: number): Observable<any>{ 
+    mapRolesWithRoute(roleId: number, routeId: number): Observable<any> {
         return this.http
             .get<Array<any>>(`${this.baseUrl}/AllowRouteForRole/${roleId}/${routeId}`)
             .pipe(map(response => response));

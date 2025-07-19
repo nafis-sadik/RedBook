@@ -1,7 +1,7 @@
 import { Injectable } from "@angular/core";
 import { UserModel } from "../Models/user.model";
 import { OrganizationModel } from "../Models/organization.model";
-import { environment } from "src/environments/environment.development";
+import { environment } from "src/environments/environment";
 import { HttpClient } from "@angular/common/http";
 
 @Injectable({
@@ -10,8 +10,8 @@ import { HttpClient } from "@angular/common/http";
 export class OnboardingService {
     baseUrl = environment.baseUrlUMS;
 
-    constructor(private http: HttpClient) {}
-    
+    constructor(private http: HttpClient) { }
+
     public onboardUser(userModel: UserModel, orgModel: OrganizationModel) {
         let model = {
             User: userModel,

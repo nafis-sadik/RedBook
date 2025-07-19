@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { SalesInvoiceModel } from "../Models/sales-invoice.model";
 import { Observable, map } from "rxjs";
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { environment } from "src/environments/environment.development";
+import { environment } from "src/environments/environment";
 import { IPaginationModel } from "src/app/shared/ngx-pagination/Models/IPaginationModel";
 import { SharedService } from "src/app/shared/common-methods";
 

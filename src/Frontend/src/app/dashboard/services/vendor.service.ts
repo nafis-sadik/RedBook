@@ -3,7 +3,7 @@ import { VendorModel } from "../Models/vendor.model";
 import { IPaginationModel } from "src/app/shared/ngx-pagination/Models/IPaginationModel";
 import { Observable, Subject } from "rxjs";
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { environment } from "src/environments/environment.development";
+import { environment } from "src/environments/environment";
 import { SharedService } from "src/app/shared/common-methods";
 
 @Injectable({

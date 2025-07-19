@@ -1,6 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { environment } from "src/environments/environment.development";
+import { environment } from "src/environments/environment";
 import { CachingService } from "./caching.service";
 import { Observable, map, of } from "rxjs";
 import { CategoryModel } from "../Models/category.model";

@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { environment } from "src/environments/environment.development";
+import { environment } from "src/environments/environment";
 import { OrganizationModel } from "../Models/organization.model";
 import { Observable, Subject, map, of } from "rxjs";
 import { CachingService } from "./caching.service";
@@ -9,9 +9,9 @@ import { IPaginationModel } from "src/app/shared/ngx-pagination/Models/IPaginati
 import { SharedService } from "src/app/shared/common-methods";
 
 @Injectable({
-    providedIn: 'root',
+  providedIn: 'root',
 })
-export class OrganizationService{
+export class OrganizationService {
   baseUrl = environment.baseUrlUMS;
   private orgSubject: Subject<Array<OrganizationModel>>;
 
@@ -26,19 +26,19 @@ export class OrganizationService{
   addNewOrganization(orgModel: OrganizationModel): Observable<OrganizationModel> {
     return this.http
       .post<OrganizationModel>(`${this.baseUrl}/api/Organization`, orgModel)
-        .pipe(map((response) => response));
+      .pipe(map((response) => response));
   }
 
   updateOrganization(orgModel: OrganizationModel): Observable<OrganizationModel> {
     return this.http
       .put<OrganizationModel>(`${this.baseUrl}/api/Organization`, orgModel)
-        .pipe(map(response => response));
+      .pipe(map(response => response));
   }
 
   deleteOrganization(orgId: number) {
     return this.http
       .delete(`${this.baseUrl}/api/Organization/${orgId}`)
-        .pipe(map(response => response));
+      .pipe(map(response => response));
   }
 
   /// <summary>
@@ -67,17 +67,17 @@ export class OrganizationService{
     }
   }
 
-  getUserByBusinessId(pagedUserModel: IPaginationModel<UserModel>, businessId: number): Observable<any>{
+  getUserByBusinessId(pagedUserModel: IPaginationModel<UserModel>, businessId: number): Observable<any> {
     let params = this.sharedService.paginationToParams<UserModel>(pagedUserModel);
-    
+
     return this.http
-      .get<IPaginationModel<UserModel>>(`${this.baseUrl}/api/User/${businessId}`, { params } )
-          .pipe(map(response => response));
+      .get<IPaginationModel<UserModel>>(`${this.baseUrl}/api/User/${businessId}`, { params })
+      .pipe(map(response => response));
   }
 
-  removeUserFromBusiness(userId: number, orgId: number): Observable<any>{      
+  removeUserFromBusiness(userId: number, orgId: number): Observable<any> {
     return this.http
       .delete(`${this.baseUrl}/api/Organization/User/${userId}/${orgId}`)
-        .pipe(map((response) => response));
+      .pipe(map((response) => response));
   }
 }

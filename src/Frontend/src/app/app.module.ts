@@ -10,6 +10,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { NbPasswordAuthStrategy, NbAuthModule, NbAuthJWTToken } from '@nebular/auth';
 import { AuthGuard } from './shared/auth/auth-guard.service';
 import { AuthInterceptorService } from './shared/auth/api-Interceptor.service';
+import { environment } from 'src/environments/environment';
 
 @NgModule({
   declarations: [
@@ -47,7 +48,8 @@ import { AuthInterceptorService } from './shared/auth/api-Interceptor.service';
             class: NbAuthJWTToken,
             key: 'response', // key where the token is located in local storage
           },
-          baseEndpoint: 'http://localhost:5062',
+          baseEndpoint: `${environment.baseUrlUMS}`,
+          // baseEndpoint: `http://localhost:5062`,
           login: {
             endpoint: '/api/Auth/LogIn',
             redirect: {
