@@ -72,7 +72,12 @@ export class PurchaseInvoiceDetailsModel {
      */
     totalCostPrice: number = 0;
     /**
+     * Stock Keeping Unit
+     */
+    sku: string = '';
+    /**
      * Array of product variants of the selected product. (Required for viewing on UI, not necessary for API)
      */
     variants: Array<ProductVariantModel> = [];
+    purchaseDate: string = '';
 }

@@ -1,17 +1,18 @@
 ﻿using Inventory.Data.Entities;
 using Inventory.Data.Models.Product;
+using Inventory.Data.Models.Purchase;
 using Inventory.Domain.Abstraction.Product;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RedBook.Core;
 using RedBook.Core.AutoMapper;
 using RedBook.Core.Domain;
 using RedBook.Core.Models;
 using RedBook.Core.Security;
 using RedBook.Core.UnitOfWork;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using RedBook.Core;
 
 
 namespace Inventory.Domain.Implementation.Product

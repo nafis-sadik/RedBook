@@ -1,7 +1,7 @@
 <section id="PagedTable" class="table-responsive">
   <table class="table table-bordered align-middle">
     <thead>
-      <tr class="align-bottom row-color-2">
+      <tr class="align-bottom">
         <th>#</th>
         <th
             *ngFor="let item of this.config.columnNames"
@@ -30,7 +30,7 @@
               <nb-icon icon="edit-2-outline" class="edit"></nb-icon>
             </span>
             <span *ngIf="config.onView" (click)="onView(i)">
-              <nb-icon icon="file-text-outline" class="delete"></nb-icon>
+              <nb-icon icon="file-text-outline" class="view"></nb-icon>
             </span>
             <span *ngIf="config.onDelete" (click)="onDelete(i)">
               <nb-icon icon="trash-2-outline" class="delete"></nb-icon>

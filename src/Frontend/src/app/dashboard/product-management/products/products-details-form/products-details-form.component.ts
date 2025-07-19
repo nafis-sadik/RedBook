@@ -15,6 +15,7 @@ import { environment } from 'src/environments/environment.development';
   templateUrl: './products-details-form.component.html',
   styleUrls: ['./products-details-form.component.scss']
 })
+
 export class ProductsDetailsFormComponent implements OnInit {
   @Input() productModelInput: ProductModel | undefined = undefined;
   @Input() selectedBusinessId: number;
@@ -42,21 +43,21 @@ export class ProductsDetailsFormComponent implements OnInit {
     if (this.productModelInput != undefined) {
       this.subCategoryService.getSubcategoriesUnderCategoryId(this.productModelInput.categoryId)
         .subscribe((subcategories: Array<CategoryModel>) => {
-            this.subcategoryList = subcategories;
-          });
+          this.subcategoryList = subcategories;
+        });
       this.productModel = this.productModelInput;
     } else {
       this.productModel = new ProductModel();
     }
-    
+
     this.categoryService.getCategoriesUnderOrganization(this.selectedBusinessId)
       .subscribe((categories) => {
         this.categoryList = categories;
-        
+
         this.commonAttributeService.getAttributes(environment.attributeTypes.quantity)
           .subscribe((attributes) => {
             this.quantityAttributes = attributes;
-            
+
             this.commonAttributeService.getAttributes(environment.attributeTypes.brands)
               .subscribe((attributes) => {
                 this.brandAttributes = attributes;
@@ -86,13 +87,13 @@ export class ProductsDetailsFormComponent implements OnInit {
     });
   }
 
-  addVariant(){
+  addVariant() {
     let variant = new ProductVariantModel();
-    if(this.productModel.productVariants == null || this.productModel.productVariants == undefined){
+    if (this.productModel.productVariants == null || this.productModel.productVariants == undefined) {
       this.productModel.productVariants = [];
     }
 
-    if(this.productModel.productVariants.length <= 0) {
+    if (this.productModel.productVariants.length <= 0) {
       variant.variantName = this.productModel.productName;
     } else {
       variant.variantName = '';
@@ -102,7 +103,6 @@ export class ProductsDetailsFormComponent implements OnInit {
     variant.stockQuantity = 0;
     this.productModel.productVariants.push(variant);
     this.cdRef.detectChanges();
-    console.log('this.productModel.productVariants', this.productModel.productVariants);
   }
 
   removeVariant(variant: ProductVariantModel) {
@@ -112,16 +112,16 @@ export class ProductsDetailsFormComponent implements OnInit {
   save() {
     if (this.productForm.valid) {
       let selectedBrand = this.brandAttributes.find(brand => brand.attributeId == this.productModel.brandId);
-      this.productModel.brandName = selectedBrand? selectedBrand.attributeName: '';
+      this.productModel.brandName = selectedBrand ? selectedBrand.attributeName : '';
       this.saveMethod(this.productModel);
       this.dialogRef.close();
     }
-    
+
     else this.toasterService.danger('Please fill all required fields.', 'Error');
   }
 
-  loadSubCategories(selectedCategoryId: number){
-    if(selectedCategoryId <= 0) return;
+  loadSubCategories(selectedCategoryId: number) {
+    if (selectedCategoryId <= 0) return;
     this.productModel.categoryId = selectedCategoryId;
     this.subCategoryService.getSubcategoriesUnderCategoryId(this.productModel.categoryId)
       .subscribe((categories) => {

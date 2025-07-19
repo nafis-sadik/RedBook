@@ -66,5 +66,6 @@
         /// The total price of the product details. (Considering unit price and quantity)
         /// </summary>
         public decimal TotalPrice { get; set; } = 0;
+        public DateTime? PurchaseDate { get; set; } = null;
     }
 }

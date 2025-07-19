@@ -18,7 +18,7 @@ namespace Inventory.WebAPI.Controllers.Product
         /// </summary>
         /// <param name="ProductId">Unique identifier of Product</param>
         [HttpGet]
-        [Route("{ProductId}")]
+        [Route("Product/{ProductId}")]
         public async Task<IActionResult> GetList(int ProductId) => Ok(await _productVariantService.GetVariantListOfProduct(ProductId));
 
         /// <summary>

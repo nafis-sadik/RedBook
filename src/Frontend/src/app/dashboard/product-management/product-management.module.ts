@@ -11,6 +11,7 @@ import { CategoryComponent } from './product-settings/category/category.componen
 import { ProductsDetailsFormComponent } from './products/products-details-form/products-details-form.component';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ProductTrackerComponent } from './product-tracker/product-tracker.component';
+import { ProductDetailsModalComponent } from './products/product-details-modal/product-details-modal.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import { ProductTrackerComponent } from './product-tracker/product-tracker.compo
     ProductsComponent,
     CategoryComponent,
     ProductTrackerComponent,
+    ProductDetailsModalComponent
   ],
   imports: [
     CommonModule,

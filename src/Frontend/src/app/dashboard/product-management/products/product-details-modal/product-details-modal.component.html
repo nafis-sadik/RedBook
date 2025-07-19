@@ -1,0 +1,95 @@
+<section id="ProductSave">
+    <nb-card>
+        <nb-card-header>
+            <div class="container-fluid">
+                <div class="row">
+                    <span>
+                        Product Information
+                    </span>
+                </div>
+            </div>
+        </nb-card-header>
+        <nb-card-body class="pt-0">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-md-4">
+                        Product Name: {{ productModelInput.productName }}
+                        <ul>
+                            <li *ngFor="let variant of productModelInput.productVariants">
+                                {{ variant.variantName }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr class="align-bottom">
+                                <th>Product Name</th>
+                                <th>Variant Name</th>
+                                <th>Stock Keeping Unit</th>
+                                <th>Purchase Date</th>
+                                <th>Purchase Price</th>
+                                <th>Retail Price</th>
+                                <th>Max Retail Discount</th>
+                                <th>Stock Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let variant of inventory">
+                                <td>{{ variant.productName }}</td>
+                                <td>{{ variant.variantName }}</td>
+                                <td>{{ variant.sku }}</td>
+                                <td>
+                                    <table class="table table-bordered align-middle">
+                                        <tbody>
+                                            <tr *ngFor="let lot of variant.lots">
+                                                <td>{{ lot.purchaseDate }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table class="table table-bordered align-middle">
+                                        <tbody>
+                                            <tr *ngFor="let lot of variant.lots">
+                                                <td>{{ lot.purchasePrice }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table class="table table-bordered align-middle">
+                                        <tbody>
+                                            <tr *ngFor="let lot of variant.lots">
+                                                <td>{{ lot.retailPrice }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table class="table table-bordered align-middle">
+                                        <tbody>
+                                            <tr *ngFor="let lot of variant.lots">
+                                                <td>{{ lot.maxRetailDiscount }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                                <td>
+                                    <table class="table table-bordered align-middle">
+                                        <tbody>
+                                            <tr *ngFor="let lot of variant.lots">
+                                                <td>{{ lot.quantity }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </nb-card-body>
+    </nb-card>
+</section>

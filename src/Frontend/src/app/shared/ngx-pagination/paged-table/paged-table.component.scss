@@ -13,21 +13,26 @@
 
 // Table row styles
 #PagedTable .edit,
+#PagedTable .view,
 #PagedTable .delete {
   margin: 0.5rem;
+  fill: var(--text-basic-color) !important;
+  color: var(--text-basic-color) !important;
 }
 
-#PagedTable .edit:hover {
+#PagedTable .edit:hover,
+#PagedTable .view:hover {
   transition: 0.5s;
-  color: var(--color-primary-default);
+  color: var(--color-primary-hover) !important;
 }
 
 #PagedTable .delete:hover {
   transition: 0.5s;
-  color: red;
+  color: red !important;
 }
 
-#PagedTable tbody tr:nth-child(2n) {
+#PagedTable tbody tr:nth-child(2n),
+#PagedTable th {
   background-color: var(--background-basic-color-2);
 }
 
@@ -36,14 +41,6 @@
   color: var(--text-basic-color);
   border: 1px solid var(--divider-color);
   font-family: var(--smart-table-header-font-family);
-}
-
-#PagedTable .row-color-1 {
-  background-color: var(--background-basic-color-1);
-}
-
-#PagedTable .row-color-2 {
-  background-color: var(--background-basic-color-2);
 }
 
 #PagedTable tbody tr:hover,

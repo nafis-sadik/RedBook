@@ -1,5 +1,6 @@
 ﻿using Inventory.Data.Models.Product;
 using Inventory.Domain.Abstraction.Product;
+using Inventory.Domain.Implementation.Product;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RedBook.Core.Models;

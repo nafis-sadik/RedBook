@@ -34,6 +34,7 @@ namespace Inventory.WebAPI.Configurations
             services.AddScoped<IInventoryService, InventoryService>();
             services.AddScoped<ISalesService, SalesService>();
             services.AddScoped<ISalesDetailsService, SalesDetailsService>();
+            services.AddScoped<IProductVariantService, ProductVariantService>();
         }
     }
 }

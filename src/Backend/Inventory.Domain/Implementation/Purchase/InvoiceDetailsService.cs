@@ -1,4 +1,5 @@
 ﻿using Inventory.Data.Entities;
+using Inventory.Data.Models.Product;
 using Inventory.Data.Models.Purchase;
 using Inventory.Domain.Abstraction.Purchase;
 using Microsoft.AspNetCore.Http;
@@ -28,6 +29,12 @@ namespace Inventory.Domain.Implementation.Purchase
                 var _invoiceDetailsRepo = factory.GetRepository<PurchaseInvoiceDetails>();
 
                 IEnumerable<PurchaseInvoiceDetails> entities = Mapper.Map<List<PurchaseInvoiceDetails>>(purchaseModel);
+
+                foreach(var items in entities)
+                {
+                    items.CreateDate = DateTime.UtcNow;
+                    items.CreateBy = User.UserId;
+                }
 
                 await _invoiceDetailsRepo.BulkInsertAsync(entities);
 

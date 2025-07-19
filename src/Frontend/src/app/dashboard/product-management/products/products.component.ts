@@ -9,6 +9,8 @@ import { NbToastrService } from '@nebular/theme';
 import { ProductModel } from 'src/app/dashboard/Models/product.model';
 import { ProductService } from '../../services/products.service';
 import { ProductVariantService } from '../../services/product-variant.service';
+import { ProductVariantModel } from '../../Models/product-variant.model';
+import { ProductDetailsModalComponent } from './product-details-modal/product-details-modal.component';
 
 @Component({
   selector: 'app-products',
@@ -29,6 +31,7 @@ export class ProductsComponent implements OnInit {
     private toastrService: NbToastrService,
     private productService: ProductService,
     private orgService: OrganizationService,
+    private variantService: ProductVariantService,
     private ngxPaginationService: NGXPaginationService<ProductModel>,
   ) {
     this.pagedProductModel = dashboardService.getPagingConfig(ProductsDetailsFormComponent, 'Product List', 'Add New Product');
@@ -54,41 +57,52 @@ export class ProductsComponent implements OnInit {
       };
 
       this.pagedProductModel.tableConfig.onEdit = (product: ProductModel) => {
-        dashboardService.ngDialogService.open(ProductsDetailsFormComponent, {
-          context: {
-            productModelInput: product,
-            selectedBusinessId: this.selectedOutletId,
-            saveMethod: (product: ProductModel) => {
-              this.productService.updateProduct(product)
-                .subscribe((response: ProductModel) => {
-                  this.pagedProductModel.tableConfig?.sourceData.forEach(product => {
-                    if (product.productId === response.productId) {
-                      Object.assign(product, response);
-                      this.toastrService.success('Product Updated Successfully', 'Success');
-                      return;
-                    }
-                  });
+        this.variantService.getProductVariants(product.productId)
+          .subscribe((variantList: Array<ProductVariantModel>) => {
+            product.productVariants = variantList;
+            dashboardService.ngDialogService.open(ProductsDetailsFormComponent, {
+              context: {
+                productModelInput: product,
+                selectedBusinessId: this.selectedOutletId,
+                saveMethod: (product: ProductModel) => {
+                  this.productService.updateProduct(product)
+                    .subscribe((response: ProductModel) => {
+                      this.pagedProductModel.tableConfig?.sourceData.forEach(product => {
+                        if (product.productId === response.productId) {
+                          Object.assign(product, response);
+                          this.toastrService.success('Product Updated Successfully', 'Success');
+                          return;
+                        }
+                      });
 
-                  this.ngxPaginationService.set(this.pagedProductModel);
-                });
-            }
-          }
-        });
-      };
+                      this.ngxPaginationService.set(this.pagedProductModel);
+                    });
+                }
+              }
+            });
+          });
+      }
 
-      this.pagedProductModel.tableConfig.onDelete = () => { console.log('onDelete'); };
+      this.pagedProductModel.tableConfig.onDelete = () => { console.log('onDelete'); }
 
-      this.pagedProductModel.tableConfig.onView = null;
-      // this.pagedProductModel.tableConfig.onView = (data: any) => {
-      //   console.log('data', data);
-      // }
+      this.pagedProductModel.tableConfig.onView = (selectedProduct: ProductModel) => {
+        this.variantService.getProductVariants(selectedProduct.productId)
+          .subscribe((variantList: Array<ProductVariantModel>) => {
+            selectedProduct.productVariants = variantList;
+            dashboardService.ngDialogService.open(ProductDetailsModalComponent, {
+              context: {
+                productModelInput: selectedProduct,
+              }
+            })
+          });
+      }
     }
 
     if (this.pagedProductModel.addNewElementButtonConfig) {
       this.pagedProductModel.addNewElementButtonConfig.onAdd = () => {
         dashboardService.ngDialogService.open(ProductsDetailsFormComponent, {
           context: {
-            productModel: undefined,
+            productModelInput: undefined,
             selectedBusinessId: this.selectedOutletId,
             saveMethod: (product: ProductModel) => {
               product.organizationId = this.selectedOutletId;
@@ -116,18 +130,20 @@ export class ProductsComponent implements OnInit {
 
   ngOnInit(): void {
     this.orgService.getUserOrgs()
-      .subscribe((orgList: Array<OrganizationModel>) => {
-        this.organizationList = orgList;
-        this.cdRef.detectChanges();
-      },
+      .subscribe(
+        (orgList: Array<OrganizationModel>) => {
+          this.organizationList = orgList;
+          this.cdRef.detectChanges();
+        },
         (error) => {
           console.log('error', error);
-        }).add(() => {
-          if (this.loaderContainer && this.loaderContainer.classList.contains('d-block')) {
-            this.loaderContainer.classList.remove('d-block');
-            this.loaderContainer.classList.add('d-none');
-          }
-        });
+        })
+      .add(() => {
+        if (this.loaderContainer && this.loaderContainer.classList.contains('d-block')) {
+          this.loaderContainer.classList.remove('d-block');
+          this.loaderContainer.classList.add('d-none');
+        }
+      });
   }
 
   fetchProductsOfOutlet(outletId: number) {
