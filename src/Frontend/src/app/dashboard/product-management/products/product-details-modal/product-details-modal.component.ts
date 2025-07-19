@@ -18,8 +18,19 @@ export class ProductDetailsModalComponent {
     if (!this.productModelInput) return;
     this.inventoryService.getProductInventory(this.productModelInput.productId)
       .subscribe(response => {
-        console.log('response', response);
         this.inventory = response;
+        for (let index = 0; index < this.inventory.length; index++) {
+          let element: VariantInventoryStatusModel = this.inventory[index];
+          element.totalStockQuantity = 0;
+          for (let i = 0; i < element.lots.length; i++) {
+            let lot = element.lots[i];
+            if (lot.purchaseDate != null) {
+              lot.purchaseDate = new Date(lot.purchaseDate).toLocaleString();
+              lot.purchaseDate = lot.purchaseDate.split(',').join(' - ');
+            }
+            element.totalStockQuantity += lot.quantity;
+          }
+        }
       })
   }
 }

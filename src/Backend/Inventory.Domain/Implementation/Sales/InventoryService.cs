@@ -58,50 +58,40 @@ namespace Inventory.Domain.Implementation.Sales
             {
                 var purchaseDetailsRepo = factory.GetRepository<PurchaseInvoiceDetails>();
 
-                List<PurchaseInvoiceDetails> invoiceDetails = await purchaseDetailsRepo.UnTrackableQuery()
+                List<VariantInventoryStatusModel> invoiceDetails = await purchaseDetailsRepo.UnTrackableQuery()
                     .Where(invoiceDetails => invoiceDetails.ProductVariant.ProductId == ProductId && invoiceDetails.CurrentStockQuantity > 0)
-                    .Select(invoiceDetails => new PurchaseInvoiceDetails
+                    .Select(invoiceDetails => new VariantInventoryStatusModel
                     {
-                        InvoiceId = invoiceDetails.InvoiceId,
-                        ProductVariantId = invoiceDetails.ProductVariantId,
-                        ProductVariantName = invoiceDetails.ProductVariantName,
-                        ProductName = invoiceDetails.ProductName,
-                        PurchasePrice = invoiceDetails.PurchasePrice - (invoiceDetails.PurchaseDiscount / invoiceDetails.Quantity),
-                        RetailPrice = invoiceDetails.RetailPrice,
-                        MaxRetailDiscount = invoiceDetails.MaxRetailDiscount,
-                        Quantity = invoiceDetails.Quantity,
-                        CreateDate = invoiceDetails.CreateDate,
-                        ProductVariant = new ProductVariant
+                        ProductId = invoiceDetails.ProductVariant.ProductId,
+                        VariantId = invoiceDetails.ProductVariant.VariantId,
+                        ProductName = invoiceDetails.ProductVariant.Product.ProductName,
+                        VariantName = invoiceDetails.ProductVariant.VariantName,
+                        ProductCategory = invoiceDetails.ProductVariant.Product.Category.CatagoryName,
+                        ProductSubCategory = invoiceDetails.ProductVariant.Product.Category.ParentCategory == null? invoiceDetails.ProductVariant.Product.Category.CatagoryName : invoiceDetails.ProductVariant.Product.Category.ParentCategory.CatagoryName,
+                        ProductImage = string.Empty,
+                        SKU = invoiceDetails.ProductVariant.SKU,
+                        Lots = new List<PurchaseInvoiceDetailsModel>
                         {
-                            ProductId = invoiceDetails.ProductVariant.ProductId,
-                            SKU = invoiceDetails.ProductVariant.SKU
+                            new PurchaseInvoiceDetailsModel
+                            {
+                                InvoiceId = invoiceDetails.RecordId,
+                                PurchaseDate = invoiceDetails.CreateDate,
+                                PurchasePrice = invoiceDetails.PurchasePrice - (invoiceDetails.PurchaseDiscount / invoiceDetails.Quantity),
+                                RetailPrice = invoiceDetails.RetailPrice,
+                                MaxRetailDiscount = invoiceDetails.MaxRetailDiscount,
+                                Quantity = invoiceDetails.Quantity
+                            }
                         }
                     })
                     .ToListAsync();
 
                 Dictionary<int, VariantInventoryStatusModel> inventory = new Dictionary<int, VariantInventoryStatusModel>();
-                foreach (PurchaseInvoiceDetails invoice in invoiceDetails)
+                foreach (VariantInventoryStatusModel invoice in invoiceDetails)
                 {
-                    if (!inventory.ContainsKey(invoice.InvoiceId))
-                    {
-                        inventory.Add(invoice.InvoiceId, new VariantInventoryStatusModel
-                        {
-                            ProductId = invoice.ProductVariant.ProductId,
-                            ProductName = invoice.ProductName,
-                            VariantId = invoice.ProductVariantId,
-                            VariantName = invoice.ProductVariantName,
-                            SKU = invoice.ProductVariant.SKU,
-                            Lots = new List<PurchaseInvoiceDetailsModel>()
-                        });
-                    }
-                    inventory[invoice.InvoiceId].Lots.Add(new PurchaseInvoiceDetailsModel
-                    {
-                        PurchaseDate = invoice.CreateDate,
-                        PurchasePrice = invoice.PurchasePrice,
-                        RetailPrice = invoice.RetailPrice,
-                        MaxRetailDiscount = invoice.MaxRetailDiscount,
-                        Quantity = invoice.Quantity,
-                    });
+                    if (!inventory.ContainsKey(invoice.VariantId))
+                        inventory.Add(invoice.VariantId, invoice);
+                    else
+                        inventory[invoice.VariantId].Lots.Add(invoice.Lots.First());
                 }
 
                 return inventory.Values;

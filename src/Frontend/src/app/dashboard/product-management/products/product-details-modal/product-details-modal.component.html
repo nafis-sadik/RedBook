@@ -2,24 +2,52 @@
     <nb-card>
         <nb-card-header>
             <div class="container-fluid">
-                <div class="row">
-                    <span>
-                        Product Information
-                    </span>
+                <div class="row px-0">
+                    Product Information
                 </div>
             </div>
         </nb-card-header>
         <nb-card-body class="pt-0">
             <div class="container-fluid">
                 <div class="row">
-                    <div class="col-md-4">
-                        Product Name: {{ productModelInput.productName }}
-                        <ul>
-                            <li *ngFor="let variant of productModelInput.productVariants">
-                                {{ variant.variantName }}
-                            </li>
-                        </ul>
-                    </div>
+                    <h6 class="px-0">Product Inventory Status</h6>
+                </div>
+                <div class="row">
+                    <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr class="align-bottom">
+                                <th>Product Name</th>
+                                <th>Category</th>
+                                <th>Subcategory</th>
+                                <th>Variants</th>
+                                <th>SKU</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <ng-container *ngFor="let variant of productModelInput.productVariants; let i = index">
+                                <tr>
+                                    <td *ngIf="i === 0" [attr.rowspan]="productModelInput.productVariants.length">
+                                        {{ inventory[0].productName }}
+                                    </td>
+                                    <td *ngIf="i === 0" [attr.rowspan]="productModelInput.productVariants.length">
+                                        {{ inventory[0].productCategory }}
+                                    </td>
+                                    <td *ngIf="i === 0" [attr.rowspan]="productModelInput.productVariants.length">
+                                        {{ inventory[0].productSubCategory }}
+                                    </td>
+                                    <td>
+                                        {{ variant.variantName }}
+                                    </td>
+                                    <td>
+                                        {{ variant.sku }}
+                                    </td>
+                                </tr>
+                            </ng-container>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <h6 class="px-0">Product Inventory Status</h6>
                 </div>
                 <div class="row">
                     <table class="table table-bordered align-middle">
@@ -28,6 +56,7 @@
                                 <th>Product Name</th>
                                 <th>Variant Name</th>
                                 <th>Stock Keeping Unit</th>
+                                <th>Total Stock Quantity</th>
                                 <th>Purchase Date</th>
                                 <th>Purchase Price</th>
                                 <th>Retail Price</th>
@@ -36,56 +65,29 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let variant of inventory">
-                                <td>{{ variant.productName }}</td>
-                                <td>{{ variant.variantName }}</td>
-                                <td>{{ variant.sku }}</td>
-                                <td>
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <tr *ngFor="let lot of variant.lots">
-                                                <td>{{ lot.purchaseDate }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                                <td>
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <tr *ngFor="let lot of variant.lots">
-                                                <td>{{ lot.purchasePrice }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                                <td>
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <tr *ngFor="let lot of variant.lots">
-                                                <td>{{ lot.retailPrice }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                                <td>
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <tr *ngFor="let lot of variant.lots">
-                                                <td>{{ lot.maxRetailDiscount }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                                <td>
-                                    <table class="table table-bordered align-middle">
-                                        <tbody>
-                                            <tr *ngFor="let lot of variant.lots">
-                                                <td>{{ lot.quantity }}</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
+                            <ng-container *ngFor="let variant of inventory">
+                                <ng-container *ngFor="let lot of variant.lots; let i = index">
+                                    <tr>
+                                        <td *ngIf="i === 0" [attr.rowspan]="variant.lots.length">
+                                            {{ variant.productName }}
+                                        </td>
+                                        <td *ngIf="i === 0" [attr.rowspan]="variant.lots.length">
+                                            {{ variant.variantName }}
+                                        </td>
+                                        <td *ngIf="i === 0" [attr.rowspan]="variant.lots.length">
+                                            {{ variant.sku }}
+                                        </td>
+                                        <td *ngIf="i === 0" [attr.rowspan]="variant.lots.length">
+                                            {{ variant.totalStockQuantity }}
+                                        </td>
+                                        <td>{{ lot.purchaseDate }}</td>
+                                        <td>{{ lot.purchasePrice }}</td>
+                                        <td>{{ lot.retailPrice }}</td>
+                                        <td>{{ lot.maxRetailDiscount }}</td>
+                                        <td>{{ lot.quantity }}</td>
+                                    </tr>
+                                </ng-container>
+                            </ng-container>
                         </tbody>
                     </table>
                 </div>

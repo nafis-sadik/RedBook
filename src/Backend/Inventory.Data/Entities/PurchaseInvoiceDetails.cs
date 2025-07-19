@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Inventory.Data.Entities;
 
@@ -37,7 +38,14 @@ public partial class PurchaseInvoiceDetails
     [Required]
     public int CreateBy { get; set; }
 
-    public DateTime? CreateDate { get; set; }
+    [Required]
+    public DateTime CreateDate { get; set; }
+
+    [AllowNull]
+    public int? UpdateBy { get; set; }
+
+    [AllowNull]
+    public DateTime? UpdateDate { get; set; }
 
     [ForeignKey("InvoiceId")]
     public virtual PurchaseInvoice Invoice { get; set; }
