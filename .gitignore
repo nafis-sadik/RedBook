@@ -109,3 +109,11 @@ docker-compose.override.yml
 **/.dockerignore
 
 **/github-personal-access-token.txt
+
+#######################
+# Authentik #
+#######################
+**/src/Authentik/authentik-worker
+**/src/Authentik/postgres_data
+**/src/Authentik/redis_data
+**/src/Authentik/.dev.env

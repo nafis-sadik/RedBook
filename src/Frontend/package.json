@@ -23,6 +23,7 @@
     "@nebular/eva-icons": "^13.0.0",
     "@nebular/security": "^13.0.0",
     "@nebular/theme": "^13.0.0",
+    "angular-oauth2-oidc": "^15.0.0",
     "jsbarcode": "^3.11.6",
     "jwt-decode": "^4.0.0",
     "rxjs": "~7.8.0",

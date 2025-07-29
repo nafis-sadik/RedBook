@@ -11,6 +11,7 @@ import { NbPasswordAuthStrategy, NbAuthModule, NbAuthJWTToken } from '@nebular/a
 import { AuthGuard } from './shared/auth/auth-guard.service';
 import { AuthInterceptorService } from './shared/auth/api-Interceptor.service';
 import { environment } from 'src/environments/environment';
+import { OAuthModule } from 'angular-oauth2-oidc';
 
 @NgModule({
   declarations: [
@@ -59,7 +60,13 @@ import { environment } from 'src/environments/environment';
         }),
       ],
       forms: {},
-    })
+    }),
+    OAuthModule.forRoot({
+      resourceServer: {
+        allowedUrls: [environment.baseUrlUMS],
+        sendAccessToken: true,
+      },
+    }),
   ],
   providers: [
     AuthGuard,
